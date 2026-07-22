@@ -74,8 +74,13 @@ export default async function DashboardPage({
     <>
       {/* Toolbar: prepinac stranok + publikovanie.
           Mobil: dva ciste riadky (Models hore, publish dole cez celu sirku —
-          Unpublish vlavo, hlavne tlacidlo vpravo). Desktop: jeden riadok. */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between sm:gap-3">
+          Unpublish vlavo, hlavne tlacidlo vpravo). Desktop: jeden riadok.
+          ⚠️ Tlacidla su vzdy dokovane vpravo cez `sm:ml-auto` na ich vlastnom
+          wrapperi — NIE cez `justify-between` na rodicovi. ProfileSwitcher
+          sa pri jedinom profile (bezny Free ucet) nevykresli vobec (vracia
+          null), takze pri justify-between by ostal jediny flex-child a
+          prehodil by sa na zaciatok riadku namiesto na koniec. */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-start sm:gap-3">
         <ProfileSwitcher
           profiles={profiles.map((x) => ({
             id: x.id,
@@ -87,7 +92,7 @@ export default async function DashboardPage({
           limit={plan.profiles}
         />
 
-        <div className="flex w-full items-center gap-2 sm:w-auto">
+        <div className="flex w-full items-center gap-2 sm:ml-auto sm:w-auto">
           {current.is_published && (
             <form
               action={unpublishProfile.bind(null, current.id)}

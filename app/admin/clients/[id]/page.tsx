@@ -1,13 +1,14 @@
 import Link from "next/link";
-import { redirect, notFound } from "next/navigation";
+import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { setPlan } from "@/app/admin/actions";
-import { Wordmark } from "@/components/wordmark";
-import { PLAN_KEYS, PLANS } from "@/lib/plans";
+import { SetPlanForm } from "@/components/admin/set-plan-form";
+import { PLANS } from "@/lib/plans";
 import { SITE_DOMAIN } from "@/lib/site";
 import {
   eventLabel,
   lifecycleStatus,
+  REVENUE_SOURCE,
+  revenueSource,
   TONE_BADGE,
   TONE_DOT,
   type AccountEvent,
@@ -20,6 +21,7 @@ type Detail = {
     email: string;
     plan: string;
     subscription_status: string | null;
+    revenue_source: string | null;
     created_at: string;
     last_sign_in_at: string | null;
     plan_expires_at: string | null;
@@ -53,14 +55,8 @@ export default async function ClientDetailPage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
 
-  const { data: isAdmin } = await supabase.rpc("is_admin");
-  if (isAdmin !== true) redirect("/dashboard");
-
+  // Guard (login + is_admin) riesi app/admin/layout.tsx.
   const { data } = await supabase.rpc("admin_account_detail", { p_account: id });
   const detail = (data ?? null) as Detail | null;
   if (!detail?.account) notFound();
@@ -77,23 +73,19 @@ export default async function ClientDetailPage({
   const totalViews = detail.profiles.reduce((n, p) => n + Number(p.views_30d), 0);
   const totalClicks = detail.profiles.reduce((n, p) => n + Number(p.clicks_30d), 0);
 
-  return (
-    <div className="min-h-dvh">
-      <header className="border-b border-line bg-surface">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-2">
-            <Wordmark className="text-lg" />
-            <span className="rounded-full border border-line px-2.5 py-0.5 text-xs font-medium text-soft">
-              admin
-            </span>
-          </div>
-          <Link href="/admin" className="btn-quiet">
-            ← All clients
-          </Link>
-        </div>
-      </header>
+  const isPaidPlan = a.plan === "pro" || a.plan === "business";
+  const rs = REVENUE_SOURCE[revenueSource(a.revenue_source)];
 
-      <main className="mx-auto max-w-4xl px-6 py-10">
+  return (
+    <div className="mx-auto max-w-4xl">
+      <Link
+        href="/admin/clients"
+        className="text-sm text-soft transition hover:text-ink"
+      >
+        ← All clients
+      </Link>
+
+      <div className="mt-4">
         {/* Hlavicka klienta */}
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
@@ -113,53 +105,53 @@ export default async function ClientDetailPage({
           </div>
 
           {/* Rucna zmena planu */}
-          <form
-            action={setPlan.bind(null, a.id)}
-            className="flex items-center gap-2"
-          >
-            <select
-              name="plan"
-              defaultValue={a.plan}
-              className="rounded-lg border border-line bg-surface px-2 py-1.5 text-sm"
-            >
-              {PLAN_KEYS.map((key) => (
-                <option key={key} value={key}>
-                  {PLANS[key].label}
-                </option>
-              ))}
-            </select>
-            <button
-              type="submit"
-              className="rounded-full border border-line px-3 py-1.5 text-sm text-soft transition hover:border-ink hover:text-ink"
-            >
-              Set plan
-            </button>
-          </form>
+          <SetPlanForm accountId={a.id} currentPlan={a.plan} />
         </div>
 
         {/* Fakty */}
         <section className="mt-6 grid gap-3 sm:grid-cols-4">
-          {[
-            { label: "Plan", value: PLANS[a.plan as keyof typeof PLANS]?.label ?? a.plan },
-            {
-              label: "Sub. status",
-              value: a.subscription_status ?? "—",
-            },
-            { label: "Views 30d", value: totalViews },
-            { label: "Clicks 30d", value: totalClicks },
-          ].map((s) => (
-            <div key={s.label} className="card p-4">
-              <p className="text-xs text-soft">{s.label}</p>
-              <p className="mt-0.5 font-grotesk text-xl font-bold tabular-nums">
-                {s.value}
+          <div className="card p-4">
+            <p className="text-xs text-soft">Plan</p>
+            <p className="mt-0.5 font-grotesk text-xl font-bold">
+              {PLANS[a.plan as keyof typeof PLANS]?.label ?? a.plan}
+            </p>
+          </div>
+          <div className="card p-4">
+            <p className="text-xs text-soft">Revenue</p>
+            {isPaidPlan ? (
+              <p className="mt-1">
+                <span
+                  className={`rounded-full px-2.5 py-0.5 text-sm font-semibold ${TONE_BADGE[rs.tone]}`}
+                >
+                  {rs.label}
+                </span>
               </p>
-            </div>
-          ))}
+            ) : (
+              <p className="mt-0.5 font-grotesk text-xl font-bold">—</p>
+            )}
+            {isPaidPlan && <p className="mt-1.5 text-xs text-faint">{rs.note}</p>}
+          </div>
+          <div className="card p-4">
+            <p className="text-xs text-soft">Views 30d</p>
+            <p className="mt-0.5 font-grotesk text-xl font-bold tabular-nums">
+              {totalViews}
+            </p>
+          </div>
+          <div className="card p-4">
+            <p className="text-xs text-soft">Clicks 30d</p>
+            <p className="mt-0.5 font-grotesk text-xl font-bold tabular-nums">
+              {totalClicks}
+            </p>
+          </div>
         </section>
 
-        {a.plan_expires_at && (
+        {(a.subscription_status || a.plan_expires_at) && (
           <p className="mt-3 text-sm text-soft">
-            Plan expires {fmt(a.plan_expires_at)}
+            {a.subscription_status && (
+              <>Stripe status: {a.subscription_status}</>
+            )}
+            {a.subscription_status && a.plan_expires_at && " · "}
+            {a.plan_expires_at && <>Plan expires {fmt(a.plan_expires_at)}</>}
           </p>
         )}
 
@@ -228,7 +220,7 @@ export default async function ClientDetailPage({
             )}
           </ol>
         </section>
-      </main>
+      </div>
     </div>
   );
 }

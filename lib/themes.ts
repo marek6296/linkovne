@@ -59,6 +59,11 @@ export type Theme = {
   fontHeading?: string;
   avatarBg: string;
   avatarText: string;
+  /** Tvar/velkost/prstenec profilovky — doplna resolveTheme z `design`.
+   *  V presetoch sa neuvadzaju, render pouziva fallbacky (kruh, 96px, bez ramu). */
+  avatarRadius?: string;
+  avatarSizePx?: number;
+  avatarRing?: string;
   /** Jemne dekorativne pozadie (radial bloby) za obsahom — dava profilu hlbku
    *  namiesto plochej farby. Nizka priehladnost, ladi s paletou temy. */
   glow?: string;

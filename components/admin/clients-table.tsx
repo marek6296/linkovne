@@ -5,6 +5,8 @@ import Link from "next/link";
 import {
   lifecycleStatus,
   planMrr,
+  REVENUE_SOURCE,
+  revenueSource,
   TONE_BADGE,
   type Tone,
 } from "@/lib/crm";
@@ -14,6 +16,7 @@ export type ClientRow = {
   email: string;
   plan: string;
   subscription_status: string | null;
+  revenue_source: string | null;
   profiles_count: number;
   published_count: number;
   usernames: string;
@@ -110,6 +113,7 @@ export function ClientsTable({ accounts }: { accounts: ClientRow[] }) {
               <th className="px-3 py-2 font-medium">
                 <SortBtn k="mrr" label="Plan" />
               </th>
+              <th className="px-3 py-2 font-medium">Revenue</th>
               <th className="px-3 py-2 font-medium">
                 <SortBtn k="created_at" label="Joined" />
               </th>
@@ -148,6 +152,23 @@ export function ClientsTable({ accounts }: { accounts: ClientRow[] }) {
                   </td>
                   <td className="px-3 py-2.5">
                     <span className="capitalize">{a.plan}</span>
+                  </td>
+                  <td className="px-3 py-2.5">
+                    {a.plan === "pro" || a.plan === "business" ? (
+                      (() => {
+                        const rs = REVENUE_SOURCE[revenueSource(a.revenue_source)];
+                        return (
+                          <span
+                            title={rs.note}
+                            className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${TONE_BADGE[rs.tone]}`}
+                          >
+                            {rs.label}
+                          </span>
+                        );
+                      })()
+                    ) : (
+                      <span className="text-faint">—</span>
+                    )}
                   </td>
                   <td className="px-3 py-2.5 text-soft">{fmtDate(a.created_at)}</td>
                   <td className="px-3 py-2.5 text-soft">

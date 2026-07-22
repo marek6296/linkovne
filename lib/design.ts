@@ -3,6 +3,8 @@ import { BTN_SIZES, getTheme, type BtnSize, type Theme } from "@/lib/themes";
 export type BgMode = "theme" | "solid" | "gradient" | "image";
 export type BtnStyle = "fill" | "outline" | "soft" | "glass";
 export type BtnShape = "pill" | "rounded" | "square";
+export type AvatarShape = "circle" | "rounded" | "square";
+export type AvatarSize = "sm" | "md" | "lg";
 export type FontKey =
   | "sans"
   | "serif"
@@ -26,6 +28,11 @@ export type Design = {
   font?: FontKey;
   /** Font mena v hlavicke profilu */
   fontHeading?: FontKey;
+  /** Profilovka: tvar, velkost a jemny prstenec okolo nej */
+  avatarShape?: AvatarShape;
+  avatarSize?: AvatarSize;
+  avatarRing?: boolean;
+  avatarRingColor?: string;
 };
 
 export const FONTS: Record<FontKey, { label: string; css: string }> = {
@@ -64,6 +71,21 @@ export const BTN_STYLES: Record<BtnStyle, string> = {
   glass: "Glass",
 };
 
+export const AVATAR_SHAPES: Record<
+  AvatarShape,
+  { label: string; radius: string }
+> = {
+  circle: { label: "Circle", radius: "999px" },
+  rounded: { label: "Rounded", radius: "26px" },
+  square: { label: "Square", radius: "8px" },
+};
+
+export const AVATAR_SIZES: Record<AvatarSize, { label: string; px: number }> = {
+  sm: { label: "Small", px: 80 },
+  md: { label: "Medium", px: 96 },
+  lg: { label: "Large", px: 120 },
+};
+
 /**
  * Do CSS ide len to, co prejde tymto filtrom. Design objekt sice zapisuje
  * iba majitel profilu (RLS), ale hodnota konci v `style` atribute na verejnej
@@ -79,6 +101,24 @@ function safeUrl(raw: string | undefined): string | null {
 export function safeColor(raw: string | undefined): string | null {
   if (!raw) return null;
   return /^#[0-9a-f]{3,8}$/i.test(raw) ? raw : null;
+}
+
+/**
+ * Cierny alebo biely text podla jasu pozadia — zaruci citatelnost na
+ * AKEJKOLVEK farbe. Pouziva sa na featured tlacidlo, ktoreho pozadie sa
+ * odvodi z farby textu temy a mohlo by inak splynut s textom.
+ */
+export function readableText(bg: string): string {
+  let hex = bg.trim().replace(/^#/, "");
+  if (hex.length === 3) hex = hex.replace(/(.)/g, "$1$1");
+  if (!/^[0-9a-f]{6}/i.test(hex)) return "#ffffff";
+  const n = parseInt(hex.slice(0, 6), 16);
+  const srgb = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((c) => {
+    const x = c / 255;
+    return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4;
+  });
+  const L = 0.2126 * srgb[0] + 0.7152 * srgb[1] + 0.0722 * srgb[2];
+  return L > 0.52 ? "#0b0b0b" : "#ffffff";
 }
 
 export { safeUrl };
@@ -154,6 +194,15 @@ export function resolveTheme(
   if (design.font) t.font = FONTS[design.font].css;
   if (design.fontHeading) t.fontHeading = FONTS[design.fontHeading].css;
   if (design.btnSize) t.size = BTN_SIZES[design.btnSize];
+
+  // ---- Profilovka (tvar / velkost / prstenec) ----
+  if (design.avatarShape) t.avatarRadius = AVATAR_SHAPES[design.avatarShape].radius;
+  if (design.avatarSize) t.avatarSizePx = AVATAR_SIZES[design.avatarSize].px;
+  if (design.avatarRing) {
+    const ring = safeColor(design.avatarRingColor) ?? t.text;
+    // Prstenec kopiruje tvar avataru (box-shadow respektuje border-radius).
+    t.avatarRing = `0 0 0 4px ${ring}`;
+  }
 
   return t;
 }

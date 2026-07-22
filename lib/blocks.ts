@@ -87,6 +87,8 @@ export type BlockConfig = {
   src?: string;
   alt?: string;
   href?: string;
+  /** Ci `src` je foto alebo nahrate video. Chyba = "image" (spatna kompatibilita). */
+  mediaType?: "image" | "video";
   // socials
   items?: { platform: SocialPlatform; url: string }[];
   // faq
@@ -123,7 +125,7 @@ export const BLOCK_META: Record<
   link: { label: "Link", hint: "A button that sends people somewhere" },
   headline: { label: "Headline", hint: "Section title to group your links" },
   text: { label: "Text", hint: "A short paragraph or announcement" },
-  image: { label: "Image", hint: "A photo or clickable banner" },
+  image: { label: "Photo / Video", hint: "An uploaded photo or short video" },
   video: { label: "Embed", hint: "YouTube · TikTok · Spotify · Vimeo" },
   socials: { label: "Social icons", hint: "A row of social profile icons" },
   faq: { label: "FAQ", hint: "Questions people keep asking you" },
@@ -156,7 +158,7 @@ export function defaultConfig(type: BlockType): BlockConfig {
     case "text":
       return { text: "Say something about yourself." };
     case "image":
-      return { src: "", alt: "", href: "" };
+      return { src: "", alt: "", href: "", mediaType: "image" };
     case "video":
       return { url: "" };
     case "socials":

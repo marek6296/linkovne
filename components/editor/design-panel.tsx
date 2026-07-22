@@ -2,10 +2,14 @@
 
 import { useRef, useState } from "react";
 import {
+  AVATAR_SHAPES,
+  AVATAR_SIZES,
   BTN_SHAPES,
   BTN_STYLES,
   FONT_KEYS,
   FONTS,
+  type AvatarShape,
+  type AvatarSize,
   type BgMode,
   type BtnShape,
   type BtnStyle,
@@ -230,6 +234,64 @@ export function DesignPanel({
               value={design.textColor}
               fallback="#191813"
               onChange={(textColor) => onChange({ textColor })}
+            />
+          </Row>
+        )}
+      </div>
+
+      {/* ---------- Profile photo ---------- */}
+      <div className="p-5">
+        <h3 className="text-sm font-semibold">Profile photo</h3>
+
+        <div className="mt-3 space-y-3">
+          <div>
+            <p className="mb-1.5 text-xs text-soft">Shape</p>
+            <Choice
+              options={(Object.keys(AVATAR_SHAPES) as AvatarShape[]).map((k) => ({
+                key: k,
+                label: AVATAR_SHAPES[k].label,
+              }))}
+              value={design.avatarShape ?? "circle"}
+              onChange={(avatarShape) => onChange({ avatarShape })}
+            />
+          </div>
+
+          <div>
+            <p className="mb-1.5 text-xs text-soft">Size</p>
+            <Choice
+              options={(Object.keys(AVATAR_SIZES) as AvatarSize[]).map((k) => ({
+                key: k,
+                label: AVATAR_SIZES[k].label,
+              }))}
+              value={design.avatarSize ?? "md"}
+              onChange={(avatarSize) => onChange({ avatarSize })}
+            />
+          </div>
+        </div>
+
+        <Row label="Ring">
+          <button
+            type="button"
+            role="switch"
+            aria-checked={!!design.avatarRing}
+            onClick={() => onChange({ avatarRing: !design.avatarRing })}
+            className={`relative h-6 w-11 rounded-full transition ${
+              design.avatarRing ? "bg-ink" : "bg-line"
+            }`}
+          >
+            <span
+              className={`absolute top-0.5 h-5 w-5 rounded-full bg-paper shadow transition-all ${
+                design.avatarRing ? "left-[22px]" : "left-0.5"
+              }`}
+            />
+          </button>
+        </Row>
+        {design.avatarRing && (
+          <Row label="Ring colour">
+            <Swatch
+              value={design.avatarRingColor}
+              fallback="#ffffff"
+              onChange={(avatarRingColor) => onChange({ avatarRingColor })}
             />
           </Row>
         )}

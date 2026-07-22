@@ -40,6 +40,14 @@ const RESERVED = new Set([
   "www",
 ]);
 
+/** Prevadzkovatel (admin) smie obsadit aj rezervovane brandove mena. */
+async function isAdmin(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+): Promise<boolean> {
+  const { data } = await supabase.rpc("is_admin");
+  return data === true;
+}
+
 /**
  * Profil uz nie je 1:1 s uctom, takze kazda akcia musi overit, ze dany profil
  * naozaj patri prihlasenemu uctu. RLS to drzi aj na urovni DB, toto je druha
@@ -370,15 +378,18 @@ export async function createProfile(
   if (!USERNAME_RE.test(username)) {
     return { error: "Use 3–30 characters: lowercase letters, numbers, . or _" };
   }
-  if (RESERVED.has(username)) {
-    return { error: "That address is reserved. Try another one." };
-  }
 
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+
+  // Rezervovane mena (brand, systemove cesty) su chranene pred verejnostou,
+  // ale prevadzkovatel si svoje znacky moze obsadit.
+  if (RESERVED.has(username) && !(await isAdmin(supabase))) {
+    return { error: "That address is reserved. Try another one." };
+  }
 
   const { error } = await supabase
     .from("profiles")

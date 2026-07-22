@@ -21,7 +21,7 @@ import {
 } from "@/lib/blocks";
 import { Icon, ICON_KEYS } from "@/components/blocks/icon";
 import { Collapse, Chevron } from "@/components/editor/collapse";
-import { uploadImage } from "@/lib/upload";
+import { uploadImage, uploadVideo } from "@/lib/upload";
 
 /** ISO → hodnota pre <input type="datetime-local"> v lokálnom čase. */
 function toLocalInput(iso: string | null | undefined): string {
@@ -55,6 +55,8 @@ function Field({
   );
 }
 
+/** Jednoducha verzia len pre obrazky — pouziva ju miniatura tlacidla (thumb),
+ *  ktora video nepodporuje. Photo/Video blok pouziva MediaPicker nizsie. */
 function ImagePicker({
   value,
   userId,
@@ -119,6 +121,114 @@ function ImagePicker({
           </button>
         )}
       </div>
+      {error && <p className="text-xs text-danger">{error}</p>}
+    </div>
+  );
+}
+
+function MediaPicker({
+  value,
+  mediaType,
+  userId,
+  onChange,
+}: {
+  value: string;
+  mediaType: "image" | "video";
+  userId: string;
+  onChange: (patch: { src: string; mediaType: "image" | "video" }) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handle(file: File | undefined) {
+    if (!file) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const isVideo = file.type.startsWith("video/");
+      const src = isVideo
+        ? await uploadVideo(file, userId)
+        : await uploadImage(file, userId);
+      onChange({ src, mediaType: isVideo ? "video" : "image" });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Upload failed.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="space-y-2">
+      {/* Prepinac urcuje, aky suborovy picker sa otvori — nie retroaktivnu
+          zmenu uz nahrateho media (na to sluzi Replace). */}
+      <div className="inline-flex rounded-full border border-line p-0.5 text-sm">
+        {(["image", "video"] as const).map((t) => (
+          <button
+            key={t}
+            type="button"
+            onClick={() => !value && onChange({ src: value, mediaType: t })}
+            className={`rounded-full px-3 py-1 transition ${
+              mediaType === t ? "bg-ink text-white" : "text-soft hover:text-ink"
+            }`}
+          >
+            {t === "image" ? "Photo" : "Video"}
+          </button>
+        ))}
+      </div>
+
+      <div className="flex items-center gap-3">
+        {value ? (
+          mediaType === "video" ? (
+            <video
+              src={value}
+              muted
+              playsInline
+              className="h-14 w-14 rounded-lg border border-line object-cover"
+            />
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={value}
+              alt=""
+              className="h-14 w-14 rounded-lg border border-line object-cover"
+            />
+          )
+        ) : (
+          <div className="h-14 w-14 rounded-lg border border-dashed border-line" />
+        )}
+        <input
+          ref={inputRef}
+          type="file"
+          accept={mediaType === "video" ? "video/*" : "image/*"}
+          hidden
+          onChange={(e) => handle(e.target.files?.[0])}
+        />
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          disabled={busy}
+          className="rounded-full border border-line px-4 py-2 text-sm transition hover:border-ink disabled:opacity-50"
+        >
+          {busy
+            ? "Uploading…"
+            : value
+              ? "Replace"
+              : `Upload ${mediaType === "video" ? "video" : "image"}`}
+        </button>
+        {value && (
+          <button
+            type="button"
+            onClick={() => onChange({ src: "", mediaType })}
+            className="text-sm text-danger"
+          >
+            Remove
+          </button>
+        )}
+      </div>
+      {mediaType === "video" && (
+        <p className="text-xs text-faint">MP4 or MOV, up to 30 MB.</p>
+      )}
       {error && <p className="text-xs text-danger">{error}</p>}
     </div>
   );
@@ -229,8 +339,10 @@ export function BlockCard({
         ? `${(block.config.items ?? []).length} icons`
         : block.type === "image"
           ? block.config.src
-            ? "Image"
-            : "No image yet"
+            ? block.config.mediaType === "video"
+              ? "Video"
+              : "Photo"
+            : "No media yet"
           : (block.config.text ?? block.config.url ?? "").slice(0, 40) ||
             BLOCK_META[block.type].label;
 
@@ -555,10 +667,11 @@ export function BlockCard({
 
           {block.type === "image" && (
             <>
-              <ImagePicker
+              <MediaPicker
                 value={block.config.src ?? ""}
+                mediaType={block.config.mediaType ?? "image"}
                 userId={userId}
-                onChange={(src) => patchConfig({ src })}
+                onChange={(patch) => patchConfig(patch)}
               />
               <Field label="Links to (optional)">
                 <input

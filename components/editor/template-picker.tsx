@@ -31,10 +31,16 @@ function TemplateCard({
         className="flex h-44 flex-col items-center gap-2 px-6 pt-6"
         style={{ background: theme.page }}
       >
-        {/* avatar */}
+        {/* avatar — odzrkadluje tvar/ram z temy (mensia mierka ramu) */}
         <div
-          className="h-9 w-9 rounded-full"
-          style={{ background: theme.avatarBg }}
+          className="h-9 w-9"
+          style={{
+            background: theme.avatarBg,
+            borderRadius: theme.avatarRadius ?? "999px",
+            boxShadow: theme.avatarRing
+              ? theme.avatarRing.replace("4px", "2px")
+              : undefined,
+          }}
         />
         {/* meno */}
         <div

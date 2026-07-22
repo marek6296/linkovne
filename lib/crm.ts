@@ -94,3 +94,69 @@ export function planMrr(plan: string): number {
   if (plan === "business") return 14.99;
   return 0;
 }
+
+/* ---------- Zdroj príjmu: platiaci vs. free granty ---------- */
+
+/**
+ * Odkiaľ ma ucet platený plán. DB (linkove.revenue_source) to pocita a vracia
+ * jeden z tychto klucov — tu su len popisky a farby. Kluc `paying` hovori, ci
+ * z toho realne tecu peniaze (ide do MRR).
+ */
+export type RevenueSource =
+  | "paid"
+  | "trial"
+  | "past_due"
+  | "invite"
+  | "referral"
+  | "comp"
+  | "free";
+
+export const REVENUE_SOURCE: Record<
+  RevenueSource,
+  { label: string; tone: Tone; paying: boolean; note: string }
+> = {
+  paid: { label: "Paying", tone: "ok", paying: true, note: "Active card subscription" },
+  trial: { label: "Trial", tone: "warn", paying: false, note: "In free trial, no payment yet" },
+  past_due: { label: "At risk", tone: "danger", paying: false, note: "Payment failed" },
+  invite: { label: "Promo code", tone: "accent", paying: false, note: "Redeemed a free code" },
+  referral: { label: "Referral", tone: "accent", paying: false, note: "Referral reward" },
+  comp: { label: "Comp", tone: "muted", paying: false, note: "Granted by you, free" },
+  free: { label: "Free", tone: "muted", paying: false, note: "On the free plan" },
+};
+
+/** Bezpecne precitanie zdroja z DB (fallback na free pri neznamom). */
+export function revenueSource(raw: string | null | undefined): RevenueSource {
+  return raw && raw in REVENUE_SOURCE ? (raw as RevenueSource) : "free";
+}
+
+/* ---------- Zdielane formatovanie datumov v admin paneli ---------- */
+
+export function fmtDate(iso: string | null): string {
+  if (!iso) return "—";
+  return new Date(iso).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+export function fmtDateTime(iso: string | null): string {
+  if (!iso) return "—";
+  return new Date(iso).toLocaleString("en-GB", {
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+/** „5d ago" / „today" — kompaktny relativny cas do tabuliek a feedov. */
+export function relativeDays(iso: string | null): string {
+  if (!iso) return "never";
+  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
+  if (days <= 0) return "today";
+  if (days === 1) return "yesterday";
+  if (days < 30) return `${days}d ago`;
+  if (days < 365) return `${Math.floor(days / 30)}mo ago`;
+  return `${Math.floor(days / 365)}y ago`;
+}

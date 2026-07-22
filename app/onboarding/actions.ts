@@ -78,14 +78,20 @@ export async function completeOnboarding(
   if (!USERNAME_RE.test(username)) {
     return { error: "Use 3–30 characters: lowercase letters, numbers, . or _" };
   }
-  if (RESERVED.has(username)) {
-    return { error: "That address is reserved. Try another one." };
-  }
 
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  // Rezervovane brandove/systemove mena su chranene pred verejnostou, ale
+  // prevadzkovatel (admin) si svoje znacky moze obsadit.
+  if (RESERVED.has(username)) {
+    const { data: admin } = await supabase.rpc("is_admin");
+    if (admin !== true) {
+      return { error: "That address is reserved. Try another one." };
+    }
+  }
   if (!user) redirect("/login");
 
   // Ucet musi existovat skor ako profil

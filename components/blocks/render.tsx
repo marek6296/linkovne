@@ -9,11 +9,12 @@ import {
 } from "@/lib/blocks";
 import { Icon, ICON_KEYS, type IconKey } from "@/components/blocks/icon";
 import { BTN_SIZES, type Theme } from "@/lib/themes";
-import { safeColor } from "@/lib/design";
+import { readableText, safeColor } from "@/lib/design";
 import { SocialIcon } from "@/components/blocks/social-icon";
 import { Countdown } from "@/components/blocks/countdown";
 import { Faq } from "@/components/blocks/faq";
 import { ContactForm } from "@/components/blocks/contact-form";
+import { VideoBlock } from "@/components/blocks/video-block";
 
 // Ciste prezentacny komponent — pouziva ho aj verejna stranka (server)
 // aj live preview v editore (client). Ziadne server-only API.
@@ -51,16 +52,11 @@ function LinkBlock({
   const customFg = safeColor(cfg.textColor);
 
   const background = customBg ?? (featured ? theme.text : theme.btnBg);
-  // Zvyrazneny button ma pozadie vo farbe textu, takze popis musi ist farbou
-  // STRANKY — nie btnBg, ten byva priehladny (noir) alebo zhodny (mono),
-  // co robilo text neviditelnym.
-  const color =
-    customFg ??
-    (featured
-      ? theme.page.includes("gradient") || theme.page.includes("url(")
-        ? "#fff"
-        : theme.page
-      : theme.btnText);
+  // Featured tlacidlo ma pozadie vo farbe textu temy. Farbu popisu preto NEsmie
+  // urcovat pozadie stranky (pri svetlom textColor + gradiente vysiel biely text
+  // na svetlom buttone — neviditelny). Namiesto toho ju odvodime z JASU pozadia
+  // buttonu, takze kontrast je zaruceny na kazdej teme aj custom farbe.
+  const color = customFg ?? (featured ? readableText(background) : theme.btnText);
 
   const shell: React.CSSProperties = {
     background,
@@ -357,22 +353,25 @@ export function BlockList({
             case "image": {
               const src = block.config.src;
               if (!src) return null;
-              const img = (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={src}
-                  alt={block.config.alt ?? ""}
-                  className="w-full rounded-xl object-cover"
-                />
-              );
+              const media =
+                block.config.mediaType === "video" ? (
+                  <VideoBlock src={src} />
+                ) : (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={src}
+                    alt={block.config.alt ?? ""}
+                    className="w-full rounded-xl object-cover"
+                  />
+                );
               return (
                 <div key={block.id}>
                   {block.config.href ? (
                     <a href={block.config.href} rel="noopener">
-                      {img}
+                      {media}
                     </a>
                   ) : (
-                    img
+                    media
                   )}
                 </div>
               );
@@ -496,7 +495,19 @@ export function ProfileHeader({
   avatarUrl: string | null;
   theme: Theme;
 }) {
-  const name = displayName || username;
+  // Prazdne display name = klient ho vypol (chce iba foto + tlacidla).
+  // Fallback na username je len pre iniciálu v placeholder avatare, nikdy sa
+  // nezobrazuje ako text mena.
+  const hasName = !!displayName?.trim();
+  const initial = (displayName || username).charAt(0).toUpperCase();
+
+  // Tvar/velkost/prstenec pochadzaju z `design` (Pro), s bezpecnymi fallbackmi.
+  const avatarSize = theme.avatarSizePx ?? 96;
+  const avatarRadius = theme.avatarRadius ?? "999px";
+  const dropShadow = "0 12px 32px -10px rgba(0,0,0,0.45)";
+  const avatarShadow = theme.avatarRing
+    ? `${theme.avatarRing}, ${dropShadow}`
+    : dropShadow;
   return (
     <div className="text-center">
       {avatarUrl ? (
@@ -504,32 +515,42 @@ export function ProfileHeader({
         <img
           src={avatarUrl}
           alt=""
-          className="mx-auto h-24 w-24 rounded-full object-cover"
-          style={{ boxShadow: "0 12px 32px -10px rgba(0,0,0,0.45)" }}
+          className="mx-auto object-cover"
+          style={{
+            width: avatarSize,
+            height: avatarSize,
+            borderRadius: avatarRadius,
+            boxShadow: avatarShadow,
+          }}
         />
       ) : (
         <div
-          className="mx-auto flex h-24 w-24 items-center justify-center rounded-full text-4xl"
+          className="mx-auto flex items-center justify-center text-4xl"
           style={{
+            width: avatarSize,
+            height: avatarSize,
+            borderRadius: avatarRadius,
             background: theme.avatarBg,
             color: theme.avatarText,
             fontFamily: theme.fontHeading ?? theme.font,
-            boxShadow: "0 12px 32px -10px rgba(0,0,0,0.45)",
+            boxShadow: avatarShadow,
           }}
         >
-          {name.charAt(0).toUpperCase()}
+          {initial}
         </div>
       )}
 
-      <h1
-        className="mt-5 text-2xl font-semibold tracking-tight"
-        style={{ fontFamily: theme.fontHeading ?? theme.font }}
-      >
-        {name}
-      </h1>
+      {hasName && (
+        <h1
+          className="mt-5 text-2xl font-semibold tracking-tight"
+          style={{ fontFamily: theme.fontHeading ?? theme.font }}
+        >
+          {displayName}
+        </h1>
+      )}
       {bio && (
         <p
-          className="mt-2 text-[15px] leading-relaxed text-pretty"
+          className={`text-[15px] leading-relaxed text-pretty ${hasName ? "mt-2" : "mt-5"}`}
           style={{ color: theme.muted }}
         >
           {bio}

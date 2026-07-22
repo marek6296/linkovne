@@ -5,15 +5,26 @@ import { createClient } from "@/lib/supabase/server";
 
 // Autorizaciu robi databaza: admin_set_plan je SECURITY DEFINER
 // a sama overuje linkove.is_admin(). Tu ju len volame.
-export async function setPlan(targetId: string, formData: FormData) {
+export type SetPlanState = { error?: string } | undefined;
+
+export async function setPlan(
+  targetId: string,
+  formData: FormData,
+): Promise<SetPlanState> {
   const plan = String(formData.get("plan") ?? "");
-  if (!["free", "pro", "business"].includes(plan)) return;
+  if (!["free", "pro", "business", "admin"].includes(plan)) {
+    return { error: "Invalid plan." };
+  }
 
   const supabase = await createClient();
-  await supabase.rpc("admin_set_plan", {
+  const { error } = await supabase.rpc("admin_set_plan", {
     target_id: targetId,
     new_plan: plan,
   });
+
+  // DB odmietne zmenu superadmin uctu alebo grant/odobratie admina od
+  // niekoho, kto nie je superadmin — chyba z RPC sa premietne do UI.
+  if (error) return { error: error.message };
 
   revalidatePath("/admin");
   revalidatePath(`/admin/clients/${targetId}`);

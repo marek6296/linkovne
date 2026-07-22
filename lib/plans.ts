@@ -70,7 +70,7 @@ export const PLANS: Record<Plan, PlanFeatures> = {
     label: "Pro",
     price: "€4.99/mo",
     tagline: "For creators",
-    profiles: 1,
+    profiles: 4,
     maxBlocks: null,
     hideBranding: true,
     customDesign: true,
@@ -146,6 +146,7 @@ export function allowsBlock(plan: PlanFeatures, type: BlockType): boolean {
 export const PLAN_BULLETS: Record<Plan, string[]> = {
   free: ["1 page", "8 blocks", "2 themes", "Basic analytics"],
   pro: [
+    "Up to 4 pages",
     "Unlimited blocks",
     "All 9 block types",
     "Full design control",
