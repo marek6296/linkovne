@@ -99,7 +99,7 @@ export default async function SettingsPage({
         <section>
           <h2 className="font-grotesk font-bold text-2xl tracking-tight">Branding</h2>
           <p className="mt-1 text-sm text-soft">
-            The small “Powered by Linkovne” badge on your public page.
+            The small “Powered by linkovne” badge on your public page.
           </p>
           <div className="mt-4">
             <BrandingPanel

@@ -89,7 +89,7 @@ export default async function Home() {
             Pricing
           </a>
         </nav>
-        <Link href="/" aria-label="Linkovne — home" className="sm:text-center sm:justify-self-center">
+        <Link href="/" aria-label="linkovne — home" className="sm:text-center sm:justify-self-center">
           <Logo className="h-7 w-auto" />
         </Link>
         <nav className="flex items-center justify-end gap-1">
@@ -117,12 +117,13 @@ export default async function Home() {
               <span className="text-pink-500">one link.</span>
             </h1>
 
-            <p
-              className="reveal mt-3 max-w-md text-[15px] leading-snug text-soft text-pretty sm:mt-4 sm:text-lg sm:leading-relaxed"
-              style={{ animationDelay: "140ms" }}
-            >
-              All your links on one page and your own domain — fast to set up,
-              fully yours, with clean analytics that respect your visitors.
+            {/* Popis ucelu appky — ZAMERNE bez `reveal` (fade), nech je vzdy
+                plne viditelny aj pre Google OAuth verifikacny crawler, ktory
+                moze robit screenshot pred dobehnutim animacie. */}
+            <p className="mt-3 max-w-md text-[15px] leading-snug text-soft text-pretty sm:mt-4 sm:text-lg sm:leading-relaxed">
+              linkovne is a link-in-bio page builder — put all your links on
+              one page, on your own domain. Fast to set up, fully yours, with
+              private analytics.
             </p>
 
             <div
@@ -176,7 +177,7 @@ export default async function Home() {
           className="mx-auto flex min-h-svh max-w-6xl flex-col justify-center px-6 py-16"
         >
           <p className="text-center font-mono text-sm font-bold tracking-wide text-pink-500 uppercase">
-            Why Linkovne
+            Why linkovne
           </p>
           <h2 className="mt-3 text-center font-grotesk text-3xl font-extrabold tracking-tight text-balance sm:text-4xl">
             Built on what others fix too late

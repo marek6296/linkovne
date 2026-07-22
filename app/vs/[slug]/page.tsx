@@ -65,7 +65,7 @@ export default async function ComparePage({
   return (
     <div className="min-h-dvh bg-[#f8f5f7]">
       <header className="mx-auto flex w-full max-w-4xl items-center justify-between px-6 py-6">
-        <Link href="/" aria-label="Linkovne — home">
+        <Link href="/" aria-label="linkovne — home">
           <Logo className="h-7 w-auto" />
         </Link>
         <Link

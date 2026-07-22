@@ -2,7 +2,7 @@ import { ImageResponse } from "next/og";
 import { createPublicClient } from "@/lib/supabase/public";
 import { SITE_DOMAIN } from "@/lib/site";
 
-export const alt = "Linkovne profile";
+export const alt = "linkovne profile";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 

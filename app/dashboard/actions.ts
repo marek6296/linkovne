@@ -307,7 +307,7 @@ export async function setHideBranding(
   const { supabase, plan } = await requireProfile(profileId);
 
   if (!plan.hideBranding) {
-    return { error: "Removing Linkovne branding needs a paid plan." };
+    return { error: "Removing linkovne branding needs a paid plan." };
   }
 
   const { error } = await supabase

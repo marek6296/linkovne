@@ -39,7 +39,7 @@ export function BrandingPanel({
     <div className="card max-w-md p-5">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-medium">Hide “Powered by Linkovne”</p>
+          <p className="text-sm font-medium">Hide “Powered by linkovne”</p>
           <p className="mt-1 text-xs text-soft">
             {canHide
               ? "Remove the badge at the bottom of your page and the promo button."

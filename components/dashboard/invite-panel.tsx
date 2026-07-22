@@ -29,7 +29,7 @@ export function InvitePanel({
     }
   }
 
-  const shareText = `Grab your own link-in-bio that survives platform bans — try Linkovne:`;
+  const shareText = `Grab your own link-in-bio that survives platform bans — try linkovne:`;
 
   return (
     <div className="space-y-8">

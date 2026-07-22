@@ -25,7 +25,7 @@ const PRO_POINTS = [
   "Unlimited blocks & every block type",
   "Link gate — shields adult links from bots",
   "Escapes the Instagram in-app browser",
-  "No Linkovne branding on your page",
+  "No linkovne branding on your page",
   "30-day analytics, contact forms & AI builder",
 ];
 

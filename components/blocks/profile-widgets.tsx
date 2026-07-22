@@ -95,7 +95,7 @@ export function ProfileWidgets({
           <button
             type="button"
             onClick={() => openModal("promo")}
-            aria-label="About Linkovne"
+            aria-label="About linkovne"
             className="flex h-10 w-10 items-center justify-center rounded-full transition hover:opacity-90"
             style={btnStyle}
           >
@@ -324,7 +324,7 @@ function ShareModal({
               <LogoMark className="h-5 w-5" />
             </span>
             <span className="text-sm">
-              <span className="font-semibold">Create your own Linkovne</span>
+              <span className="font-semibold">Create your own linkovne</span>
               <span className="block text-xs text-neutral-500">Free · one link that lasts</span>
             </span>
           </span>

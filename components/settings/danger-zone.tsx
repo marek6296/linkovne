@@ -49,7 +49,7 @@ export function DangerZone({
       )}
 
       <div className="card border-danger/25 p-5">
-        <p className="font-medium">Delete all my Linkovne data</p>
+        <p className="font-medium">Delete all my linkovne data</p>
         <p className="mt-1 max-w-xl text-sm text-soft">
           Deletes every page, block, message and statistic on this account. Your
           login itself stays — it&apos;s shared with our other sites, so removing

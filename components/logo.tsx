@@ -11,7 +11,7 @@ export function Logo({
   return (
     <Image
       src="/logo.png"
-      alt="Linkovne"
+      alt="linkovne"
       width={874}
       height={236}
       priority

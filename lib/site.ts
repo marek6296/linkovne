@@ -7,7 +7,9 @@
  * by znamenalo migraciu vsetkych policy, funkcii aj ulozenych suborov.
  */
 export const BRAND = "linkovne";
-export const BRAND_TITLE = "Linkovne";
+/** Zobrazovane meno znacky — zamerne s malym „l" (sedi s wordmark logom
+ *  aj s app name v Google OAuth consent screene). */
+export const BRAND_TITLE = "linkovne";
 
 /** Ostra domena. Da sa prebit env premennou NEXT_PUBLIC_SITE_DOMAIN.
  *  `|| ` (nie `??`), aby prazdny string z envu spadol na default — inak

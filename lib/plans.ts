@@ -150,7 +150,7 @@ export const PLAN_BULLETS: Record<Plan, string[]> = {
     "Unlimited blocks",
     "All 9 block types",
     "Full design control",
-    "No Linkovne branding",
+    "No linkovne branding",
     "Contact forms & leads",
     "AI page builder",
     "Link gate — a confirmation step before external links",

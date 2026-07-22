@@ -8,7 +8,7 @@ import { join } from "path";
  * Profilove stranky maju vlastnu kartu (app/[username]/opengraph-image.tsx),
  * takze tie sa nemenia.
  */
-export const alt = "Linkovne";
+export const alt = "linkovne";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
