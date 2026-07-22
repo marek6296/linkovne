@@ -196,8 +196,9 @@ export default async function PublicProfilePage({
         theme={theme}
       />
 
-      {/* Jemny banner (in-app) — len ked NENI zapnuty tvrdy escape gate. */}
-      {!escapeEnabled && (
+      {/* Jemny banner (in-app) — LEN ked tvorca escape zapol, ale nema tvrdy
+          gate (napr. free plan). Ked je moznost vypnuta, nezobrazi sa NIC. */}
+      {profile.escape_inapp === true && !escapeEnabled && (
         <div className="relative z-10 w-full max-w-[26rem]">
           <InAppBanner theme={theme} auto={false} />
         </div>
