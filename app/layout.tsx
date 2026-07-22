@@ -6,6 +6,12 @@ import {
   Instrument_Serif,
   Playfair_Display,
   Space_Mono,
+  Manrope,
+  Montserrat,
+  Raleway,
+  Lora,
+  Cormorant_Garamond,
+  Syne,
 } from "next/font/google";
 import "./globals.css";
 import { BRAND_TITLE, SITE_URL } from "@/lib/site";
@@ -51,6 +57,43 @@ const mono = Space_Mono({
   preload: false,
 });
 
+const manrope = Manrope({
+  subsets: ["latin", "latin-ext"],
+  variable: "--font-manrope",
+  preload: false,
+});
+
+const montserrat = Montserrat({
+  subsets: ["latin", "latin-ext"],
+  variable: "--font-montserrat",
+  preload: false,
+});
+
+const raleway = Raleway({
+  subsets: ["latin", "latin-ext"],
+  variable: "--font-raleway",
+  preload: false,
+});
+
+const lora = Lora({
+  subsets: ["latin", "latin-ext"],
+  variable: "--font-lora",
+  preload: false,
+});
+
+const cormorant = Cormorant_Garamond({
+  weight: ["400", "600", "700"],
+  subsets: ["latin", "latin-ext"],
+  variable: "--font-cormorant",
+  preload: false,
+});
+
+const syne = Syne({
+  subsets: ["latin", "latin-ext"],
+  variable: "--font-syne",
+  preload: false,
+});
+
 const TITLE = `${BRAND_TITLE} — link in bio on your own domain`;
 const DESCRIPTION =
   "All your links on one page, on a domain that's yours. Clean link-in-bio pages, private analytics, link protection and an AI builder. Free to start in two minutes.";
@@ -93,7 +136,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${sans.variable} ${serif.variable} ${display.variable} ${grotesk.variable} ${classic.variable} ${mono.variable}`}
+      className={`${sans.variable} ${serif.variable} ${display.variable} ${grotesk.variable} ${classic.variable} ${mono.variable} ${manrope.variable} ${montserrat.variable} ${raleway.variable} ${lora.variable} ${cormorant.variable} ${syne.variable}`}
     >
       <body>{children}</body>
     </html>

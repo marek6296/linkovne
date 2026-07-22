@@ -74,6 +74,7 @@ function LinkBlock({
     backdropFilter: theme.btnBackdrop,
     WebkitBackdropFilter: theme.btnBackdrop,
     fontSize: size.font,
+    fontWeight: theme.btnWeight ?? 500,
   };
 
   // Roh miniatury sa riadi tvarom buttonu, nech nevyzera nalepena
@@ -517,10 +518,14 @@ export function BlockList({
   };
 
   return (
-    <div className="space-y-3">
+    <div className="flex flex-col" style={{ gap: theme.btnGap ?? "0.75rem" }}>
       {rows.map((row) =>
         row.length === 2 ? (
-          <div key={row[0].id} className="grid grid-cols-2 gap-3">
+          <div
+            key={row[0].id}
+            className="grid grid-cols-2"
+            style={{ gap: theme.btnGap ?? "0.75rem" }}
+          >
             {row.map(renderOne)}
           </div>
         ) : (
@@ -552,11 +557,22 @@ export function ProfileHeader({
 
   // Tvar/velkost/prstenec pochadzaju z `design` (Pro), s bezpecnymi fallbackmi.
   const avatarSize = theme.avatarSizePx ?? 96;
+  const avatarWidth = theme.avatarWidthPx ?? avatarSize;
+  const avatarHeight = theme.avatarHeightPx ?? avatarSize;
   const avatarRadius = theme.avatarRadius ?? "999px";
   const dropShadow = "0 12px 32px -10px rgba(0,0,0,0.45)";
-  const avatarShadow = theme.avatarRing
-    ? `${theme.avatarRing}, ${dropShadow}`
-    : dropShadow;
+  const avatarShadow =
+    theme.avatarShadow ??
+    (theme.avatarRing ? `${theme.avatarRing}, ${dropShadow}` : dropShadow);
+  const avatarStyle: React.CSSProperties = {
+    width: avatarWidth,
+    height: avatarHeight,
+    boxSizing: "border-box",
+    borderRadius: avatarRadius,
+    border: theme.avatarBorder,
+    background: theme.avatarBg,
+    boxShadow: avatarShadow,
+  };
   return (
     <div className="text-center">
       {avatarUrl ? (
@@ -564,25 +580,21 @@ export function ProfileHeader({
         <img
           src={avatarUrl}
           alt=""
-          className="mx-auto object-cover"
+          className="mx-auto"
           style={{
-            width: avatarSize,
-            height: avatarSize,
-            borderRadius: avatarRadius,
-            boxShadow: avatarShadow,
+            ...avatarStyle,
+            objectFit: theme.avatarFit ?? "cover",
+            objectPosition: theme.avatarPosition ?? "center",
           }}
         />
       ) : (
         <div
           className="mx-auto flex items-center justify-center text-4xl"
           style={{
-            width: avatarSize,
-            height: avatarSize,
-            borderRadius: avatarRadius,
+            ...avatarStyle,
             background: theme.avatarBg,
             color: theme.avatarText,
             fontFamily: theme.fontHeading ?? theme.font,
-            boxShadow: avatarShadow,
           }}
         >
           {initial}

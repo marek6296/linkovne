@@ -2,17 +2,31 @@
 
 import { useRef, useState } from "react";
 import {
+  AVATAR_ASPECTS,
+  AVATAR_FRAMES,
   AVATAR_SHAPES,
   AVATAR_SIZES,
+  BTN_BORDERS,
   BTN_SHAPES,
+  BTN_SHADOWS,
+  BTN_SPACING,
   BTN_STYLES,
+  BTN_WEIGHTS,
   FONT_KEYS,
   FONTS,
+  type AvatarAspect,
+  type AvatarFit,
+  type AvatarFrame,
+  type AvatarPosition,
   type AvatarShape,
   type AvatarSize,
   type BgMode,
   type BtnShape,
+  type BtnBorder,
+  type BtnShadow,
+  type BtnSpacing,
   type BtnStyle,
+  type BtnWeight,
   type Design,
   type DeskBgMode,
 } from "@/lib/design";
@@ -68,6 +82,9 @@ export type ThemeOption = {
   key: string;
   label: string;
   swatch: string;
+  page: string;
+  text: string;
+  button: string;
   locked: boolean;
 };
 
@@ -126,6 +143,42 @@ function VisualChip({
   );
 }
 
+function FontGrid({
+  value,
+  onPick,
+}: {
+  value: string | undefined;
+  onPick: (font: (typeof FONT_KEYS)[number]) => void;
+}) {
+  return (
+    <div className="mt-2 grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+      {FONT_KEYS.map((k) => (
+        <button
+          key={k}
+          type="button"
+          onClick={() => onPick(k)}
+          aria-pressed={value === k}
+          className={`flex items-center gap-2 rounded-xl border px-3 py-2.5 text-left transition ${
+            value === k
+              ? "border-ink bg-ink/[0.04] ring-1 ring-ink"
+              : "border-line hover:border-soft"
+          }`}
+        >
+          <span
+            className="w-8 shrink-0 text-center text-xl leading-none"
+            style={{ fontFamily: FONTS[k].css }}
+          >
+            Aa
+          </span>
+          <span className="min-w-0 truncate text-xs font-medium">
+            {FONTS[k].label}
+          </span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
 /** Farebny riadok — label vlavo, vyber farby + hex kod vpravo. */
 function ColorRow({
   label,
@@ -160,26 +213,6 @@ function ColorRow({
   );
 }
 
-function Toggle({ on, onClick }: { on: boolean; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={on}
-      onClick={onClick}
-      className={`relative h-6 w-11 shrink-0 rounded-full transition ${
-        on ? "bg-ink" : "bg-line"
-      }`}
-    >
-      <span
-        className={`absolute top-0.5 h-5 w-5 rounded-full bg-paper shadow transition-all ${
-          on ? "left-[22px]" : "left-0.5"
-        }`}
-      />
-    </button>
-  );
-}
-
 export function DesignPanel({
   design,
   userId,
@@ -206,16 +239,29 @@ export function DesignPanel({
   const deskBg = design.deskBg ?? "auto";
 
   return (
-    <div className="overflow-hidden rounded-xl border border-line bg-surface">
+    <div className="overflow-hidden rounded-2xl border border-line bg-surface shadow-[0_12px_35px_rgba(25,24,19,0.05)]">
+      <div className="flex items-start justify-between gap-4 border-b border-line bg-paper/70 px-5 py-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <p className="text-sm font-semibold">Design studio</p>
+            <span className="rounded-full bg-ink px-2 py-0.5 text-[9px] font-bold tracking-widest text-paper uppercase">
+              Premium
+            </span>
+          </div>
+          <p className="mt-1 text-xs text-soft">
+            Every change appears instantly in your live preview.
+          </p>
+        </div>
+      </div>
       {/* Taby — vzdy vidno len jednu skupinu nastaveni */}
       <div className="border-b border-line p-2.5">
-        <div className="flex gap-1">
+        <div className="flex gap-1 overflow-x-auto">
           {TABS.map((t) => (
             <button
               key={t.key}
               type="button"
               onClick={() => setTab(t.key)}
-              className={`flex-1 rounded-full px-2 py-1.5 text-sm font-medium transition ${
+              className={`min-w-[88px] flex-1 rounded-full px-3 py-1.5 text-sm font-medium transition ${
                 tab === t.key
                   ? "bg-ink text-paper"
                   : "text-soft hover:bg-black/[0.04] hover:text-ink"
@@ -230,33 +276,47 @@ export function DesignPanel({
       <div className="min-h-[230px] p-5">
         {/* ---------- Theme ---------- */}
         {tab === "theme" && (
-          <div className="space-y-3">
-            <GroupLabel>Palette</GroupLabel>
-            <div className="flex flex-wrap gap-2">
+          <div className="space-y-4">
+            <div>
+              <GroupLabel>Theme collection</GroupLabel>
+              <p className="mt-1 text-xs leading-relaxed text-soft">
+                Start with a curated look, then fine-tune every detail in the other tabs.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               {themes.map((t) => (
                 <button
                   key={t.key}
                   type="button"
                   onClick={() => onPickTheme(t.key)}
                   aria-pressed={activeTheme === t.key}
-                  className={`flex items-center gap-2 rounded-full border px-3 py-2 text-sm transition ${
+                  className={`group overflow-hidden rounded-xl border text-left transition ${
                     activeTheme === t.key
-                      ? "border-ink"
+                      ? "border-ink ring-1 ring-ink"
                       : "border-line hover:border-soft"
-                  } ${t.locked ? "opacity-55" : ""}`}
+                  }`}
                 >
                   <span
-                    className="h-4 w-4 rounded-full border border-line"
-                    style={{ background: t.swatch }}
-                  />
-                  {t.label}
-                  {t.locked && <LockGlyph />}
+                    className="block h-16 p-2.5"
+                    style={{ background: t.page, color: t.text }}
+                  >
+                    <span className="mx-auto block h-2 w-7 rounded-full bg-current opacity-70" />
+                    <span
+                      className="mx-auto mt-2 block h-3.5 w-full max-w-20 rounded-full border border-black/5"
+                      style={{ background: t.button }}
+                    />
+                    <span
+                      className="mx-auto mt-1.5 block h-3.5 w-full max-w-20 rounded-full border border-black/5"
+                      style={{ background: t.button }}
+                    />
+                  </span>
+                  <span className="flex items-center justify-between gap-2 px-2.5 py-2 text-xs font-medium">
+                    {t.label}
+                    {t.locked && <LockGlyph />}
+                  </span>
                 </button>
               ))}
             </div>
-            <p className="text-xs text-soft">
-              A theme sets your base palette. Background, buttons and fonts fine-tune it.
-            </p>
           </div>
         )}
 
@@ -530,7 +590,42 @@ export function DesignPanel({
 
         {/* ---------- Profile photo ---------- */}
         {tab === "avatar" && (
-          <div className="space-y-4">
+          <div className="space-y-5">
+            <div>
+              <GroupLabel>Format</GroupLabel>
+              <p className="mt-1 text-xs text-soft">
+                Choose a square, portrait or landscape crop for your profile image.
+              </p>
+              <div className="mt-2 grid grid-cols-4 gap-1.5">
+                {(Object.keys(AVATAR_ASPECTS) as AvatarAspect[]).map((k) => {
+                  const ratio = AVATAR_ASPECTS[k].ratio;
+                  return (
+                    <button
+                      key={k}
+                      type="button"
+                      aria-pressed={(design.avatarAspect ?? "square") === k}
+                      onClick={() => onChange({ avatarAspect: k })}
+                      className={`flex min-h-16 flex-col items-center justify-center gap-1.5 rounded-xl border px-2 py-2 text-xs transition ${
+                        (design.avatarAspect ?? "square") === k
+                          ? "border-ink bg-ink/[0.04] font-medium"
+                          : "border-line hover:border-soft"
+                      }`}
+                    >
+                      <span
+                        className="block max-h-7 border-[1.5px] border-current opacity-75"
+                        style={{
+                          width: ratio > 1 ? 28 : 22 * ratio,
+                          height: ratio > 1 ? 28 / ratio : 28,
+                          borderRadius: 5,
+                        }}
+                      />
+                      {AVATAR_ASPECTS[k].label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             <div>
               <GroupLabel>Shape</GroupLabel>
               <div className="mt-2 flex flex-wrap gap-1.5">
@@ -545,11 +640,13 @@ export function DesignPanel({
                         className="h-5 w-5 shrink-0 border-[1.5px] border-current opacity-80"
                         style={{
                           borderRadius:
-                            AVATAR_SHAPES[k].radius === "999px"
+                            k === "circle"
                               ? "999px"
-                              : AVATAR_SHAPES[k].radius === "26px"
+                              : k === "rounded"
                                 ? "7px"
-                                : "2px",
+                                : k === "organic"
+                                  ? AVATAR_SHAPES.organic.radius
+                                  : "2px",
                         }}
                       />
                     }
@@ -562,41 +659,93 @@ export function DesignPanel({
               <GroupLabel>Size</GroupLabel>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {(Object.keys(AVATAR_SIZES) as AvatarSize[]).map((k) => (
-                  <VisualChip
+                  <button
                     key={k}
-                    active={(design.avatarSize ?? "md") === k}
+                    type="button"
                     onClick={() => onChange({ avatarSize: k })}
-                    label={AVATAR_SIZES[k].label}
-                    glyph={
-                      <span
-                        className="shrink-0 rounded-full border-[1.5px] border-current opacity-80"
-                        style={{
-                          width: k === "sm" ? 12 : k === "md" ? 16 : 20,
-                          height: k === "sm" ? 12 : k === "md" ? 16 : 20,
-                        }}
-                      />
-                    }
-                  />
+                    className={`rounded-full border px-3.5 py-1.5 text-sm transition ${
+                      (design.avatarSize ?? "md") === k
+                        ? "border-ink bg-ink text-paper"
+                        : "border-line hover:border-soft"
+                    }`}
+                  >
+                    {AVATAR_SIZES[k].label}
+                  </button>
                 ))}
               </div>
             </div>
 
-            <div className="border-t border-line pt-2">
-              <div className="flex items-center justify-between gap-4 py-2">
-                <span className="text-sm text-soft">Ring around photo</span>
-                <Toggle
-                  on={!!design.avatarRing}
-                  onClick={() => onChange({ avatarRing: !design.avatarRing })}
-                />
+            <div className="border-t border-line pt-4">
+              <GroupLabel>Frame</GroupLabel>
+              <div className="mt-2 grid grid-cols-3 gap-1.5 sm:grid-cols-5">
+                {(Object.keys(AVATAR_FRAMES) as AvatarFrame[]).map((k) => (
+                  <button
+                    key={k}
+                    type="button"
+                    onClick={() =>
+                      onChange({ avatarFrame: k, avatarRing: false })
+                    }
+                    className={`rounded-xl border px-2 py-2 text-xs transition ${
+                      (design.avatarFrame ?? (design.avatarRing ? "line" : "shadow")) === k
+                        ? "border-ink bg-ink/[0.04] font-medium"
+                        : "border-line hover:border-soft"
+                    }`}
+                  >
+                    {AVATAR_FRAMES[k]}
+                  </button>
+                ))}
               </div>
-              {design.avatarRing && (
+              {design.avatarFrame &&
+                design.avatarFrame !== "none" &&
+                design.avatarFrame !== "shadow" && (
                 <ColorRow
-                  label="Ring colour"
+                  label="Frame colour"
                   value={design.avatarRingColor}
                   fallback="#ffffff"
                   onChange={(avatarRingColor) => onChange({ avatarRingColor })}
                 />
               )}
+            </div>
+
+            <div className="grid gap-4 border-t border-line pt-4 sm:grid-cols-2">
+              <div>
+                <GroupLabel>Image fit</GroupLabel>
+                <div className="mt-2 flex rounded-xl bg-black/[0.035] p-1">
+                  {(["cover", "contain"] as AvatarFit[]).map((k) => (
+                    <button
+                      key={k}
+                      type="button"
+                      onClick={() => onChange({ avatarFit: k })}
+                      className={`flex-1 rounded-lg px-2 py-1.5 text-xs capitalize transition ${
+                        (design.avatarFit ?? "cover") === k
+                          ? "bg-paper font-medium shadow-sm"
+                          : "text-soft"
+                      }`}
+                    >
+                      {k}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <GroupLabel>Focal point</GroupLabel>
+                <div className="mt-2 flex rounded-xl bg-black/[0.035] p-1">
+                  {(["top", "center", "bottom"] as AvatarPosition[]).map((k) => (
+                    <button
+                      key={k}
+                      type="button"
+                      onClick={() => onChange({ avatarPosition: k })}
+                      className={`flex-1 rounded-lg px-2 py-1.5 text-xs capitalize transition ${
+                        (design.avatarPosition ?? "center") === k
+                          ? "bg-paper font-medium shadow-sm"
+                          : "text-soft"
+                      }`}
+                    >
+                      {k}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -649,7 +798,9 @@ export function DesignPanel({
                               ? "border-[1.5px] border-current opacity-80"
                               : k === "soft"
                                 ? "bg-current opacity-30"
-                                : "border border-current bg-current opacity-20"
+                                : k === "gradient"
+                                  ? "bg-gradient-to-r from-current to-transparent opacity-80"
+                                  : "border border-current bg-current opacity-20"
                         }`}
                       />
                     }
@@ -658,33 +809,30 @@ export function DesignPanel({
               </div>
             </div>
 
-            <div>
-              <GroupLabel>Size</GroupLabel>
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {(Object.keys(BTN_SIZE_LABELS) as BtnSize[]).map((k) => (
-                  <VisualChip
-                    key={k}
-                    active={design.btnSize === k}
-                    onClick={() => onChange({ btnSize: k })}
-                    label={BTN_SIZE_LABELS[k]}
-                    glyph={
-                      <span
-                        className="w-8 shrink-0 rounded-full border-[1.5px] border-current opacity-80"
-                        style={{ height: k === "sm" ? 8 : k === "md" ? 12 : 16 }}
-                      />
-                    }
-                  />
-                ))}
-              </div>
-            </div>
-
             <div className="divide-y divide-line/60 border-t border-line pt-1">
-              <ColorRow
-                label="Button colour"
-                value={design.btnBg}
-                fallback="#ffffff"
-                onChange={(btnBg) => onChange({ btnBg })}
-              />
+              {design.btnStyle === "gradient" ? (
+                <>
+                  <ColorRow
+                    label="Gradient from"
+                    value={design.btnGradientColor}
+                    fallback="#7c3aed"
+                    onChange={(btnGradientColor) => onChange({ btnGradientColor })}
+                  />
+                  <ColorRow
+                    label="Gradient to"
+                    value={design.btnGradientColor2}
+                    fallback="#0ea5e9"
+                    onChange={(btnGradientColor2) => onChange({ btnGradientColor2 })}
+                  />
+                </>
+              ) : (
+                <ColorRow
+                  label="Button colour"
+                  value={design.btnBg}
+                  fallback="#ffffff"
+                  onChange={(btnBg) => onChange({ btnBg })}
+                />
+              )}
               <ColorRow
                 label="Button text"
                 value={design.btnText}
@@ -692,52 +840,143 @@ export function DesignPanel({
                 onChange={(btnText) => onChange({ btnText })}
               />
             </div>
+
+            <div className="grid gap-4 border-t border-line pt-4 sm:grid-cols-2">
+              <div>
+                <GroupLabel>Size</GroupLabel>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {(Object.keys(BTN_SIZE_LABELS) as BtnSize[]).map((k) => (
+                    <button
+                      key={k}
+                      type="button"
+                      onClick={() => onChange({ btnSize: k })}
+                      className={`rounded-full border px-3 py-1.5 text-xs transition ${
+                        (design.btnSize ?? "md") === k
+                          ? "border-ink bg-ink text-paper"
+                          : "border-line hover:border-soft"
+                      }`}
+                    >
+                      {BTN_SIZE_LABELS[k]}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <GroupLabel>Spacing</GroupLabel>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {(Object.keys(BTN_SPACING) as BtnSpacing[]).map((k) => (
+                    <button
+                      key={k}
+                      type="button"
+                      onClick={() => onChange({ btnSpacing: k })}
+                      className={`rounded-full border px-3 py-1.5 text-xs transition ${
+                        (design.btnSpacing ?? "normal") === k
+                          ? "border-ink bg-ink text-paper"
+                          : "border-line hover:border-soft"
+                      }`}
+                    >
+                      {BTN_SPACING[k].label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="grid gap-4 border-t border-line pt-4 sm:grid-cols-2">
+              <div>
+                <GroupLabel>Shadow</GroupLabel>
+                <div className="mt-2 grid grid-cols-2 gap-1.5">
+                  {(Object.keys(BTN_SHADOWS) as BtnShadow[]).map((k) => (
+                    <button
+                      key={k}
+                      type="button"
+                      onClick={() => onChange({ btnShadow: k })}
+                      className={`rounded-xl border px-2 py-2 text-xs transition ${
+                        design.btnShadow === k
+                          ? "border-ink bg-ink/[0.04] font-medium"
+                          : "border-line hover:border-soft"
+                      }`}
+                    >
+                      {BTN_SHADOWS[k].label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <GroupLabel>Border</GroupLabel>
+                <div className="mt-2 grid grid-cols-3 gap-1.5">
+                  {(Object.keys(BTN_BORDERS) as BtnBorder[]).map((k) => (
+                    <button
+                      key={k}
+                      type="button"
+                      onClick={() => onChange({ btnBorder: k })}
+                      className={`rounded-xl border px-2 py-2 text-xs transition ${
+                        design.btnBorder === k
+                          ? "border-ink bg-ink/[0.04] font-medium"
+                          : "border-line hover:border-soft"
+                      }`}
+                    >
+                      {BTN_BORDERS[k].label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="border-t border-line pt-4">
+              <GroupLabel>Text weight</GroupLabel>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {(Object.keys(BTN_WEIGHTS) as BtnWeight[]).map((k) => (
+                  <button
+                    key={k}
+                    type="button"
+                    onClick={() => onChange({ btnWeight: k })}
+                    style={{ fontWeight: BTN_WEIGHTS[k].value }}
+                    className={`rounded-full border px-3.5 py-1.5 text-sm transition ${
+                      (design.btnWeight ?? "medium") === k
+                        ? "border-ink bg-ink text-paper"
+                        : "border-line hover:border-soft"
+                    }`}
+                  >
+                    {BTN_WEIGHTS[k].label}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         )}
 
         {/* ---------- Fonts ---------- */}
         {tab === "font" && (
-          <div className="space-y-4">
+          <div className="space-y-5">
+            <div className="rounded-xl border border-line bg-paper px-4 py-3">
+              <p
+                className="text-2xl font-semibold tracking-tight"
+                style={{ fontFamily: FONTS[design.fontHeading ?? "sans"].css }}
+              >
+                Your name
+              </p>
+              <p
+                className="mt-1 text-sm text-soft"
+                style={{ fontFamily: FONTS[design.font ?? "sans"].css }}
+              >
+                A live typography pairing preview
+              </p>
+            </div>
             <div>
-              <GroupLabel>Your name</GroupLabel>
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {FONT_KEYS.map((k) => (
-                  <button
-                    key={k}
-                    type="button"
-                    onClick={() => onChange({ fontHeading: k })}
-                    style={{ fontFamily: FONTS[k].css }}
-                    className={`rounded-full border px-3.5 py-1.5 text-sm transition ${
-                      design.fontHeading === k
-                        ? "border-ink bg-ink text-paper"
-                        : "border-line hover:border-soft"
-                    }`}
-                  >
-                    {FONTS[k].label}
-                  </button>
-                ))}
-              </div>
+              <GroupLabel>Name font</GroupLabel>
+              <FontGrid
+                value={design.fontHeading}
+                onPick={(fontHeading) => onChange({ fontHeading })}
+              />
             </div>
 
-            <div>
+            <div className="border-t border-line pt-4">
               <GroupLabel>Buttons &amp; text</GroupLabel>
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {FONT_KEYS.map((k) => (
-                  <button
-                    key={k}
-                    type="button"
-                    onClick={() => onChange({ font: k })}
-                    style={{ fontFamily: FONTS[k].css }}
-                    className={`rounded-full border px-3.5 py-1.5 text-sm transition ${
-                      design.font === k
-                        ? "border-ink bg-ink text-paper"
-                        : "border-line hover:border-soft"
-                    }`}
-                  >
-                    {FONTS[k].label}
-                  </button>
-                ))}
-              </div>
+              <FontGrid
+                value={design.font}
+                onPick={(font) => onChange({ font })}
+              />
             </div>
           </div>
         )}

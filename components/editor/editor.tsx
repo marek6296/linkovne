@@ -256,6 +256,17 @@ export function Editor({
         fontHeading: p.design.fontHeading,
         btnShape: p.design.btnShape,
         btnSize: p.design.btnSize,
+        btnShadow: p.design.btnShadow,
+        btnBorder: p.design.btnBorder,
+        btnSpacing: p.design.btnSpacing,
+        btnWeight: p.design.btnWeight,
+        avatarShape: p.design.avatarShape,
+        avatarSize: p.design.avatarSize,
+        avatarAspect: p.design.avatarAspect,
+        avatarFrame: p.design.avatarFrame,
+        avatarFit: p.design.avatarFit,
+        avatarPosition: p.design.avatarPosition,
+        avatarRingColor: p.design.avatarRingColor,
       },
     }));
   }
@@ -598,7 +609,7 @@ export function Editor({
                     <span>
                       <span className="font-medium">Customise</span>
                       <span className="ml-2 text-soft">
-                        theme, background, buttons, fonts
+                        themes, photo, frames, buttons, fonts
                       </span>
                     </span>
                     <Chevron open={designOpen} />
@@ -614,6 +625,9 @@ export function Editor({
                           key,
                           label: THEMES[key].label,
                           swatch: THEMES[key].swatch,
+                          page: THEMES[key].page,
+                          text: THEMES[key].text,
+                          button: THEMES[key].btnBg,
                           locked: !allowsTheme(plan, key),
                         }))}
                         onPickTheme={(key) =>
