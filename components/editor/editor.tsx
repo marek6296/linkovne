@@ -500,9 +500,11 @@ export function Editor({
               subtitle="theme, template, colours"
               delay={120}
             >
-              {/* Theme */}
-              <p className="text-xs font-medium text-soft">Theme</p>
-              <div className="mt-2 flex flex-wrap gap-2">
+              {/* Tema — rychla volba palety, viditelna hned */}
+              <p className="text-[11px] font-semibold tracking-wide text-faint uppercase">
+                Theme
+              </p>
+              <div className="mt-2.5 flex flex-wrap gap-2">
                 {THEME_KEYS.map((key) => {
                   const locked = !allowsTheme(plan, key);
                   return (
@@ -530,9 +532,15 @@ export function Editor({
                 })}
               </div>
 
+              {/* Druha skupina — hlbsie upravy vzhladu (sablony + customizacia),
+                  jednotne riadky pod spolocnym labelom. */}
+              <p className="mt-6 border-t border-line pt-4 text-[11px] font-semibold tracking-wide text-faint uppercase">
+                Make it yours
+              </p>
+
               {/* Templates — cely vzhlad na jeden klik */}
               {plan.customDesign && (
-                <div className="mt-4">
+                <div className="mt-2.5">
                   <button
                     type="button"
                     onClick={() => setTplOpen((v) => !v)}
@@ -572,7 +580,7 @@ export function Editor({
 
               {/* Customise */}
               {plan.customDesign ? (
-                <div className="mt-3">
+                <div className="mt-2.5">
                   <button
                     type="button"
                     onClick={() => setDesignOpen((v) => !v)}
@@ -603,10 +611,10 @@ export function Editor({
                   </Collapse>
                 </div>
               ) : (
-                <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-line px-4 py-3 text-sm">
+                <div className="mt-2.5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-line px-4 py-3 text-sm">
                   <span className="flex items-center gap-2 text-soft">
                     <Lock />
-                    Custom background, buttons and fonts
+                    Templates, custom background, buttons &amp; fonts
                   </span>
                   <Link href="/#pricing" className="btn-ink px-4 py-2 text-sm">
                     Upgrade
@@ -615,33 +623,36 @@ export function Editor({
               )}
             </Section>
 
-            {/* Link Shield — premiovy gate: citlive linky za potvrdenim */}
+            {/* Protection — Link Shield + escape z in-app prehliadaca v JEDNEJ
+                karte: obe su ochranne prepinace, patria k sebe. Dva symetricke
+                riadky (nazov + popis + Switch), oddelene ciarou. */}
             <Section
-              title="Link Shield"
-              subtitle="Gate sensitive links behind a confirmation"
+              title="Protection"
+              subtitle="link privacy · real browser"
               delay={180}
-              badge={
-                profile.link_shield ? (
+              badge={(() => {
+                if (!plan.linkShield && !plan.escapeInApp) return <Lock />;
+                const n =
+                  (plan.linkShield && profile.link_shield ? 1 : 0) +
+                  (plan.escapeInApp && profile.escape_inapp ? 1 : 0);
+                return n > 0 ? (
                   <span className="rounded-full bg-ink px-2 py-0.5 text-[11px] font-medium text-paper">
-                    On
+                    {n} on
                   </span>
-                ) : plan.linkShield ? undefined : (
-                  <Lock />
-                )
-              }
+                ) : undefined;
+              })()}
             >
-              {plan.linkShield ? (
-                <div className="space-y-4">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <p className="text-sm font-medium">
-                        Protect outbound links
-                      </p>
-                      <p className="mt-1 text-xs text-soft">
-                        Visitors see a neutral confirmation step (with an
-                        optional 18+ check) before they reach the destination.
-                        The link itself stays out of your page&apos;s code and
-                        link previews, so it isn&apos;t publicly scrapeable.
+              {plan.linkShield || plan.escapeInApp ? (
+                <div className="divide-y divide-line">
+                  {/* Link Shield */}
+                  <div className="flex items-start justify-between gap-4 pb-5">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium">Link Shield</p>
+                      <p className="mt-1 max-w-md text-xs leading-relaxed text-soft">
+                        A neutral confirmation step (with an optional 18+ check)
+                        before sensitive links. The destination stays out of
+                        your page&apos;s code and previews, so it can&apos;t be
+                        scraped. Always follow each platform&apos;s own rules.
                       </p>
                     </div>
                     <Switch
@@ -650,52 +661,17 @@ export function Editor({
                       onToggle={toggleShield}
                     />
                   </div>
-                  <p className="rounded-xl border border-line bg-surface px-4 py-3 text-xs text-soft">
-                    Keeps the destination private in your page&apos;s code. This
-                    is a privacy feature — always follow each platform&apos;s own
-                    rules.
-                  </p>
-                </div>
-              ) : (
-                <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
-                  <span className="flex items-center gap-2 text-soft">
-                    <Lock />
-                    Gate sensitive links behind a confirmation
-                  </span>
-                  <Link href="/#pricing" className="btn-ink px-4 py-2 text-sm">
-                    Upgrade
-                  </Link>
-                </div>
-              )}
-            </Section>
 
-            {/* Escape in-app browser — premiova funkcia */}
-            <Section
-              title="Open externally"
-              subtitle="leave Instagram's in-app browser"
-              delay={210}
-              badge={
-                profile.escape_inapp ? (
-                  <span className="rounded-full bg-ink px-2 py-0.5 text-[11px] font-medium text-paper">
-                    On
-                  </span>
-                ) : plan.escapeInApp ? undefined : (
-                  <Lock />
-                )
-              }
-            >
-              {plan.escapeInApp ? (
-                <div className="space-y-4">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <p className="text-sm font-medium">
-                        Force-open in the real browser
-                      </p>
-                      <p className="mt-1 text-xs text-soft">
-                        When someone opens your page from Instagram or TikTok, it
-                        jumps straight out of their cramped in-app browser into
-                        Safari / Chrome — where logins and payments actually
-                        work, so fans don&apos;t drop off.
+                  {/* Open externally */}
+                  <div className="flex items-start justify-between gap-4 pt-5">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium">Open externally</p>
+                      <p className="mt-1 max-w-md text-xs leading-relaxed text-soft">
+                        Jumps out of Instagram&apos;s / TikTok&apos;s in-app
+                        browser into real Safari or Chrome — where logins and
+                        payments actually work. Reliable on Android; on iOS
+                        visitors get a one-tap &ldquo;Open in browser&rdquo;
+                        prompt.
                       </p>
                     </div>
                     <Switch
@@ -704,22 +680,19 @@ export function Editor({
                       onToggle={toggleEscape}
                     />
                   </div>
-                  <p className="rounded-xl border border-line bg-surface px-4 py-3 text-xs text-soft">
-                    Reliable on Android. On iOS Apple limits this, so visitors
-                    get a
-                    <span className="font-medium text-ink">
-                      {" "}
-                      one-tap &ldquo;Open in browser&rdquo;{" "}
-                    </span>
-                    prompt as a fallback.
-                  </p>
                 </div>
               ) : (
-                <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
-                  <span className="flex items-center gap-2 text-soft">
-                    <Lock />
-                    Escape Instagram&apos;s in-app browser automatically
-                  </span>
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <div className="space-y-2 text-sm text-soft">
+                    <p className="flex items-center gap-2">
+                      <Lock />
+                      Link Shield — gate sensitive links behind a confirmation
+                    </p>
+                    <p className="flex items-center gap-2">
+                      <Lock />
+                      Open externally — leave the in-app browser
+                    </p>
+                  </div>
                   <Link href="/#pricing" className="btn-ink px-4 py-2 text-sm">
                     Upgrade
                   </Link>
