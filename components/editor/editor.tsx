@@ -500,41 +500,50 @@ export function Editor({
               subtitle="theme, template, colours"
               delay={120}
             >
-              {/* Tema — rychla volba palety, viditelna hned */}
-              <p className="text-[11px] font-semibold tracking-wide text-faint uppercase">
-                Theme
-              </p>
-              <div className="mt-2.5 flex flex-wrap gap-2">
-                {THEME_KEYS.map((key) => {
-                  const locked = !allowsTheme(plan, key);
-                  return (
-                    <button
-                      key={key}
-                      onClick={() =>
-                        locked
-                          ? setNotice("That theme needs a paid plan.")
-                          : pickTheme(key)
-                      }
-                      className={`flex items-center gap-2 rounded-full border px-3 py-2 text-sm transition ${
-                        profile.theme === key
-                          ? "border-ink"
-                          : "border-line hover:border-soft"
-                      } ${locked ? "opacity-55" : ""}`}
-                    >
-                      <span
-                        className="h-4 w-4 rounded-full border border-line"
-                        style={{ background: THEMES[key].swatch }}
-                      />
-                      {THEMES[key].label}
-                      {locked && <Lock />}
-                    </button>
-                  );
-                })}
-              </div>
+              {/* Tema — pre free usera (bez Customise) zostava hned viditelna.
+                  Pre Pro sa presuva do Customise ako prvy tab (nizsie). */}
+              {!plan.customDesign && (
+                <>
+                  <p className="text-[11px] font-semibold tracking-wide text-faint uppercase">
+                    Theme
+                  </p>
+                  <div className="mt-2.5 flex flex-wrap gap-2">
+                    {THEME_KEYS.map((key) => {
+                      const locked = !allowsTheme(plan, key);
+                      return (
+                        <button
+                          key={key}
+                          onClick={() =>
+                            locked
+                              ? setNotice("That theme needs a paid plan.")
+                              : pickTheme(key)
+                          }
+                          className={`flex items-center gap-2 rounded-full border px-3 py-2 text-sm transition ${
+                            profile.theme === key
+                              ? "border-ink"
+                              : "border-line hover:border-soft"
+                          } ${locked ? "opacity-55" : ""}`}
+                        >
+                          <span
+                            className="h-4 w-4 rounded-full border border-line"
+                            style={{ background: THEMES[key].swatch }}
+                          />
+                          {THEMES[key].label}
+                          {locked && <Lock />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
 
-              {/* Druha skupina — hlbsie upravy vzhladu (sablony + customizacia),
-                  jednotne riadky pod spolocnym labelom. */}
-              <p className="mt-6 border-t border-line pt-4 text-[11px] font-semibold tracking-wide text-faint uppercase">
+              {/* Druha skupina — hlbsie upravy vzhladu (sablony + customizacia).
+                  Oddelovac hore len ked je nad nim Theme blok (free plan). */}
+              <p
+                className={`text-[11px] font-semibold tracking-wide text-faint uppercase ${
+                  plan.customDesign ? "" : "mt-6 border-t border-line pt-4"
+                }`}
+              >
                 Make it yours
               </p>
 
@@ -589,7 +598,7 @@ export function Editor({
                     <span>
                       <span className="font-medium">Customise</span>
                       <span className="ml-2 text-soft">
-                        background, buttons, fonts
+                        theme, background, buttons, fonts
                       </span>
                     </span>
                     <Chevron open={designOpen} />
@@ -600,6 +609,18 @@ export function Editor({
                       <DesignPanel
                         design={profile.design}
                         userId={userId}
+                        activeTheme={profile.theme}
+                        themes={THEME_KEYS.map((key) => ({
+                          key,
+                          label: THEMES[key].label,
+                          swatch: THEMES[key].swatch,
+                          locked: !allowsTheme(plan, key),
+                        }))}
+                        onPickTheme={(key) =>
+                          allowsTheme(plan, key as (typeof THEME_KEYS)[number])
+                            ? pickTheme(key as (typeof THEME_KEYS)[number])
+                            : setNotice("That theme needs a paid plan.")
+                        }
                         onChange={(patch) =>
                           patchProfile({
                             design: { ...profile.design, ...patch },

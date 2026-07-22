@@ -46,14 +46,39 @@ const GRADIENT_PRESETS: { from: string; to: string; text: string }[] = [
   { from: "#141e30", to: "#243b55", text: "#eaf0ff" }, // navy night
 ];
 
-type Tab = "bg" | "avatar" | "buttons" | "font";
+type Tab = "theme" | "bg" | "avatar" | "buttons" | "font";
 
 const TABS: { key: Tab; label: string }[] = [
+  { key: "theme", label: "Theme" },
   { key: "bg", label: "Background" },
   { key: "avatar", label: "Photo" },
   { key: "buttons", label: "Buttons" },
   { key: "font", label: "Font" },
 ];
+
+export type ThemeOption = {
+  key: string;
+  label: string;
+  swatch: string;
+  locked: boolean;
+};
+
+/** Maly zamok pre uzamknute (platene) temy. */
+function LockGlyph() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className="h-3.5 w-3.5 opacity-70"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      aria-hidden
+    >
+      <rect x="5" y="11" width="14" height="9" rx="2" />
+      <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+    </svg>
+  );
+}
 
 /** Skupinovy nadpis vnutri tabu — rovnaky styl ako labely v editore. */
 function GroupLabel({ children }: { children: React.ReactNode }) {
@@ -150,17 +175,23 @@ function Toggle({ on, onClick }: { on: boolean; onClick: () => void }) {
 export function DesignPanel({
   design,
   userId,
+  themes,
+  activeTheme,
+  onPickTheme,
   onChange,
   onReset,
 }: {
   design: Design;
   userId: string;
+  themes: ThemeOption[];
+  activeTheme: string;
+  onPickTheme: (key: string) => void;
   onChange: (patch: Design) => void;
   onReset: () => void;
 }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
-  const [tab, setTab] = useState<Tab>("bg");
+  const [tab, setTab] = useState<Tab>("theme");
   const bg = design.bg ?? "theme";
 
   return (
@@ -186,6 +217,38 @@ export function DesignPanel({
       </div>
 
       <div className="min-h-[230px] p-5">
+        {/* ---------- Theme ---------- */}
+        {tab === "theme" && (
+          <div className="space-y-3">
+            <GroupLabel>Palette</GroupLabel>
+            <div className="flex flex-wrap gap-2">
+              {themes.map((t) => (
+                <button
+                  key={t.key}
+                  type="button"
+                  onClick={() => onPickTheme(t.key)}
+                  aria-pressed={activeTheme === t.key}
+                  className={`flex items-center gap-2 rounded-full border px-3 py-2 text-sm transition ${
+                    activeTheme === t.key
+                      ? "border-ink"
+                      : "border-line hover:border-soft"
+                  } ${t.locked ? "opacity-55" : ""}`}
+                >
+                  <span
+                    className="h-4 w-4 rounded-full border border-line"
+                    style={{ background: t.swatch }}
+                  />
+                  {t.label}
+                  {t.locked && <LockGlyph />}
+                </button>
+              ))}
+            </div>
+            <p className="text-xs text-soft">
+              A theme sets your base palette. Background, buttons and fonts fine-tune it.
+            </p>
+          </div>
+        )}
+
         {/* ---------- Background ---------- */}
         {tab === "bg" && (
           <div className="space-y-4">
