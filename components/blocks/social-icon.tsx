@@ -66,15 +66,20 @@ const PATHS: Record<SocialPlatform, React.ReactNode> = {
 
 export function SocialIcon({
   platform,
-  className = "h-5 w-5",
+  className,
+  size,
 }: {
   platform: SocialPlatform;
   className?: string;
+  /** Presna velkost v px — ma prednost pred className (default 20). */
+  size?: number;
 }) {
   return (
     <svg
       viewBox="0 0 24 24"
-      className={className}
+      className={size ? undefined : (className ?? "h-5 w-5")}
+      width={size}
+      height={size}
       fill="none"
       stroke="currentColor"
       strokeWidth="1.6"

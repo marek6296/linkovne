@@ -60,7 +60,63 @@ export type SocialPlatform =
   | "email"
   | "phone";
 
+/* ---------- Social icons — customizacia bloku ---------- */
+
+export type SocialStyle = "line" | "brand";
+export type SocialShape = "bare" | "circle" | "rounded" | "square";
+export type SocialSize = "sm" | "md" | "lg";
+
+export const SOCIAL_STYLES: { key: SocialStyle; label: string }[] = [
+  { key: "line", label: "Line" },
+  { key: "brand", label: "Brand" },
+];
+
+export const SOCIAL_SHAPES: {
+  key: SocialShape;
+  label: string;
+  radius: string;
+}[] = [
+  { key: "bare", label: "Bare", radius: "0" },
+  { key: "circle", label: "Circle", radius: "999px" },
+  { key: "rounded", label: "Rounded", radius: "12px" },
+  { key: "square", label: "Square", radius: "6px" },
+];
+
+export const SOCIAL_SIZES: { key: SocialSize; label: string; px: number }[] = [
+  { key: "sm", label: "Small", px: 18 },
+  { key: "md", label: "Medium", px: 22 },
+  { key: "lg", label: "Large", px: 28 },
+];
+
+export const SOCIAL_SIZE_PX: Record<SocialSize, number> = {
+  sm: 18,
+  md: 22,
+  lg: 28,
+};
+
+export const SOCIAL_SHAPE_RADIUS: Record<SocialShape, string> = {
+  bare: "0",
+  circle: "999px",
+  rounded: "12px",
+  square: "6px",
+};
+
+/** Znackove farby pre `brand` styl. Email/telefon nie su znacky → neutral. */
+export const SOCIAL_BRAND: Record<SocialPlatform, string> = {
+  instagram: "#E1306C",
+  tiktok: "#010101",
+  youtube: "#FF0000",
+  facebook: "#1877F2",
+  x: "#000000",
+  linkedin: "#0A66C2",
+  whatsapp: "#25D366",
+  telegram: "#229ED9",
+  email: "#6B7280",
+  phone: "#6B7280",
+};
+
 export type BlockConfig = {
+  // link
   // link
   title?: string;
   url?: string;
@@ -89,8 +145,18 @@ export type BlockConfig = {
   href?: string;
   /** Ci `src` je foto alebo nahrate video. Chyba = "image" (spatna kompatibilita). */
   mediaType?: "image" | "video";
-  // socials
-  items?: { platform: SocialPlatform; url: string }[];
+  // socials — kazda polozka moze mat vlastnu farbu (per-icon override)
+  items?: { platform: SocialPlatform; url: string; color?: string }[];
+  /** Styl ikon: `line` (jednotny obrys) alebo `brand` (znackove farby). */
+  socialStyle?: SocialStyle;
+  /** Tvar podkladu: bez pozadia alebo farebny chip (kruh/zaobleny/stvorec). */
+  socialShape?: SocialShape;
+  /** Farba ikon v `line` style (default = farba textu temy). */
+  socialColor?: string;
+  /** Farba chipu v `line` style (default = tlacidlo temy). */
+  socialBg?: string;
+  /** Velkost ikon. */
+  socialSize?: SocialSize;
   // faq
   faqs?: { q: string; a: string }[];
   // countdown — ISO datetime

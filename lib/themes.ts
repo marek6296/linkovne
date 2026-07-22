@@ -64,6 +64,10 @@ export type Theme = {
   avatarRadius?: string;
   avatarSizePx?: number;
   avatarRing?: string;
+  /** Pozadie za kartou na PC (desktop backdrop). `deskBg` je CSS background,
+   *  `deskBlur` hovori ci sa ma pouzit rozmazany „glow" efekt (auto rezim). */
+  deskBg?: string;
+  deskBlur?: boolean;
   /** Jemne dekorativne pozadie (radial bloby) za obsahom — dava profilu hlbku
    *  namiesto plochej farby. Nizka priehladnost, ladi s paletou temy. */
   glow?: string;

@@ -44,8 +44,20 @@ export function Preview({
   };
 
   return (
-    <div className="mx-auto w-[318px]">
-      <div className="rounded-[2.4rem] border-[10px] border-ink bg-ink shadow-[0_24px_70px_rgba(25,24,19,0.22)]">
+    <div className="mx-auto w-[358px]">
+      {/* Desktop backdrop za kartou — verne ako na PC verejnej stranke. */}
+      <div className="relative overflow-hidden rounded-[2.9rem] p-5">
+        <div
+          aria-hidden
+          className="absolute inset-0"
+          style={{
+            background: theme.deskBg ?? theme.page,
+            ...(theme.deskBlur !== false
+              ? { filter: "blur(30px) brightness(0.8)", transform: "scale(1.4)" }
+              : null),
+          }}
+        />
+        <div className="relative rounded-[2.4rem] border-[10px] border-ink bg-ink shadow-[0_24px_70px_rgba(25,24,19,0.22)]">
         <div
           className="relative flex h-[620px] flex-col overflow-y-auto rounded-[1.7rem] px-6 py-5"
           style={{
@@ -142,6 +154,7 @@ export function Preview({
             </footer>
           )}
         </div>
+      </div>
       </div>
       <p className="mt-3 text-center text-xs text-faint">
         Live preview · {profileLabel(username)}

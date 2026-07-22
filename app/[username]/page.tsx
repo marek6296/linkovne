@@ -145,15 +145,17 @@ export default async function PublicProfilePage({
 
   return (
     <div className="relative min-h-dvh sm:flex sm:items-center sm:justify-center sm:p-8">
-      {/* Desktop ambient — rozmazany, stlmeny „glow" temy okolo karty. Na mobile
-          skryty (karta je cela obrazovka). */}
+      {/* Pozadie za kartou na PC (desktop backdrop). Default „auto" = rozmazany
+          glow z pozadia karty; da sa prebit farbou/gradientom/fotkou (Pro).
+          Na mobile skryte — karta je cela obrazovka. */}
       <div
         aria-hidden
         className="fixed inset-0 z-0 hidden sm:block"
         style={{
-          background: theme.page,
-          filter: "blur(64px) brightness(0.72)",
-          transform: "scale(1.35)",
+          background: theme.deskBg ?? theme.page,
+          ...(theme.deskBlur !== false
+            ? { filter: "blur(64px) brightness(0.72)", transform: "scale(1.35)" }
+            : null),
         }}
       />
 

@@ -14,6 +14,7 @@ import {
   type BtnShape,
   type BtnStyle,
   type Design,
+  type DeskBgMode,
 } from "@/lib/design";
 import { BTN_SIZE_LABELS, type BtnSize } from "@/lib/themes";
 import { uploadImage } from "@/lib/upload";
@@ -27,6 +28,13 @@ import { uploadImage } from "@/lib/upload";
 
 const BG_MODES: { key: BgMode; label: string }[] = [
   { key: "theme", label: "Theme" },
+  { key: "solid", label: "Colour" },
+  { key: "gradient", label: "Gradient" },
+  { key: "image", label: "Photo" },
+];
+
+const DESK_BG_MODES: { key: DeskBgMode; label: string }[] = [
+  { key: "auto", label: "Auto glow" },
   { key: "solid", label: "Colour" },
   { key: "gradient", label: "Gradient" },
   { key: "image", label: "Photo" },
@@ -190,9 +198,12 @@ export function DesignPanel({
   onReset: () => void;
 }) {
   const fileRef = useRef<HTMLInputElement>(null);
+  const deskFileRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
+  const [deskBusy, setDeskBusy] = useState(false);
   const [tab, setTab] = useState<Tab>("theme");
   const bg = design.bg ?? "theme";
+  const deskBg = design.deskBg ?? "auto";
 
   return (
     <div className="overflow-hidden rounded-xl border border-line bg-surface">
@@ -388,6 +399,132 @@ export function DesignPanel({
                 />
               </div>
             )}
+
+            {/* ---- Desktop backdrop (pozadie za kartou, len PC) ---- */}
+            <div className="border-t border-line pt-4">
+              <GroupLabel>Behind the card · desktop</GroupLabel>
+              <p className="mt-1 text-xs text-soft">
+                The area around your card on wide screens. On phones the card
+                fills the screen, so this only shows on desktop.
+              </p>
+              <div className="mt-2.5 flex flex-wrap gap-1.5">
+                {DESK_BG_MODES.map((o) => (
+                  <button
+                    key={o.key}
+                    type="button"
+                    onClick={() => onChange({ deskBg: o.key })}
+                    className={`rounded-full border px-3.5 py-1.5 text-sm transition ${
+                      deskBg === o.key
+                        ? "border-ink bg-ink text-paper"
+                        : "border-line hover:border-soft"
+                    }`}
+                  >
+                    {o.label}
+                  </button>
+                ))}
+              </div>
+              {deskBg === "auto" && (
+                <p className="mt-2 text-xs text-soft">
+                  A soft blurred glow of your card&apos;s background.
+                </p>
+              )}
+
+              {deskBg === "solid" && (
+                <div className="mt-1">
+                  <ColorRow
+                    label="Backdrop colour"
+                    value={design.deskBgColor}
+                    fallback="#e9e7e2"
+                    onChange={(deskBgColor) => onChange({ deskBgColor })}
+                  />
+                </div>
+              )}
+
+              {deskBg === "gradient" && (
+                <>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {GRADIENT_PRESETS.map((g) => {
+                      const active =
+                        design.deskBgColor === g.from &&
+                        design.deskBgColor2 === g.to;
+                      return (
+                        <button
+                          key={`${g.from}-${g.to}`}
+                          type="button"
+                          aria-label="Gradient preset"
+                          onClick={() =>
+                            onChange({ deskBgColor: g.from, deskBgColor2: g.to })
+                          }
+                          className={`h-9 w-9 rounded-full border-2 transition hover:scale-105 ${
+                            active ? "border-ink" : "border-line"
+                          }`}
+                          style={{
+                            background: `linear-gradient(150deg, ${g.from}, ${g.to})`,
+                          }}
+                        />
+                      );
+                    })}
+                  </div>
+                  <div className="mt-2 divide-y divide-line/60">
+                    <ColorRow
+                      label="From"
+                      value={design.deskBgColor}
+                      fallback="#0f2027"
+                      onChange={(deskBgColor) => onChange({ deskBgColor })}
+                    />
+                    <ColorRow
+                      label="To"
+                      value={design.deskBgColor2}
+                      fallback="#2c5364"
+                      onChange={(deskBgColor2) => onChange({ deskBgColor2 })}
+                    />
+                  </div>
+                </>
+              )}
+
+              {deskBg === "image" && (
+                <div className="mt-3 flex items-center gap-3">
+                  {design.deskBgImage ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={design.deskBgImage}
+                      alt=""
+                      className="h-14 w-14 rounded-lg border border-line object-cover"
+                    />
+                  ) : (
+                    <div className="h-14 w-14 rounded-lg border border-dashed border-line" />
+                  )}
+                  <input
+                    ref={deskFileRef}
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setDeskBusy(true);
+                      try {
+                        onChange({ deskBgImage: await uploadImage(file, userId) });
+                      } finally {
+                        setDeskBusy(false);
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => deskFileRef.current?.click()}
+                    disabled={deskBusy}
+                    className="rounded-full border border-line px-4 py-2 text-sm transition hover:border-ink disabled:opacity-50"
+                  >
+                    {deskBusy
+                      ? "Uploading…"
+                      : design.deskBgImage
+                        ? "Replace photo"
+                        : "Upload photo"}
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         )}
 

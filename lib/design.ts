@@ -1,6 +1,8 @@
 import { BTN_SIZES, getTheme, type BtnSize, type Theme } from "@/lib/themes";
 
 export type BgMode = "theme" | "solid" | "gradient" | "image";
+/** Rezim pozadia za kartou na PC. „auto" = rozmazany glow z pozadia karty. */
+export type DeskBgMode = "auto" | "solid" | "gradient" | "image";
 export type BtnStyle = "fill" | "outline" | "soft" | "glass";
 export type BtnShape = "pill" | "rounded" | "square";
 export type AvatarShape = "circle" | "rounded" | "square";
@@ -33,6 +35,11 @@ export type Design = {
   avatarSize?: AvatarSize;
   avatarRing?: boolean;
   avatarRingColor?: string;
+  /** Pozadie za kartou na PC (desktop backdrop) */
+  deskBg?: DeskBgMode;
+  deskBgColor?: string;
+  deskBgColor2?: string;
+  deskBgImage?: string;
 };
 
 export const FONTS: Record<FontKey, { label: string; css: string }> = {
@@ -202,6 +209,25 @@ export function resolveTheme(
     const ring = safeColor(design.avatarRingColor) ?? t.text;
     // Prstenec kopiruje tvar avataru (box-shadow respektuje border-radius).
     t.avatarRing = `0 0 0 4px ${ring}`;
+  }
+
+  // ---- Pozadie za kartou na PC (desktop backdrop) ----
+  const kc1 = safeColor(design.deskBgColor);
+  const kc2 = safeColor(design.deskBgColor2);
+  const kimg = safeUrl(design.deskBgImage);
+  if (design.deskBg === "solid" && kc1) {
+    t.deskBg = kc1;
+    t.deskBlur = false;
+  } else if (design.deskBg === "gradient" && kc1 && kc2) {
+    t.deskBg = `linear-gradient(165deg, ${kc1} 0%, ${kc2} 100%)`;
+    t.deskBlur = false;
+  } else if (design.deskBg === "image" && kimg) {
+    t.deskBg = `url("${kimg}") center / cover no-repeat`;
+    t.deskBlur = false;
+  } else {
+    // auto — rozmazany glow z pozadia karty (povodne spravanie)
+    t.deskBg = t.page;
+    t.deskBlur = true;
   }
 
   return t;
