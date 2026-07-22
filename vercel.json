@@ -1,0 +1,16 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/link-health",
+      "schedule": "0 */6 * * *"
+    },
+    {
+      "path": "/api/cron/domain-health",
+      "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/cron/expire-plans",
+      "schedule": "0 3 * * *"
+    }
+  ]
+}

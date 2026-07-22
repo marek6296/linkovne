@@ -1,0 +1,896 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import {
+  BLOCK_META,
+  BLOCK_ORDER,
+  defaultConfig,
+  type Block,
+  type BlockType,
+} from "@/lib/blocks";
+import { THEMES, THEME_KEYS } from "@/lib/themes";
+import { resolveTheme, type Design } from "@/lib/design";
+import { allowsBlock, allowsTheme, type PlanFeatures } from "@/lib/plans";
+import {
+  deleteBlock,
+  saveBlocks,
+  saveProfile,
+  setLinkShield,
+  setEscapeInApp,
+} from "@/app/dashboard/actions";
+import { uploadImage } from "@/lib/upload";
+import { AiDraft } from "@/components/editor/ai-draft";
+import { BlockCard } from "@/components/editor/block-card";
+import { ImportPanel } from "@/components/editor/import-panel";
+import { TemplateGrid } from "@/components/editor/template-picker";
+import { templateBlocks } from "@/lib/templates";
+import { DesignPanel } from "@/components/editor/design-panel";
+import { Preview } from "@/components/editor/preview";
+import { Collapse, Chevron } from "@/components/editor/collapse";
+import { BlockGlyph } from "@/components/editor/block-glyph";
+
+type ProfileState = {
+  id: string;
+  username: string;
+  display_name: string;
+  bio: string;
+  avatar_url: string | null;
+  theme: string;
+  design: Design;
+  link_shield: boolean;
+  escape_inapp: boolean;
+};
+
+type SaveStatus = "idle" | "saving" | "saved" | "error";
+
+function StatusPill({ status }: { status: SaveStatus }) {
+  const map: Record<SaveStatus, string> = {
+    idle: "",
+    saving: "Saving…",
+    saved: "All changes saved",
+    error: "Couldn't save",
+  };
+  if (!map[status]) return null;
+  return (
+    <span
+      className={`text-xs ${status === "error" ? "text-danger" : "text-faint"}`}
+    >
+      {map[status]}
+    </span>
+  );
+}
+
+function Lock() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+      <rect x="5" y="11" width="14" height="9" rx="2" />
+      <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+    </svg>
+  );
+}
+
+/**
+ * Jednotna rozklikavacia karta. Cely editor je poskladany z tychto sekcii,
+ * takze klient vidi prehladny zoznam „Profile · Design · Blocks…" namiesto
+ * jednej dlhej steny nastaveni. Profile a Blocks su otvorene, zvysok zbaleny.
+ */
+function Section({
+  title,
+  subtitle,
+  defaultOpen = false,
+  badge,
+  delay = 0,
+  children,
+}: {
+  title: string;
+  subtitle?: string;
+  defaultOpen?: boolean;
+  badge?: React.ReactNode;
+  /** Poradove oneskorenie nabehu karty pri nacitani (ms). */
+  delay?: number;
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <section
+      className="lk-section-in card overflow-hidden"
+      style={{ animationDelay: `${delay}ms` }}
+    >
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left transition hover:bg-surface"
+      >
+        <span className="flex items-baseline gap-2">
+          <span className="text-sm font-semibold">{title}</span>
+          {subtitle && (
+            <span className="hidden text-xs text-soft sm:inline">
+              {subtitle}
+            </span>
+          )}
+        </span>
+        <span className="flex items-center gap-2.5">
+          {badge}
+          <Chevron open={open} />
+        </span>
+      </button>
+      <Collapse open={open}>
+        <div className="border-t border-line px-5 py-5">{children}</div>
+      </Collapse>
+    </section>
+  );
+}
+
+function Switch({
+  on,
+  onToggle,
+  busy,
+}: {
+  on: boolean;
+  onToggle: (next: boolean) => void;
+  busy?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={on}
+      disabled={busy}
+      onClick={() => onToggle(!on)}
+      className={`relative h-6 w-11 shrink-0 rounded-full transition disabled:opacity-50 ${
+        on ? "bg-ink" : "bg-line"
+      }`}
+    >
+      <span
+        className={`absolute top-0.5 h-5 w-5 rounded-full bg-paper transition-all ${
+          on ? "left-[22px]" : "left-0.5"
+        }`}
+      />
+    </button>
+  );
+}
+
+export function Editor({
+  initialProfile,
+  initialBlocks,
+  brokenLinks = [],
+  plan,
+  userId,
+}: {
+  initialProfile: ProfileState;
+  initialBlocks: Block[];
+  brokenLinks?: string[];
+  plan: PlanFeatures;
+  userId: string;
+}) {
+  const broken = new Set(brokenLinks);
+  const [profile, setProfile] = useState(initialProfile);
+  const [blocks, setBlocks] = useState<Block[]>(initialBlocks);
+  const [status, setStatus] = useState<SaveStatus>("idle");
+  const [tab, setTab] = useState<"edit" | "preview">("edit");
+  const [notice, setNotice] = useState<string | null>(null);
+  const [designOpen, setDesignOpen] = useState(false);
+  const [tplOpen, setTplOpen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [shieldBusy, setShieldBusy] = useState(false);
+  const [escapeBusy, setEscapeBusy] = useState(false);
+
+  // Bez tychto flagov by autosave vystrelil hned po mounte a prepisoval by
+  // server tym istym, co z neho prislo.
+  const blocksDirty = useRef(false);
+  const profileDirty = useRef(false);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
+
+  useEffect(() => {
+    if (!blocksDirty.current) return;
+    setStatus("saving");
+    const t = setTimeout(async () => {
+      const res = await saveBlocks(profile.id, blocks);
+      blocksDirty.current = false;
+      setStatus(res?.error ? "error" : "saved");
+      if (res?.error) setNotice(res.error);
+    }, 700);
+    return () => clearTimeout(t);
+  }, [blocks, profile.id]);
+
+  useEffect(() => {
+    if (!profileDirty.current) return;
+    setStatus("saving");
+    const t = setTimeout(async () => {
+      const res = await saveProfile(profile.id, {
+        display_name: profile.display_name,
+        bio: profile.bio,
+        avatar_url: profile.avatar_url,
+        theme: profile.theme,
+        ...(plan.customDesign ? { design: profile.design } : {}),
+      });
+      profileDirty.current = false;
+      setStatus(res?.error ? "error" : "saved");
+      if (res?.error) setNotice(res.error);
+    }, 700);
+    return () => clearTimeout(t);
+  }, [profile, plan.customDesign]);
+
+  function patchProfile(patch: Partial<ProfileState>) {
+    profileDirty.current = true;
+    setProfile((p) => ({ ...p, ...patch }));
+  }
+
+  /**
+   * Vyber temy zahodi FAREBNE prepisy z designu (pozadie, farby tlacidiel,
+   * styl), aby zvolena tema naozaj bola vidno. Ponecha typografiu a tvar —
+   * to su preferencie, nie farby konkretnej temy. Bez toho by farby zo
+   * sablony maskovali kazdu novo zvolenu temu.
+   */
+  function pickTheme(key: string) {
+    profileDirty.current = true;
+    setProfile((p) => ({
+      ...p,
+      theme: key,
+      design: {
+        font: p.design.font,
+        fontHeading: p.design.fontHeading,
+        btnShape: p.design.btnShape,
+        btnSize: p.design.btnSize,
+      },
+    }));
+  }
+
+  function patchBlocks(fn: (prev: Block[]) => Block[]) {
+    blocksDirty.current = true;
+    setBlocks(fn);
+  }
+
+  /**
+   * Link Shield sa uklada samostatnou akciou (nie cez debounced autosave) a
+   * plati okamzite. Preto NEnastavujeme profileDirty — autosave sa nespusti.
+   */
+  async function toggleShield(next: boolean) {
+    setShieldBusy(true);
+    setProfile((p) => ({ ...p, link_shield: next }));
+    const res = await setLinkShield(profile.id, next);
+    if (res?.error) {
+      setProfile((p) => ({ ...p, link_shield: !next })); // vratit spat
+      setNotice(res.error);
+    }
+    setShieldBusy(false);
+  }
+
+  async function toggleEscape(next: boolean) {
+    setEscapeBusy(true);
+    setProfile((p) => ({ ...p, escape_inapp: next }));
+    const res = await setEscapeInApp(profile.id, next);
+    if (res?.error) {
+      setProfile((p) => ({ ...p, escape_inapp: !next }));
+      setNotice(res.error);
+    }
+    setEscapeBusy(false);
+  }
+
+  function addBlock(type: BlockType) {
+    if (!allowsBlock(plan, type)) {
+      setNotice(`The ${BLOCK_META[type].label} block needs a paid plan.`);
+      return;
+    }
+    if (plan.maxBlocks !== null && blocks.length >= plan.maxBlocks) {
+      setNotice(
+        `Your plan is limited to ${plan.maxBlocks} blocks. Upgrade for unlimited.`,
+      );
+      return;
+    }
+    setNotice(null);
+    patchBlocks((prev) => [
+      ...prev,
+      {
+        id: crypto.randomUUID(),
+        type,
+        config: defaultConfig(type),
+        position: prev.length,
+        is_active: true,
+      },
+    ]);
+    setPaletteOpen(false);
+  }
+
+  async function removeBlock(id: string) {
+    setBlocks((prev) => prev.filter((b) => b.id !== id));
+    await deleteBlock(profile.id, id);
+  }
+
+  function duplicateBlock(id: string) {
+    if (plan.maxBlocks !== null && blocks.length >= plan.maxBlocks) {
+      setNotice(`Your plan is limited to ${plan.maxBlocks} blocks.`);
+      return;
+    }
+    patchBlocks((prev) => {
+      const idx = prev.findIndex((b) => b.id === id);
+      if (idx < 0) return prev;
+      const src = prev[idx];
+      const copy: Block = {
+        ...src,
+        id: crypto.randomUUID(),
+        config: { ...src.config },
+      };
+      const next = [...prev];
+      next.splice(idx + 1, 0, copy);
+      return next;
+    });
+  }
+
+  function onDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    patchBlocks((prev) => {
+      const from = prev.findIndex((b) => b.id === active.id);
+      const to = prev.findIndex((b) => b.id === over.id);
+      return arrayMove(prev, from, to);
+    });
+  }
+
+  const theme = resolveTheme(
+    profile.theme,
+    plan.customDesign ? profile.design : {},
+  );
+
+  return (
+    <div>
+      {/* Mobile tabs */}
+      <div className="mb-6 flex gap-1 rounded-full border border-line bg-surface p-1 lg:hidden">
+        {(["edit", "preview"] as const).map((t) => (
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            className={`flex-1 rounded-full py-2 text-sm font-medium capitalize transition ${
+              tab === t ? "bg-ink text-paper" : "text-soft"
+            }`}
+          >
+            {t}
+          </button>
+        ))}
+      </div>
+
+      <div className="grid gap-10 lg:grid-cols-[1fr_340px]">
+        {/* ---------- Editor column ---------- */}
+        <div className={tab === "edit" ? "" : "hidden lg:block"}>
+          <div className="flex items-center justify-between">
+            <h1 className="font-grotesk font-bold text-2xl tracking-tight">Your page</h1>
+            <StatusPill status={status} />
+          </div>
+
+          {notice && (
+            <div className="alert-error mt-4 flex flex-wrap items-center justify-between gap-3">
+              <span>{notice}</span>
+              <Link href="/#pricing" className="underline underline-offset-2">
+                See plans
+              </Link>
+            </div>
+          )}
+
+          <div className="mt-5 space-y-3">
+            {/* 1 — Quick start: AI + import (zbalene) */}
+            <Section
+              title="Quick start"
+              subtitle="build with AI · import links"
+              delay={0}
+            >
+              <div className="space-y-3">
+                <AiDraft
+                  bare
+                  enabled={plan.ai}
+                  onApply={(draft) => {
+                    // Jeden zapis do oboch stavov — autosave sa postara o zvysok
+                    profileDirty.current = true;
+                    blocksDirty.current = true;
+                    setProfile((p) => ({
+                      ...p,
+                      display_name: draft.display_name || p.display_name,
+                      bio: draft.bio || p.bio,
+                      theme: allowsTheme(plan, draft.theme)
+                        ? draft.theme
+                        : p.theme,
+                      design: plan.customDesign
+                        ? { ...p.design, ...draft.design }
+                        : p.design,
+                    }));
+                    setBlocks(
+                      plan.maxBlocks === null
+                        ? draft.blocks
+                        : draft.blocks.slice(0, plan.maxBlocks),
+                    );
+                    setNotice(null);
+                  }}
+                />
+
+                <ImportPanel
+                  bare
+                  onApply={(result) => {
+                    profileDirty.current = true;
+                    blocksDirty.current = true;
+                    setProfile((p) => ({
+                      ...p,
+                      display_name: result.display_name || p.display_name,
+                      bio: result.bio || p.bio,
+                      avatar_url: result.avatar_url || p.avatar_url,
+                    }));
+                    setBlocks(
+                      plan.maxBlocks === null
+                        ? result.blocks
+                        : result.blocks.slice(0, plan.maxBlocks),
+                    );
+                    setNotice(
+                      plan.maxBlocks !== null &&
+                        result.blocks.length > plan.maxBlocks
+                        ? `Imported the first ${plan.maxBlocks} links — upgrade to keep the rest.`
+                        : null,
+                    );
+                  }}
+                />
+              </div>
+            </Section>
+
+            {/* 2 — Profile (otvorene) */}
+            <Section
+              title="Profile"
+              subtitle="photo, name, bio"
+              defaultOpen
+              delay={60}
+            >
+              <div className="space-y-4">
+                <AvatarRow
+                  url={profile.avatar_url}
+                  userId={userId}
+                  onChange={(avatar_url) => patchProfile({ avatar_url })}
+                />
+                <label className="block">
+                  <span className="mb-1 block text-xs font-medium text-soft">
+                    Display name
+                  </span>
+                  <input
+                    value={profile.display_name}
+                    maxLength={60}
+                    onChange={(e) =>
+                      patchProfile({ display_name: e.target.value })
+                    }
+                    className="field py-2.5"
+                  />
+                </label>
+                <label className="block">
+                  <span className="mb-1 block text-xs font-medium text-soft">
+                    Bio
+                  </span>
+                  <textarea
+                    rows={2}
+                    maxLength={300}
+                    value={profile.bio}
+                    placeholder="Photographer · Prague"
+                    onChange={(e) => patchProfile({ bio: e.target.value })}
+                    className="field py-2.5"
+                  />
+                </label>
+              </div>
+            </Section>
+
+            {/* 3 — Design: tema + sablony + customizacia (zbalene) */}
+            <Section
+              title="Design"
+              subtitle="theme, template, colours"
+              delay={120}
+            >
+              {/* Theme */}
+              <p className="text-xs font-medium text-soft">Theme</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {THEME_KEYS.map((key) => {
+                  const locked = !allowsTheme(plan, key);
+                  return (
+                    <button
+                      key={key}
+                      onClick={() =>
+                        locked
+                          ? setNotice("That theme needs a paid plan.")
+                          : pickTheme(key)
+                      }
+                      className={`flex items-center gap-2 rounded-full border px-3 py-2 text-sm transition ${
+                        profile.theme === key
+                          ? "border-ink"
+                          : "border-line hover:border-soft"
+                      } ${locked ? "opacity-55" : ""}`}
+                    >
+                      <span
+                        className="h-4 w-4 rounded-full border border-line"
+                        style={{ background: THEMES[key].swatch }}
+                      />
+                      {THEMES[key].label}
+                      {locked && <Lock />}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Templates — cely vzhlad na jeden klik */}
+              {plan.customDesign && (
+                <div className="mt-4">
+                  <button
+                    type="button"
+                    onClick={() => setTplOpen((v) => !v)}
+                    className="flex w-full items-center justify-between rounded-xl border border-line bg-surface px-4 py-3 text-sm transition hover:border-soft"
+                  >
+                    <span>
+                      <span className="font-medium">Start from a template</span>
+                      <span className="ml-2 text-soft">
+                        a full look in one click
+                      </span>
+                    </span>
+                    <Chevron open={tplOpen} />
+                  </button>
+                  <Collapse open={tplOpen}>
+                    <div className="mt-3">
+                      <TemplateGrid
+                        onPick={(t) => {
+                          profileDirty.current = true;
+                          blocksDirty.current = true;
+                          patchProfile({ theme: t.theme, design: t.design });
+                          // Sablonu naplnime len ak je stranka prazdna, inak by
+                          // sme prepisali robotu usera
+                          if (blocks.length === 0) {
+                            setBlocks(templateBlocks(t));
+                          }
+                          setNotice(
+                            blocks.length === 0
+                              ? null
+                              : "Applied the look. Your existing blocks were kept.",
+                          );
+                        }}
+                      />
+                    </div>
+                  </Collapse>
+                </div>
+              )}
+
+              {/* Customise */}
+              {plan.customDesign ? (
+                <div className="mt-3">
+                  <button
+                    type="button"
+                    onClick={() => setDesignOpen((v) => !v)}
+                    className="flex w-full items-center justify-between rounded-xl border border-line bg-surface px-4 py-3 text-sm transition hover:border-soft"
+                  >
+                    <span>
+                      <span className="font-medium">Customise</span>
+                      <span className="ml-2 text-soft">
+                        background, buttons, fonts
+                      </span>
+                    </span>
+                    <Chevron open={designOpen} />
+                  </button>
+
+                  <Collapse open={designOpen}>
+                    <div className="mt-3">
+                      <DesignPanel
+                        design={profile.design}
+                        userId={userId}
+                        onChange={(patch) =>
+                          patchProfile({
+                            design: { ...profile.design, ...patch },
+                          })
+                        }
+                        onReset={() => patchProfile({ design: {} })}
+                      />
+                    </div>
+                  </Collapse>
+                </div>
+              ) : (
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-line px-4 py-3 text-sm">
+                  <span className="flex items-center gap-2 text-soft">
+                    <Lock />
+                    Custom background, buttons and fonts
+                  </span>
+                  <Link href="/#pricing" className="btn-ink px-4 py-2 text-sm">
+                    Upgrade
+                  </Link>
+                </div>
+              )}
+            </Section>
+
+            {/* Link Shield — premiovy gate: citlive linky za potvrdenim */}
+            <Section
+              title="Link Shield"
+              subtitle="Gate sensitive links behind a confirmation"
+              delay={180}
+              badge={
+                profile.link_shield ? (
+                  <span className="rounded-full bg-ink px-2 py-0.5 text-[11px] font-medium text-paper">
+                    On
+                  </span>
+                ) : plan.linkShield ? undefined : (
+                  <Lock />
+                )
+              }
+            >
+              {plan.linkShield ? (
+                <div className="space-y-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="text-sm font-medium">
+                        Protect outbound links
+                      </p>
+                      <p className="mt-1 text-xs text-soft">
+                        Visitors see a neutral confirmation step (with an
+                        optional 18+ check) before they reach the destination.
+                        The link itself stays out of your page&apos;s code and
+                        link previews, so it isn&apos;t publicly scrapeable.
+                      </p>
+                    </div>
+                    <Switch
+                      on={profile.link_shield}
+                      busy={shieldBusy}
+                      onToggle={toggleShield}
+                    />
+                  </div>
+                  <p className="rounded-xl border border-line bg-surface px-4 py-3 text-xs text-soft">
+                    Keeps the destination private in your page&apos;s code. This
+                    is a privacy feature — always follow each platform&apos;s own
+                    rules.
+                  </p>
+                </div>
+              ) : (
+                <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
+                  <span className="flex items-center gap-2 text-soft">
+                    <Lock />
+                    Gate sensitive links behind a confirmation
+                  </span>
+                  <Link href="/#pricing" className="btn-ink px-4 py-2 text-sm">
+                    Upgrade
+                  </Link>
+                </div>
+              )}
+            </Section>
+
+            {/* Escape in-app browser — premiova funkcia */}
+            <Section
+              title="Open externally"
+              subtitle="leave Instagram's in-app browser"
+              delay={210}
+              badge={
+                profile.escape_inapp ? (
+                  <span className="rounded-full bg-ink px-2 py-0.5 text-[11px] font-medium text-paper">
+                    On
+                  </span>
+                ) : plan.escapeInApp ? undefined : (
+                  <Lock />
+                )
+              }
+            >
+              {plan.escapeInApp ? (
+                <div className="space-y-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="text-sm font-medium">
+                        Force-open in the real browser
+                      </p>
+                      <p className="mt-1 text-xs text-soft">
+                        When someone opens your page from Instagram or TikTok, it
+                        jumps straight out of their cramped in-app browser into
+                        Safari / Chrome — where logins and payments actually
+                        work, so fans don&apos;t drop off.
+                      </p>
+                    </div>
+                    <Switch
+                      on={profile.escape_inapp}
+                      busy={escapeBusy}
+                      onToggle={toggleEscape}
+                    />
+                  </div>
+                  <p className="rounded-xl border border-line bg-surface px-4 py-3 text-xs text-soft">
+                    Reliable on Android. On iOS Apple limits this, so visitors
+                    get a
+                    <span className="font-medium text-ink">
+                      {" "}
+                      one-tap &ldquo;Open in browser&rdquo;{" "}
+                    </span>
+                    prompt as a fallback.
+                  </p>
+                </div>
+              ) : (
+                <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
+                  <span className="flex items-center gap-2 text-soft">
+                    <Lock />
+                    Escape Instagram&apos;s in-app browser automatically
+                  </span>
+                  <Link href="/#pricing" className="btn-ink px-4 py-2 text-sm">
+                    Upgrade
+                  </Link>
+                </div>
+              )}
+            </Section>
+
+            {/* 4 — Blocks (otvorene) */}
+            <Section
+              title="Blocks"
+              subtitle="your links & content"
+              defaultOpen
+              delay={240}
+              badge={
+                <span className="text-xs text-faint">
+                  {plan.maxBlocks !== null
+                    ? `${blocks.length} / ${plan.maxBlocks}`
+                    : blocks.length}
+                </span>
+              }
+            >
+              {/* Add block — paleta skryta za jednym tlacidlom */}
+              <button
+                type="button"
+                onClick={() => setPaletteOpen((v) => !v)}
+                aria-expanded={paletteOpen}
+                className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-line px-4 py-3 text-sm font-medium transition hover:border-ink"
+              >
+                {paletteOpen ? "Close" : "+ Add a block"}
+              </button>
+
+              <Collapse open={paletteOpen}>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {BLOCK_ORDER.map((type) => {
+                    const locked = !allowsBlock(plan, type);
+                    return (
+                      <button
+                        key={type}
+                        onClick={() => addBlock(type)}
+                        title={BLOCK_META[type].hint}
+                        className={`flex items-center gap-2 rounded-full border border-line bg-surface px-3.5 py-2 text-sm transition hover:border-ink ${
+                          locked ? "opacity-55" : ""
+                        }`}
+                      >
+                        <BlockGlyph type={type} />
+                        {BLOCK_META[type].label}
+                        {locked && <Lock />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </Collapse>
+
+              <div className="mt-4 space-y-2.5">
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  modifiers={[restrictToVerticalAxis]}
+                  onDragEnd={onDragEnd}
+                >
+                  <SortableContext
+                    items={blocks.map((b) => b.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {blocks.map((block) => (
+                      <BlockCard
+                        key={block.id}
+                        block={block}
+                        broken={broken.has(block.id)}
+                        userId={userId}
+                        vip={plan.vipLinks}
+                        onChange={(patch) =>
+                          patchBlocks((prev) =>
+                            prev.map((b) =>
+                              b.id === block.id ? { ...b, ...patch } : b,
+                            ),
+                          )
+                        }
+                        onDelete={() => removeBlock(block.id)}
+                        onDuplicate={() => duplicateBlock(block.id)}
+                      />
+                    ))}
+                  </SortableContext>
+                </DndContext>
+              </div>
+
+              {blocks.length === 0 && (
+                <p className="mt-4 rounded-2xl border border-dashed border-line p-10 text-center text-sm text-soft">
+                  Nothing here yet — add your first block above.
+                </p>
+              )}
+            </Section>
+          </div>
+        </div>
+
+        {/* ---------- Preview column ---------- */}
+        <div
+          className={`${tab === "preview" ? "" : "hidden lg:block"} lg:sticky lg:top-8 lg:self-start`}
+        >
+          <Preview
+            profileId={profile.id}
+            displayName={profile.display_name}
+            username={profile.username}
+            bio={profile.bio}
+            avatarUrl={profile.avatar_url}
+            blocks={blocks}
+            theme={theme}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AvatarRow({
+  url,
+  userId,
+  onChange,
+}: {
+  url: string | null;
+  userId: string;
+  onChange: (url: string | null) => void;
+}) {
+  const ref = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+
+  return (
+    <div className="flex items-center gap-4">
+      {url ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={url}
+          alt=""
+          className="h-16 w-16 rounded-full border border-line object-cover"
+        />
+      ) : (
+        <div className="h-16 w-16 rounded-full border border-dashed border-line" />
+      )}
+      <input
+        ref={ref}
+        type="file"
+        accept="image/*"
+        hidden
+        onChange={async (e) => {
+          const file = e.target.files?.[0];
+          if (!file) return;
+          setBusy(true);
+          try {
+            onChange(await uploadImage(file, userId));
+          } finally {
+            setBusy(false);
+          }
+        }}
+      />
+      <button
+        type="button"
+        onClick={() => ref.current?.click()}
+        disabled={busy}
+        className="rounded-full border border-line px-4 py-2 text-sm transition hover:border-ink disabled:opacity-50"
+      >
+        {busy ? "Uploading…" : url ? "Change photo" : "Upload photo"}
+      </button>
+      {url && (
+        <button
+          type="button"
+          onClick={() => onChange(null)}
+          className="text-sm text-danger"
+        >
+          Remove
+        </button>
+      )}
+    </div>
+  );
+}

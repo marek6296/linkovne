@@ -1,0 +1,493 @@
+@import "tailwindcss";
+
+@theme {
+  --color-paper: #faf9f6;
+  --color-surface: #ffffff;
+  --color-ink: #191813;
+  --color-soft: #5c5a52;
+  --color-faint: #94928a;
+  --color-line: #e8e6df;
+  --color-accent: #2b45d9;
+  --color-danger: #c2402a;
+  --color-ok: #1e7a4e;
+  --font-sans: var(--font-instrument-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-instrument-serif), Georgia, serif;
+  --font-display: var(--font-fraunces), Georgia, serif;
+  --font-grotesk: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-space-mono), ui-monospace, monospace;
+}
+
+html {
+  color-scheme: light;
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--color-ink);
+  color: var(--color-paper);
+}
+
+/* Predvoleny a11y focus ring. V @layer base, aby ho vedeli prebit Tailwind
+   utility (outline-none) — inak by nezavisle od utility vzdy vyhral a na
+   inputoch v `overflow-hidden` obale by presvital ako modry prizok pri okraji. */
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.reveal {
+  animation: rise 0.7s cubic-bezier(0.22, 0.68, 0.24, 1) both;
+}
+
+/* Upozornovacie animacie pre zvyrazneny odkaz.
+   CSS animacie prebijaju inline style, takze funguju aj nad temou. */
+@keyframes lk-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.028);
+  }
+}
+
+@keyframes lk-shake {
+  0%,
+  88%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  90% {
+    transform: translate3d(-4px, 0, 0);
+  }
+  93% {
+    transform: translate3d(4px, 0, 0);
+  }
+  96% {
+    transform: translate3d(-2px, 0, 0);
+  }
+}
+
+@keyframes lk-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(120, 120, 120, 0.35);
+  }
+  60% {
+    box-shadow: 0 0 0 10px rgba(120, 120, 120, 0);
+  }
+}
+
+.anim-pulse {
+  animation: lk-pulse 2.4s ease-in-out infinite;
+}
+.anim-shake {
+  animation: lk-shake 4s ease-in-out infinite;
+}
+.anim-glow {
+  animation: lk-glow 2.2s ease-out infinite;
+}
+
+/* Plynule rozbalovanie/zbalovanie sekcii editora.
+   Grid-rows trik (0fr -> 1fr) anima vysku bez merania v JS — hladko a lacno. */
+.lk-collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.34s cubic-bezier(0.22, 0.68, 0.24, 1);
+}
+.lk-collapse.is-open {
+  grid-template-rows: 1fr;
+}
+.lk-collapse > .lk-collapse-inner {
+  overflow: hidden;
+  min-height: 0;
+}
+/* Obsah sa navyse jemne vynori (fade + posun), az ked sa sekcia otvara. */
+.lk-collapse > .lk-collapse-inner > * {
+  opacity: 0;
+  transform: translateY(-6px);
+  transition:
+    opacity 0.26s ease,
+    transform 0.3s cubic-bezier(0.22, 0.68, 0.24, 1);
+}
+.lk-collapse.is-open > .lk-collapse-inner > * {
+  opacity: 1;
+  transform: none;
+  transition-delay: 0.05s;
+}
+
+/* Decentny nabeh kariet pri nacitani editora (staggered cez inline delay). */
+@keyframes lk-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.lk-section-in {
+  animation: lk-rise-in 0.5s cubic-bezier(0.22, 0.68, 0.24, 1) both;
+}
+
+/* ---------- Squishy pricing ---------- */
+.sq-card {
+  transition:
+    transform 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.35),
+    box-shadow 0.3s ease;
+}
+.sq-card:hover {
+  transform: scale(1.05);
+}
+/* Velky auth panel — chceme len animaciu pozadia, nie zoom celeho panela. */
+.sq-bg-only.sq-card:hover {
+  transform: none;
+}
+.sq-price {
+  transform: scale(0.88);
+  transform-origin: top left;
+  transition: transform 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.35);
+}
+.sq-card:hover .sq-price {
+  transform: scale(1);
+}
+.sq-svg,
+.sq-shape {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 1s cubic-bezier(0.68, -0.55, 0.265, 1.25);
+}
+
+/* bg 1 — circle squishes, ellipse grows */
+.sq-card:hover .sq-svg-1 {
+  transform: scale(1.5);
+}
+.sq-card:hover .sq-c1 {
+  transform: scaleY(0.5) translateY(-25px);
+  transition-delay: 0.2s;
+}
+.sq-card:hover .sq-e1 {
+  transform: scaleY(2.25) translateY(-11px);
+  transition-delay: 0.2s;
+}
+
+/* bg 2 — two rounded squares swap + rotate */
+.sq-r1 {
+  transform: translateY(12px);
+}
+.sq-card:hover .sq-r1 {
+  transform: translateY(219px) rotate(90deg) scaleX(2);
+  transition-delay: 0.2s;
+}
+.sq-r2 {
+  transform: translateY(219px);
+}
+.sq-card:hover .sq-r2 {
+  transform: translateY(12px) rotate(90deg) scaleX(2);
+  transition-delay: 0.2s;
+}
+
+/* bg 3 — stacked diamonds slide up */
+.sq-card:hover .sq-svg-3 {
+  transform: scale(1.25);
+}
+.sq-card:hover .sq-d1 {
+  transform: translateY(-50px);
+  transition-delay: 0.3s;
+}
+.sq-card:hover .sq-d2 {
+  transform: translateY(-50px);
+  transition-delay: 0.2s;
+}
+.sq-card:hover .sq-d3 {
+  transform: translateY(-50px);
+  transition-delay: 0.1s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .reveal,
+  .anim-pulse,
+  .anim-shake,
+  .anim-glow,
+  .lk-section-in {
+    animation: none;
+  }
+  .lk-collapse {
+    transition: none;
+  }
+  .lk-collapse > .lk-collapse-inner > * {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .sq-card,
+  .sq-card:hover,
+  .sq-price,
+  .sq-svg,
+  .sq-shape {
+    transition: none;
+    transform: none;
+  }
+}
+
+/* ---------- Jemny „float" pre plavajuce chipy v hero mockupe ---------- */
+@keyframes lk-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+.lk-float {
+  animation: lk-float 5s ease-in-out infinite;
+}
+.lk-float-2 {
+  animation: lk-float 6.5s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .lk-float,
+  .lk-float-2 {
+    animation: none;
+  }
+}
+
+/* ---------- Tech marquee (built-with strip) ----------
+   Nekonecne posuvajuci sa pas log. Track ma dve identicke skupiny;
+   animujeme translateX(-50% - gap/2), takze druha skupina presne nadviaze
+   na prvu → plynula slucka bez skoku. Iba `transform` (GPU), 0 JS.
+   Okraje sa vyblednu cez mask-image (ako `.edge-fade`), nezavisle od pozadia. */
+.lk-marquee {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 8%,
+    #000 92%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 8%,
+    #000 92%,
+    transparent 100%
+  );
+}
+.lk-marquee-track {
+  display: flex;
+  width: max-content;
+  gap: var(--lk-gap, 4rem);
+  animation: lk-marquee var(--lk-duration, 34s) linear infinite;
+}
+.lk-marquee-group {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--lk-gap, 4rem);
+}
+/* Pauza pri hover — necha uzivatela zastavit a pozriet si znacky. */
+.lk-marquee:hover .lk-marquee-track {
+  animation-play-state: paused;
+}
+@keyframes lk-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(-50% - var(--lk-gap, 4rem) / 2));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lk-marquee-track {
+    animation: none;
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1.5rem 3rem;
+  }
+  /* Bez pohybu netreba duplikat — zobrazime len jednu sadu, vycentrovanu. */
+  .lk-marquee-group[data-dup="true"] {
+    display: none;
+  }
+}
+
+/* ---------- Legal pages (Privacy / Terms) ---------- */
+.legal {
+  color: var(--color-soft);
+  line-height: 1.7;
+  font-size: 15px;
+}
+.legal h2 {
+  color: var(--color-ink);
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin: 2rem 0 0.6rem;
+}
+.legal h3 {
+  color: var(--color-ink);
+  font-weight: 600;
+  font-size: 1rem;
+  margin: 1.3rem 0 0.4rem;
+}
+.legal p {
+  margin: 0.6rem 0;
+}
+.legal ul {
+  margin: 0.6rem 0;
+  padding-left: 1.2rem;
+  list-style: disc;
+}
+.legal li {
+  margin: 0.3rem 0;
+}
+.legal a {
+  color: var(--color-ink);
+  text-decoration: underline;
+}
+.legal strong {
+  color: var(--color-ink);
+}
+
+/* ---------- In-app escape gate ----------
+   Gate je defaultne skryty (aj v SSR HTML). Inline skript pri parse zisti
+   in-app prehliadac a prida `lk-escaping` na <html> → gate sa okamzite ukaze
+   a zvysok stranky sa skryje, este pred vykreslenim profilu (ziadny flash). */
+.lk-gate {
+  display: none;
+}
+html.lk-escaping .lk-gate {
+  display: grid;
+}
+html.lk-escaping main > :not(.lk-gate):not(script) {
+  display: none !important;
+}
+
+/* ---------- Edge fade ----------
+   Jemne vyblednutie okrajov (video/obrazok splynie s pozadim, ziadny sev).
+   Dve linearne masky sa pretnu → mäkký ramik po celom obvode. */
+.edge-fade {
+  -webkit-mask-image:
+    linear-gradient(to right, transparent 0, #000 6%, #000 94%, transparent 100%),
+    linear-gradient(to bottom, transparent 0, #000 5%, #000 95%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(to right, transparent 0, #000 6%, #000 94%, transparent 100%),
+    linear-gradient(to bottom, transparent 0, #000 5%, #000 95%, transparent 100%);
+  mask-composite: intersect;
+}
+
+/* ---------- Gradient button ----------
+   Nas hlavny marketingovy CTA (landing nav+hero, verejny profil promo).
+   Biele vnutro s cierny obrysom; na hover sa cierna farba "natiahne" zvnutra
+   cez pseudo-element (transform: scaleX), takze text plynule prejde na
+   biely. Vzdy pill (rounded-full), rovnaky tvar ako .btn-ink/.btn-line. */
+.gradient-button {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: 9999px;
+  color: var(--color-ink);
+  font-weight: 600;
+  background: var(--color-paper);
+  border: 1.5px solid var(--color-ink);
+  box-shadow: 0 1px 2px rgba(25, 24, 19, 0.06);
+  transition:
+    color 0.32s ease,
+    border-color 0.32s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+.gradient-button::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--color-ink);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.38s cubic-bezier(0.22, 0.68, 0.24, 1);
+}
+.gradient-button:hover {
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(25, 24, 19, 0.2);
+}
+.gradient-button:hover::before {
+  transform: scaleX(1);
+}
+
+/* Variantne farby vyplne — rovnake ako inde na webe (nas ruzovy akcent,
+   modra z pricing karty), namiesto standardnej cierny. */
+.gradient-button--pink::before {
+  background: #ec4899;
+}
+.gradient-button--pink:hover {
+  border-color: #ec4899;
+  box-shadow: 0 10px 24px rgba(236, 72, 153, 0.3);
+}
+.gradient-button--blue::before {
+  background: #6366f1;
+}
+.gradient-button--blue:hover {
+  border-color: #6366f1;
+  box-shadow: 0 10px 24px rgba(99, 102, 241, 0.3);
+}
+
+/* Tmavy zaklad — pre CTA, ktore maju byt uz v pokoji vyplnene (nie biele s
+   obrysom), a farba vyplne sa animuje az na hover cez ::before vyssie. */
+.gradient-button--dark {
+  background: var(--color-ink);
+  color: #fff;
+  border-color: var(--color-ink);
+  box-shadow: 0 6px 18px rgba(25, 24, 19, 0.2);
+}
+
+@layer components {
+  .btn-ink {
+    @apply inline-flex items-center justify-center rounded-full bg-ink px-6 py-3 font-medium text-paper transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_28px_rgba(25,24,19,0.22)] disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none;
+  }
+  .btn-line {
+    @apply inline-flex items-center justify-center rounded-full border border-line bg-surface px-6 py-3 font-medium text-ink transition duration-200 hover:border-ink;
+  }
+  .btn-quiet {
+    @apply inline-flex items-center justify-center rounded-full px-4 py-2 text-sm text-soft transition hover:text-ink;
+  }
+  .field {
+    @apply w-full rounded-xl border border-line bg-surface px-4 py-3 text-ink outline-none transition placeholder:text-faint focus:border-ink;
+  }
+  .field:focus-visible {
+    outline: none;
+  }
+  .card {
+    @apply rounded-2xl border border-line bg-surface;
+  }
+  .alert-error {
+    @apply rounded-xl border border-danger/25 bg-danger/5 px-4 py-2.5 text-sm text-danger;
+  }
+}
