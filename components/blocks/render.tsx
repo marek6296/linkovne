@@ -2,6 +2,9 @@ import {
   ANIM_CLASS,
   socialHref,
   toEmbed,
+  SOCIAL_BRAND,
+  SOCIAL_SIZE_PX,
+  SOCIAL_SHAPE_RADIUS,
   type Block,
   type LinkAnim,
   type LinkLayout,
@@ -405,26 +408,72 @@ export function BlockList({
                 i.url?.trim(),
               );
               if (items.length === 0) return null;
+
+              const style = block.config.socialStyle ?? "line";
+              const shape = block.config.socialShape ?? "bare";
+              const size = block.config.socialSize ?? "md";
+              const px = SOCIAL_SIZE_PX[size];
+              const radius = SOCIAL_SHAPE_RADIUS[shape];
+              // Chip = ikona + vypln okolo (mensia pri sm, vacsia pri lg).
+              const chipPx = px + (size === "sm" ? 16 : size === "md" ? 20 : 24);
+
               return (
                 <div
                   key={block.id}
-                  className="flex flex-wrap items-center justify-center gap-4 py-2"
+                  className="flex flex-wrap items-center justify-center gap-3 py-2"
                 >
-                  {items.map((item, i) => (
-                    <a
-                      key={`${item.platform}-${i}`}
-                      href={socialHref(
-                        item.platform as SocialPlatform,
-                        item.url,
-                      )}
-                      rel="noopener"
-                      aria-label={item.platform}
-                      className="transition hover:opacity-60"
-                      style={{ color: theme.text }}
-                    >
-                      <SocialIcon platform={item.platform as SocialPlatform} />
-                    </a>
-                  ))}
+                  {items.map((item, i) => {
+                    const platform = item.platform as SocialPlatform;
+                    // „Accent" = signaturna farba ikony (override → brand → tema).
+                    const accent =
+                      safeColor(item.color) ??
+                      (style === "brand"
+                        ? SOCIAL_BRAND[platform]
+                        : (safeColor(block.config.socialColor) ?? theme.text));
+                    const accented = style === "brand" || !!item.color;
+
+                    let glyphColor = accent;
+                    let chipBg: string | undefined;
+                    if (shape !== "bare") {
+                      if (accented) {
+                        chipBg = accent;
+                        glyphColor = readableText(accent);
+                      } else {
+                        chipBg = safeColor(block.config.socialBg) ?? theme.btnBg;
+                        glyphColor =
+                          safeColor(block.config.socialColor) ?? theme.btnText;
+                      }
+                    }
+
+                    const bare = shape === "bare";
+                    return (
+                      <a
+                        key={`${platform}-${i}`}
+                        href={socialHref(platform, item.url)}
+                        rel="noopener"
+                        aria-label={platform}
+                        className={
+                          bare
+                            ? "transition hover:opacity-60"
+                            : "flex items-center justify-center transition hover:opacity-85"
+                        }
+                        style={
+                          bare
+                            ? { color: glyphColor }
+                            : {
+                                width: chipPx,
+                                height: chipPx,
+                                borderRadius: radius,
+                                background: chipBg,
+                                color: glyphColor,
+                                boxShadow: theme.btnShadow,
+                              }
+                        }
+                      >
+                        <SocialIcon platform={platform} size={px} />
+                      </a>
+                    );
+                  })}
                 </div>
               );
             }

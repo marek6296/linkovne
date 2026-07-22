@@ -12,6 +12,9 @@ import {
   LINK_WIDTHS,
   SOCIAL_LABELS,
   SOCIAL_PLATFORMS,
+  SOCIAL_STYLES,
+  SOCIAL_SHAPES,
+  SOCIAL_SIZES,
   type Block,
   type BlockConfig,
   type LinkAnim,
@@ -234,68 +237,268 @@ function MediaPicker({
   );
 }
 
-function SocialsEditor({
-  items,
+type SocialItem = { platform: SocialPlatform; url: string; color?: string };
+
+/** Skupina chipov s malym vizualnym nahladom vlavo. */
+function SocialChips<T extends string>({
+  label,
+  options,
+  value,
   onChange,
 }: {
-  items: { platform: SocialPlatform; url: string }[];
-  onChange: (items: { platform: SocialPlatform; url: string }[]) => void;
+  label: string;
+  options: { key: T; label: string; glyph?: React.ReactNode }[];
+  value: T;
+  onChange: (v: T) => void;
 }) {
   return (
-    <div className="space-y-2">
-      {items.map((item, i) => (
-        <div key={i} className="flex gap-2">
-          <select
-            value={item.platform}
-            onChange={(e) => {
-              const next = [...items];
-              next[i] = {
-                ...item,
-                platform: e.target.value as SocialPlatform,
-              };
-              onChange(next);
-            }}
-            className="rounded-lg border border-line bg-surface px-2 py-2 text-sm"
-          >
-            {SOCIAL_PLATFORMS.map((p) => (
-              <option key={p} value={p}>
-                {SOCIAL_LABELS[p]}
-              </option>
-            ))}
-          </select>
-          <input
-            value={item.url}
-            placeholder={
-              item.platform === "email"
-                ? "you@example.com"
-                : item.platform === "phone"
-                  ? "+421…"
-                  : "instagram.com/you"
-            }
-            onChange={(e) => {
-              const next = [...items];
-              next[i] = { ...item, url: e.target.value };
-              onChange(next);
-            }}
-            className="field flex-1 px-3 py-2 text-sm"
-          />
+    <div>
+      <p className="mb-1.5 text-[11px] font-semibold tracking-wide text-faint uppercase">
+        {label}
+      </p>
+      <div className="flex flex-wrap gap-1.5">
+        {options.map((o) => (
           <button
+            key={o.key}
             type="button"
-            aria-label="Remove"
-            onClick={() => onChange(items.filter((_, j) => j !== i))}
-            className="px-2 text-faint transition hover:text-danger"
+            onClick={() => onChange(o.key)}
+            className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-sm transition ${
+              value === o.key
+                ? "border-ink bg-ink/[0.04] font-medium"
+                : "border-line hover:border-soft"
+            }`}
           >
-            ×
+            {o.glyph}
+            {o.label}
           </button>
-        </div>
-      ))}
-      <button
-        type="button"
-        onClick={() => onChange([...items, { platform: "instagram", url: "" }])}
-        className="text-sm text-soft underline underline-offset-4 hover:text-ink"
-      >
-        Add another
-      </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/** Farebny riadok — label vlavo, farba + hex vpravo. */
+function SocialColorRow({
+  label,
+  value,
+  fallback,
+  onChange,
+}: {
+  label: string;
+  value: string | undefined;
+  fallback: string;
+  onChange: (v: string) => void;
+}) {
+  const current = value ?? fallback;
+  return (
+    <div className="flex items-center justify-between gap-4 py-2">
+      <span className="text-sm text-soft">{label}</span>
+      <label className="flex cursor-pointer items-center gap-2 rounded-full border border-line py-1 pr-3 pl-1 transition hover:border-soft">
+        <span
+          className="relative h-6 w-6 overflow-hidden rounded-full border border-line"
+          style={{ background: current }}
+        >
+          <input
+            type="color"
+            value={current}
+            onChange={(e) => onChange(e.target.value)}
+            className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+          />
+        </span>
+        <code className="text-xs text-faint uppercase">{current}</code>
+      </label>
+    </div>
+  );
+}
+
+function SocialsEditor({
+  config,
+  onPatch,
+}: {
+  config: BlockConfig;
+  onPatch: (patch: Partial<BlockConfig>) => void;
+}) {
+  const items = (config.items ?? []) as SocialItem[];
+  const style = config.socialStyle ?? "line";
+  const shape = config.socialShape ?? "bare";
+  const size = config.socialSize ?? "md";
+
+  const setItems = (next: SocialItem[]) => onPatch({ items: next });
+
+  return (
+    <div className="space-y-4">
+      {/* ---------- Vzhlad ikon (vsetky naraz) ---------- */}
+      <div className="space-y-3 rounded-xl border border-line p-3.5">
+        <SocialChips
+          label="Style"
+          value={style}
+          onChange={(socialStyle) => onPatch({ socialStyle })}
+          options={SOCIAL_STYLES.map((s) => ({
+            key: s.key,
+            label: s.label,
+            glyph:
+              s.key === "brand" ? (
+                <span className="flex gap-0.5" aria-hidden>
+                  <span className="h-2.5 w-2.5 rounded-full bg-pink-500" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-sky-500" />
+                </span>
+              ) : (
+                <span
+                  aria-hidden
+                  className="h-2.5 w-2.5 rounded-full border-[1.5px] border-current"
+                />
+              ),
+          }))}
+        />
+
+        <SocialChips
+          label="Shape"
+          value={shape}
+          onChange={(socialShape) => onPatch({ socialShape })}
+          options={SOCIAL_SHAPES.map((s) => ({
+            key: s.key,
+            label: s.label,
+            glyph:
+              s.key === "bare" ? undefined : (
+                <span
+                  aria-hidden
+                  className="h-4 w-4 border-[1.5px] border-current opacity-80"
+                  style={{
+                    borderRadius:
+                      s.key === "circle"
+                        ? "999px"
+                        : s.key === "rounded"
+                          ? "5px"
+                          : "2px",
+                  }}
+                />
+              ),
+          }))}
+        />
+
+        <SocialChips
+          label="Size"
+          value={size}
+          onChange={(socialSize) => onPatch({ socialSize })}
+          options={SOCIAL_SIZES.map((s) => ({ key: s.key, label: s.label }))}
+        />
+
+        {/* Farby — len pre `line` styl (brand pouziva znackove farby) */}
+        {style === "line" && (
+          <div className="divide-y divide-line/60 border-t border-line pt-1">
+            <SocialColorRow
+              label="Icon colour"
+              value={config.socialColor}
+              fallback="#191813"
+              onChange={(socialColor) => onPatch({ socialColor })}
+            />
+            {shape !== "bare" && (
+              <SocialColorRow
+                label="Background"
+                value={config.socialBg}
+                fallback="#ffffff"
+                onChange={(socialBg) => onPatch({ socialBg })}
+              />
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* ---------- Ucty (kazdy zvlast + volitelna farba) ---------- */}
+      <div className="space-y-2">
+        {items.map((item, i) => (
+          <div key={i} className="flex items-center gap-2">
+            <select
+              value={item.platform}
+              onChange={(e) => {
+                const next = [...items];
+                next[i] = { ...item, platform: e.target.value as SocialPlatform };
+                setItems(next);
+              }}
+              className="rounded-lg border border-line bg-surface px-2 py-2 text-sm"
+            >
+              {SOCIAL_PLATFORMS.map((p) => (
+                <option key={p} value={p}>
+                  {SOCIAL_LABELS[p]}
+                </option>
+              ))}
+            </select>
+            <input
+              value={item.url}
+              placeholder={
+                item.platform === "email"
+                  ? "you@example.com"
+                  : item.platform === "phone"
+                    ? "+421…"
+                    : "instagram.com/you"
+              }
+              onChange={(e) => {
+                const next = [...items];
+                next[i] = { ...item, url: e.target.value };
+                setItems(next);
+              }}
+              className="field min-w-0 flex-1 px-3 py-2 text-sm"
+            />
+            {/* Per-icon farba — override pre tuto jednu ikonu */}
+            <label
+              title="Custom colour for this icon"
+              className="relative flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full border border-line"
+              style={item.color ? { background: item.color } : undefined}
+            >
+              {!item.color && (
+                <span
+                  aria-hidden
+                  className="h-3.5 w-3.5 rounded-full border-[1.5px] border-dashed border-faint"
+                />
+              )}
+              <input
+                type="color"
+                value={item.color ?? "#000000"}
+                onChange={(e) => {
+                  const next = [...items];
+                  next[i] = { ...item, color: e.target.value };
+                  setItems(next);
+                }}
+                className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+              />
+            </label>
+            {item.color && (
+              <button
+                type="button"
+                aria-label="Reset colour"
+                title="Reset to default colour"
+                onClick={() => {
+                  const next = [...items];
+                  const { color: _drop, ...rest } = item;
+                  void _drop;
+                  next[i] = rest;
+                  setItems(next);
+                }}
+                className="shrink-0 text-xs text-faint transition hover:text-ink"
+              >
+                ↺
+              </button>
+            )}
+            <button
+              type="button"
+              aria-label="Remove"
+              onClick={() => setItems(items.filter((_, j) => j !== i))}
+              className="shrink-0 px-1 text-faint transition hover:text-danger"
+            >
+              ×
+            </button>
+          </div>
+        ))}
+        <button
+          type="button"
+          onClick={() =>
+            setItems([...items, { platform: "instagram", url: "" }])
+          }
+          className="text-sm text-soft underline underline-offset-4 hover:text-ink"
+        >
+          Add another
+        </button>
+      </div>
     </div>
   );
 }
@@ -723,10 +926,7 @@ export function BlockCard({
           )}
 
           {block.type === "socials" && (
-            <SocialsEditor
-              items={block.config.items ?? []}
-              onChange={(items) => patchConfig({ items })}
-            />
+            <SocialsEditor config={block.config} onPatch={patchConfig} />
           )}
 
           {block.type === "faq" && (
