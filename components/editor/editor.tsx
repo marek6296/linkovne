@@ -45,8 +45,7 @@ import { DesignPanel } from "@/components/editor/design-panel";
 import { Preview } from "@/components/editor/preview";
 import { Collapse, Chevron } from "@/components/editor/collapse";
 import { BlockGlyph } from "@/components/editor/block-glyph";
-import { DesignChecker, EditorToolbar } from "@/components/editor/workspace-tools";
-import { auditDesign, autoFixDesign } from "@/lib/editor-pro";
+import { EditorToolbar } from "@/components/editor/workspace-tools";
 
 type ProfileState = {
   id: string;
@@ -206,7 +205,6 @@ export function Editor({
   const [profileOpen, setProfileOpen] = useState(true);
   const [blocksOpen, setBlocksOpen] = useState(true);
   const [openBlockId, setOpenBlockId] = useState<string | null>(null);
-  const [checkerOpen, setCheckerOpen] = useState(false);
   const [pendingTemplate, setPendingTemplate] = useState<Template | null>(null);
 
   // Bez tychto flagov by autosave vystrelil hned po mounte a prepisoval by
@@ -471,8 +469,6 @@ export function Editor({
     profile.theme,
     plan.customDesign ? profile.design : {},
   );
-  const auditIssues = auditDesign(profile.theme, profile.design, blocks, broken);
-
   return (
     <div>
       {/* Mobile tabs */}
@@ -501,14 +497,7 @@ export function Editor({
           <EditorToolbar
             status={status === "saving" ? "Saving…" : status === "error" ? "Save failed" : "Saved"}
             onReset={resetCurrentSection}
-            onAudit={() => setCheckerOpen((v) => !v)}
           />
-          {checkerOpen && <DesignChecker issues={auditIssues} onClose={() => setCheckerOpen(false)} onOpen={(id) => id ? selectFromPreview({ kind: "block", id }) : (setDesignOpen(true), setCheckerOpen(false))} onFixAll={() => {
-            const design = autoFixDesign(profile.design, auditIssues);
-            const missingAlt = new Set(auditIssues.filter((i) => i.fix === "alt").map((i) => i.blockId));
-            patchProfile({ design });
-            patchBlocks((prev) => prev.map((b) => missingAlt.has(b.id) ? { ...b, config: { ...b.config, alt: b.config.alt || `${profile.display_name || profile.username} photo` } } : b));
-          }} />}
 
           {notice && (
             <div className="alert-error mt-4 flex flex-wrap items-center justify-between gap-3">
