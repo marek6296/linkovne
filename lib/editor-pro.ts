@@ -2,32 +2,6 @@ import type { Block } from "@/lib/blocks";
 import { readableText, safeColor, type Design } from "@/lib/design";
 import { resolveTheme } from "@/lib/design";
 
-export type SavedTemplate = {
-  id: string;
-  name: string;
-  theme: string;
-  design: Design;
-  blocks: Block[] | null;
-  is_shared: boolean;
-  created_at: string;
-};
-
-export type ProfileVersion = {
-  id: string;
-  reason: string;
-  created_at: string;
-};
-
-export type BrandKit = {
-  name: string;
-  logo_url: string | null;
-  colors: { page?: string; text?: string; button?: string; buttonText?: string };
-  font: string | null;
-  font_heading: string | null;
-  button: Record<string, unknown>;
-  locked: boolean;
-};
-
 export type AuditIssue = {
   id: string;
   severity: "error" | "warning";

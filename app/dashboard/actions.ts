@@ -6,7 +6,6 @@ import { createClient } from "@/lib/supabase/server";
 import { planOf, allowsBlock, allowsTheme } from "@/lib/plans";
 import type { Block, BlockType } from "@/lib/blocks";
 import type { Design } from "@/lib/design";
-import type { BrandKit } from "@/lib/editor-pro";
 
 export type ActionState = { error?: string } | undefined;
 
@@ -193,24 +192,6 @@ export async function deleteBlock(
     .eq("id", id)
     .eq("profile_id", profileId);
   if (error) return { error: "Couldn't delete that block." };
-  revalidatePath("/dashboard");
-  return undefined;
-}
-
-/** Remove only the explicit block IDs that disappeared during Undo/Redo. */
-export async function deleteBlocks(
-  profileId: string,
-  ids: string[],
-): Promise<ActionState> {
-  const { supabase } = await requireProfile(profileId);
-  const uniqueIds = [...new Set(ids)].filter(Boolean);
-  if (uniqueIds.length === 0) return undefined;
-  const { error } = await supabase
-    .from("blocks")
-    .delete()
-    .eq("profile_id", profileId)
-    .in("id", uniqueIds);
-  if (error) return { error: "Couldn't synchronize Undo/Redo." };
   revalidatePath("/dashboard");
   return undefined;
 }
@@ -434,93 +415,4 @@ export async function deleteProfile(profileId: string) {
   await supabase.from("profiles").delete().eq("id", profileId);
   revalidatePath("/dashboard");
   redirect("/dashboard");
-}
-
-/** Server-authoritative snapshot. The client never supplies version contents. */
-export async function createProfileVersion(profileId: string, reason: string): Promise<ActionState> {
-  const { supabase, user, plan } = await requireProfile(profileId);
-  if (plan.versionDays <= 0) return { error: "Version history needs Pro." };
-  const [{ data: profile }, { data: blocks }] = await Promise.all([
-    supabase.from("profiles").select("display_name,bio,avatar_url,theme,design").eq("id", profileId).single(),
-    supabase.from("blocks").select("id,type,config,position,is_active,starts_at,ends_at").eq("profile_id", profileId).order("position"),
-  ]);
-  if (!profile) return { error: "Couldn't create a version." };
-  const { error } = await supabase.from("profile_versions").insert({
-    profile_id: profileId,
-    owner_id: user.id,
-    reason: reason.slice(0, 100) || "Manual version",
-    snapshot: { profile, blocks: blocks ?? [] },
-  });
-  if (error) return { error: "Version history is not ready yet." };
-  await supabase.from("profile_versions").delete().eq("owner_id", user.id).lt("created_at", new Date(Date.now() - plan.versionDays * 864e5).toISOString());
-  revalidatePath("/dashboard");
-  return undefined;
-}
-
-export async function restoreProfileVersion(profileId: string, versionId: string): Promise<ActionState> {
-  const { supabase, plan } = await requireProfile(profileId);
-  if (plan.versionDays <= 0) return { error: "Version history needs Pro." };
-  const { data, error } = await supabase.rpc("restore_profile_version", { p_profile_id: profileId, p_version_id: versionId });
-  if (error || data !== true) return { error: "Couldn't restore that version." };
-  revalidatePath("/dashboard");
-  revalidatePath("/[username]", "page");
-  return undefined;
-}
-
-export async function saveCurrentTemplate(profileId: string, name: string, includeBlocks: boolean): Promise<ActionState> {
-  const { supabase, user, plan } = await requireProfile(profileId);
-  if (plan.savedTemplates <= 0) return { error: "Saved templates need Pro." };
-  const { count } = await supabase.from("saved_templates").select("id", { count: "exact", head: true }).eq("owner_id", user.id);
-  if ((count ?? 0) >= plan.savedTemplates) return { error: `Your plan includes ${plan.savedTemplates} saved templates.` };
-  const [{ data: profile }, { data: blocks }] = await Promise.all([
-    supabase.from("profiles").select("theme,design").eq("id", profileId).single(),
-    includeBlocks ? supabase.from("blocks").select("id,type,config,position,is_active,starts_at,ends_at").eq("profile_id", profileId).order("position") : Promise.resolve({ data: null }),
-  ]);
-  if (!profile) return { error: "Couldn't save the template." };
-  const { error } = await supabase.from("saved_templates").insert({ owner_id: user.id, name: name.trim().slice(0, 60) || "My template", theme: profile.theme, design: profile.design ?? {}, blocks: includeBlocks ? (blocks ?? []) : null, is_shared: plan.brandKit });
-  if (error) return { error: "Saved templates are not ready yet." };
-  revalidatePath("/dashboard");
-  return undefined;
-}
-
-export async function deleteSavedTemplate(profileId: string, templateId: string): Promise<ActionState> {
-  const { supabase, user } = await requireProfile(profileId);
-  const { error } = await supabase.from("saved_templates").delete().eq("id", templateId).eq("owner_id", user.id);
-  if (error) return { error: "Couldn't delete the template." };
-  revalidatePath("/dashboard");
-  return undefined;
-}
-
-export async function saveBrandKit(profileId: string, kit: BrandKit): Promise<ActionState> {
-  const { supabase, user, plan } = await requireProfile(profileId);
-  if (!plan.brandKit) return { error: "Brand Kit needs Business." };
-  const { error } = await supabase.from("brand_kits").upsert({
-    owner_id: user.id,
-    name: kit.name.trim().slice(0, 60) || "Brand kit",
-    logo_url: kit.logo_url,
-    colors: kit.colors,
-    font: kit.font,
-    font_heading: kit.font_heading,
-    button: kit.button,
-    locked: kit.locked,
-    updated_at: new Date().toISOString(),
-  });
-  if (error) return { error: "Brand Kit is not ready yet." };
-  revalidatePath("/dashboard");
-  return undefined;
-}
-
-export async function applyBrandKitToAllProfiles(profileId: string): Promise<ActionState> {
-  const { supabase, user, plan } = await requireProfile(profileId);
-  if (!plan.brandKit) return { error: "Brand Kit needs Business." };
-  const { data: kit } = await supabase.from("brand_kits").select("colors,font,font_heading,button").eq("owner_id", user.id).maybeSingle();
-  if (!kit) return { error: "Save your Brand Kit first." };
-  const { data: profiles } = await supabase.from("profiles").select("id,design").eq("owner_id", user.id);
-  for (const p of profiles ?? []) {
-    await createProfileVersion(p.id, "Before Brand Kit");
-    const colors = (kit.colors ?? {}) as BrandKit["colors"];
-    await supabase.from("profiles").update({ design: { ...(p.design as Design ?? {}), bgColor: colors.page, textColor: colors.text, btnBg: colors.button, btnText: colors.buttonText, font: kit.font, fontHeading: kit.font_heading, ...(kit.button as Design) }, updated_at: new Date().toISOString() }).eq("id", p.id);
-  }
-  revalidatePath("/dashboard");
-  return undefined;
 }

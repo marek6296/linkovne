@@ -29,9 +29,7 @@ import { THEMES, THEME_KEYS } from "@/lib/themes";
 import { resolveTheme, type Design } from "@/lib/design";
 import { allowsBlock, allowsTheme, type PlanFeatures } from "@/lib/plans";
 import {
-  createProfileVersion,
   deleteBlock,
-  deleteBlocks,
   saveBlocks,
   saveProfile,
   setLinkShield,
@@ -47,16 +45,8 @@ import { DesignPanel } from "@/components/editor/design-panel";
 import { Preview } from "@/components/editor/preview";
 import { Collapse, Chevron } from "@/components/editor/collapse";
 import { BlockGlyph } from "@/components/editor/block-glyph";
-import {
-  BrandKitPanel,
-  DesignChecker,
-  EditorToolbar,
-  PremiumWorkspaceLock,
-  SavedTemplatesPanel,
-  VersionHistory,
-  applyKitDesign,
-} from "@/components/editor/workspace-tools";
-import { auditDesign, autoFixDesign, type BrandKit, type ProfileVersion, type SavedTemplate } from "@/lib/editor-pro";
+import { DesignChecker, EditorToolbar } from "@/components/editor/workspace-tools";
+import { auditDesign, autoFixDesign } from "@/lib/editor-pro";
 
 type ProfileState = {
   id: string;
@@ -195,18 +185,12 @@ export function Editor({
   brokenLinks = [],
   plan,
   userId,
-  initialSavedTemplates = [],
-  initialVersions = [],
-  initialBrandKit = null,
 }: {
   initialProfile: ProfileState;
   initialBlocks: Block[];
   brokenLinks?: string[];
   plan: PlanFeatures;
   userId: string;
-  initialSavedTemplates?: SavedTemplate[];
-  initialVersions?: ProfileVersion[];
-  initialBrandKit?: BrandKit | null;
 }) {
   const broken = new Set(brokenLinks);
   const [profile, setProfile] = useState(initialProfile);
@@ -223,79 +207,12 @@ export function Editor({
   const [blocksOpen, setBlocksOpen] = useState(true);
   const [openBlockId, setOpenBlockId] = useState<string | null>(null);
   const [checkerOpen, setCheckerOpen] = useState(false);
-  const [workspaceOpen, setWorkspaceOpen] = useState(false);
-  const [versionsOpen, setVersionsOpen] = useState(false);
-  const [historyTick, setHistoryTick] = useState(0);
   const [pendingTemplate, setPendingTemplate] = useState<Template | null>(null);
-
-  type Snapshot = { profile: ProfileState; blocks: Block[] };
-  const undoStack = useRef<Snapshot[]>([]);
-  const redoStack = useRef<Snapshot[]>([]);
-  const lastHistoryAt = useRef(0);
 
   // Bez tychto flagov by autosave vystrelil hned po mounte a prepisoval by
   // server tym istym, co z neho prislo.
   const blocksDirty = useRef(false);
   const profileDirty = useRef(false);
-
-  function snapshot(): Snapshot {
-    return { profile: structuredClone(profile), blocks: structuredClone(blocks) };
-  }
-
-  function recordHistory(force = false) {
-    const now = Date.now();
-    if (!force && now - lastHistoryAt.current < 550) return;
-    undoStack.current.push(snapshot());
-    if (undoStack.current.length > 50) undoStack.current.shift();
-    redoStack.current = [];
-    lastHistoryAt.current = now;
-    setHistoryTick((x) => x + 1);
-  }
-
-  async function restoreLocal(next: Snapshot) {
-    const nextIds = new Set(next.blocks.map((block) => block.id));
-    const removedIds = blocks
-      .filter((block) => !nextIds.has(block.id))
-      .map((block) => block.id);
-    if (removedIds.length > 0) {
-      const result = await deleteBlocks(profile.id, removedIds);
-      if (result?.error) {
-        setNotice(result.error);
-        setStatus("error");
-        return false;
-      }
-    }
-    profileDirty.current = true;
-    blocksDirty.current = true;
-    setProfile(structuredClone(next.profile));
-    setBlocks(structuredClone(next.blocks));
-    setStatus("saving");
-    return true;
-  }
-
-  async function undo() {
-    const next = undoStack.current.pop();
-    if (!next) return;
-    const current = snapshot();
-    if (!(await restoreLocal(next))) {
-      undoStack.current.push(next);
-      return;
-    }
-    redoStack.current.push(current);
-    setHistoryTick((x) => x + 1);
-  }
-
-  async function redo() {
-    const next = redoStack.current.pop();
-    if (!next) return;
-    const current = snapshot();
-    if (!(await restoreLocal(next))) {
-      redoStack.current.push(next);
-      return;
-    }
-    undoStack.current.push(current);
-    setHistoryTick((x) => x + 1);
-  }
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -335,7 +252,6 @@ export function Editor({
   }, [profile, plan.customDesign]);
 
   function patchProfile(patch: Partial<ProfileState>) {
-    recordHistory();
     profileDirty.current = true;
     setProfile((p) => ({ ...p, ...patch }));
   }
@@ -347,7 +263,6 @@ export function Editor({
    * sablony maskovali kazdu novo zvolenu temu.
    */
   function pickTheme(key: string) {
-    recordHistory(true);
     profileDirty.current = true;
     setProfile((p) => ({
       ...p,
@@ -374,7 +289,6 @@ export function Editor({
   }
 
   function patchBlocks(fn: (prev: Block[]) => Block[]) {
-    recordHistory();
     blocksDirty.current = true;
     setBlocks(fn);
   }
@@ -445,14 +359,11 @@ export function Editor({
 
   async function removeBlock(id: string) {
     const previous = blocks;
-    recordHistory(true);
     setBlocks((prev) => prev.filter((b) => b.id !== id));
     setStatus("saving");
     const result = await deleteBlock(profile.id, id);
     if (result?.error) {
       setBlocks(previous);
-      undoStack.current.pop();
-      setHistoryTick((x) => x + 1);
       setNotice(result.error);
       setStatus("error");
       return;
@@ -536,10 +447,8 @@ export function Editor({
     requestAnimationFrame(() => document.getElementById(`block-editor-${target.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" }));
   }
 
-  async function resetCurrentSection() {
-    if (!confirm("Reset the current section? You can undo this change.")) return;
-    if (plan.versionDays > 0) await createProfileVersion(profile.id, "Before reset");
-    recordHistory(true);
+  function resetCurrentSection() {
+    if (!confirm("Reset the current section? This cannot be undone.")) return;
     if (openBlockId) {
       patchBlocks((prev) => prev.map((b) => b.id === openBlockId ? { ...b, config: { ...defaultConfig(b.type), title: b.config.title, url: b.config.url } } : b));
     } else {
@@ -547,9 +456,7 @@ export function Editor({
     }
   }
 
-  async function applyTemplate(template: Template, withBlocks: boolean) {
-    await createProfileVersion(profile.id, "Before template");
-    recordHistory(true);
+  function applyTemplate(template: Template, withBlocks: boolean) {
     profileDirty.current = true;
     setProfile((p) => ({ ...p, theme: template.theme, design: template.design }));
     if (withBlocks) {
@@ -592,16 +499,11 @@ export function Editor({
           </div>
 
           <EditorToolbar
-            canUndo={historyTick >= 0 && undoStack.current.length > 0}
-            canRedo={redoStack.current.length > 0}
             status={status === "saving" ? "Saving…" : status === "error" ? "Save failed" : "Saved"}
-            onUndo={undo}
-            onRedo={redo}
             onReset={resetCurrentSection}
             onAudit={() => setCheckerOpen((v) => !v)}
           />
           {checkerOpen && <DesignChecker issues={auditIssues} onClose={() => setCheckerOpen(false)} onOpen={(id) => id ? selectFromPreview({ kind: "block", id }) : (setDesignOpen(true), setCheckerOpen(false))} onFixAll={() => {
-            recordHistory(true);
             const design = autoFixDesign(profile.design, auditIssues);
             const missingAlt = new Set(auditIssues.filter((i) => i.fix === "alt").map((i) => i.blockId));
             patchProfile({ design });
@@ -628,8 +530,7 @@ export function Editor({
                 <AiDraft
                   bare
                   enabled={plan.ai}
-                  onApply={async (draft) => {
-                    if (plan.versionDays > 0) await createProfileVersion(profile.id, "Before AI edit");
+                  onApply={(draft) => {
                     // Jeden zapis do oboch stavov — autosave sa postara o zvysok
                     profileDirty.current = true;
                     blocksDirty.current = true;
@@ -864,17 +765,6 @@ export function Editor({
               )}
             </Section>
 
-            <Section title="Pro workspace" subtitle="templates · brand kit" delay={150} open={workspaceOpen} onOpenChange={setWorkspaceOpen}>
-              <div className="space-y-6">
-                {plan.savedTemplates > 0 ? <><div><p className="mb-3 text-[11px] font-semibold tracking-wide text-faint uppercase">My templates</p><SavedTemplatesPanel profileId={profile.id} templates={initialSavedTemplates} onApply={async (t, withBlocks) => { await createProfileVersion(profile.id, "Before saved template"); recordHistory(true); patchProfile({ theme: t.theme, design: t.design }); if (withBlocks && t.blocks) { blocksDirty.current = true; setBlocks(t.blocks.map((b) => ({ ...b, id: crypto.randomUUID() }))); } }} /></div></> : <PremiumWorkspaceLock label="Save reusable templates" />}
-                {plan.brandKit ? <div className="border-t border-line pt-6"><p className="mb-3 text-[11px] font-semibold tracking-wide text-faint uppercase">Business Brand Kit</p><BrandKitPanel profileId={profile.id} initial={initialBrandKit} onApply={(kit) => patchProfile({ design: applyKitDesign(profile.design, kit) })} /></div> : <PremiumWorkspaceLock label="Business Brand Kit and shared client styles" />}
-              </div>
-            </Section>
-
-            <Section title="Version history" subtitle={plan.versionDays ? `${plan.versionDays} days` : "restore points"} delay={165} open={versionsOpen} onOpenChange={setVersionsOpen}>
-              {plan.versionDays > 0 ? <VersionHistory profileId={profile.id} versions={initialVersions} days={plan.versionDays} /> : <PremiumWorkspaceLock label="Automatic restore points" />}
-            </Section>
-
             {/* Protection — Link Shield + escape z in-app prehliadaca v JEDNEJ
                 karte: obe su ochranne prepinace, patria k sebe. Dva symetricke
                 riadky (nazov + popis + Switch), oddelene ciarou. */}
@@ -1066,7 +956,7 @@ export function Editor({
           />
         </div>
       </div>
-      {pendingTemplate && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4" role="dialog" aria-modal="true"><div className="w-full max-w-md rounded-3xl bg-paper p-6 shadow-2xl"><p className="text-xs font-semibold tracking-wide text-faint uppercase">Preview selected</p><h2 className="mt-1 font-grotesk text-xl font-bold">Apply {pendingTemplate.label}?</h2><p className="mt-2 text-sm leading-relaxed text-soft">The card preview shows the final colours and buttons. A restore point will be saved before anything changes.</p><div className="mt-5 grid gap-2"><button type="button" onClick={() => applyTemplate(pendingTemplate, false)} className="btn-ink py-3 text-sm">Apply design only</button><button type="button" onClick={() => applyTemplate(pendingTemplate, true)} className="rounded-xl border border-line py-3 text-sm font-medium">Apply design + demo blocks</button><button type="button" onClick={() => setPendingTemplate(null)} className="py-2 text-sm text-soft">Cancel and keep previewing</button></div></div></div>}
+      {pendingTemplate && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4" role="dialog" aria-modal="true"><div className="w-full max-w-md rounded-3xl bg-paper p-6 shadow-2xl"><p className="text-xs font-semibold tracking-wide text-faint uppercase">Preview selected</p><h2 className="mt-1 font-grotesk text-xl font-bold">Apply {pendingTemplate.label}?</h2><p className="mt-2 text-sm leading-relaxed text-soft">The card preview shows the final colours and buttons. Choose exactly what should change.</p><div className="mt-5 grid gap-2"><button type="button" onClick={() => applyTemplate(pendingTemplate, false)} className="btn-ink py-3 text-sm">Apply design only</button><button type="button" onClick={() => applyTemplate(pendingTemplate, true)} className="rounded-xl border border-line py-3 text-sm font-medium">Apply design + demo blocks</button><button type="button" onClick={() => setPendingTemplate(null)} className="py-2 text-sm text-soft">Cancel and keep previewing</button></div></div></div>}
     </div>
   );
 }
