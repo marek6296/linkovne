@@ -30,13 +30,13 @@ export function AdminNav() {
           : "overview";
 
   return (
-    <nav className="flex items-center justify-center gap-1 overflow-x-auto">
+    <nav className="flex items-center gap-1 overflow-x-auto md:justify-center [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {ITEMS.map((i) => (
         <Link
           key={i.key}
           href={i.href}
           prefetch
-          className={`shrink-0 rounded-full px-3.5 py-1.5 text-sm font-medium transition ${
+          className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium whitespace-nowrap transition ${
             i.key === active
               ? "bg-ink text-white"
               : "text-soft hover:bg-black/[0.04] hover:text-ink"

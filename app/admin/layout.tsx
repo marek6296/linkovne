@@ -29,25 +29,36 @@ export default async function AdminLayout({
   return (
     <div className="min-h-dvh">
       <header className="border-b border-line bg-surface">
-        <div className="mx-auto grid max-w-6xl grid-cols-[1fr_auto_1fr] items-center gap-4 px-6 py-2.5">
-          <div className="flex shrink-0 items-center gap-2.5">
-            <Link href="/admin" className="flex items-center">
-              <Logo className="h-6 w-auto" />
-            </Link>
-            <PlanBadge planKey="admin" />
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          {/* Horny riadok: logo + akcie. Na desktope je medzi nimi navigacia. */}
+          <div className="flex items-center justify-between gap-3 py-2.5">
+            <div className="flex shrink-0 items-center gap-2.5">
+              <Link href="/admin" className="flex items-center">
+                <Logo className="h-6 w-auto" />
+              </Link>
+              <PlanBadge planKey="admin" />
+            </div>
+
+            {/* Navigacia — centrovana na desktope; na mobile ma vlastny riadok nizsie. */}
+            <div className="hidden min-w-0 flex-1 md:block">
+              <AdminNav />
+            </div>
+
+            <div className="flex shrink-0 items-center gap-1">
+              <Link href="/dashboard" className="btn-quiet">
+                ← App
+              </Link>
+              <form action={signOut}>
+                <button type="submit" className="btn-quiet">
+                  Log out
+                </button>
+              </form>
+            </div>
           </div>
 
-          <AdminNav />
-
-          <div className="flex shrink-0 items-center justify-self-end gap-1">
-            <Link href="/dashboard" className="btn-quiet">
-              ← App
-            </Link>
-            <form action={signOut}>
-              <button type="submit" className="btn-quiet">
-                Log out
-              </button>
-            </form>
+          {/* Mobilna navigacia — samostatny riadok cez celu sirku, scrollovatelny. */}
+          <div className="border-t border-line py-2 md:hidden">
+            <AdminNav />
           </div>
         </div>
       </header>
