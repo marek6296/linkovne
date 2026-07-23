@@ -100,7 +100,12 @@ export async function completeOnboarding(
     .upsert({ id: user.id }, { onConflict: "id", ignoreDuplicates: true });
   if (accErr) return { error: "Couldn't set up your account." };
 
-  const tpl = templateByKey(payload.template);
+  // Onboarding is always the free starting point. Premium templates are
+  // intentionally applied only from the dashboard, where customDesign is
+  // checked against the active Pro/Business plan on both client and server.
+  const requestedTpl = templateByKey(payload.template);
+  const tpl =
+    requestedTpl?.key === "paper" ? requestedTpl : templateByKey("paper");
 
   const { data: profile, error: profErr } = await supabase
     .from("profiles")

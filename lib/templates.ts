@@ -1,21 +1,28 @@
 import type { Design } from "@/lib/design";
-import type { Block, BlockType } from "@/lib/blocks";
+import type {
+  Block,
+  BlockType,
+  LinkAnim,
+  LinkWidth,
+} from "@/lib/blocks";
 
 /**
  * Sablona = kompletny vzhlad na jeden klik: tema + dizajn + startovacie bloky.
  * Pouziva ju onboarding (novy user) aj editor (kedykolvek neskor).
  *
- * DOLEZITE: kazda sablona ma EXPLICITNE btnBg + btnText, aby tlacidlo vzdy
- * kontrastovalo s pozadim. Spolieha sa na `btnStyle: "fill"`, ktory tie farby
- * pouzije priamo — nie na priehladne styly (glass/soft), ktore na svetlom
- * pozadi splynu.
+ * DOLEZITE: kazda sablona ma explicitne farby pozadia, textu aj buttonov.
+ * Farebne pary su kontrolovane na WCAG kontrast; gradientne buttony maju
+ * citatelny text na oboch koncovych farbach. Ziadna sablona sa nespolieha na
+ * priehladny glass/soft styl, ktory by na casti pozadia mohol splynut.
  */
 export type TemplateCategory =
   | "Minimal"
   | "Gradient"
   | "Bold"
   | "Warm"
-  | "Creator";
+  | "Creator"
+  | "Luxury"
+  | "Experimental";
 
 export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
   "Minimal",
@@ -23,6 +30,8 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
   "Bold",
   "Warm",
   "Creator",
+  "Luxury",
+  "Experimental",
 ];
 
 export type Template = {
@@ -30,9 +39,18 @@ export type Template = {
   label: string;
   tagline: string;
   category: TemplateCategory;
+  /** Highlights newly added premium looks in the picker. */
+  featured?: boolean;
   theme: string;
   design: Design;
-  starter: { type: BlockType; title?: string; text?: string }[];
+  starter: {
+    type: BlockType;
+    title?: string;
+    text?: string;
+    /** Optional per-link grid and motion presets. */
+    width?: LinkWidth;
+    anim?: LinkAnim;
+  }[];
 };
 
 const STARTER_LINKS: Template["starter"] = [
@@ -41,7 +59,7 @@ const STARTER_LINKS: Template["starter"] = [
   { type: "socials" },
 ];
 
-export const TEMPLATES: Template[] = [
+const TEMPLATE_DEFINITIONS: Template[] = [
   /* ---------- Minimal ---------- */
   {
     key: "paper",
@@ -137,8 +155,8 @@ export const TEMPLATES: Template[] = [
     theme: "classic",
     design: {
       bg: "gradient",
-      bgColor: "#ff8a5c",
-      bgColor2: "#d64d7a",
+      bgColor: "#c2410c",
+      bgColor2: "#be185d",
       textColor: "#ffffff",
       btnBg: "#ffffff",
       btnText: "#c2402a",
@@ -162,7 +180,7 @@ export const TEMPLATES: Template[] = [
     design: {
       bg: "gradient",
       bgColor: "#1e3a8a",
-      bgColor2: "#0ea5b7",
+      bgColor2: "#0e7490",
       textColor: "#ffffff",
       btnBg: "#ffffff",
       btnText: "#1e3a8a",
@@ -185,8 +203,8 @@ export const TEMPLATES: Template[] = [
     theme: "noir",
     design: {
       bg: "gradient",
-      bgColor: "#2dd4bf",
-      bgColor2: "#7c3aed",
+      bgColor: "#0f766e",
+      bgColor2: "#6d28d9",
       textColor: "#ffffff",
       btnBg: "#ffffff",
       btnText: "#5b21b6",
@@ -318,7 +336,7 @@ export const TEMPLATES: Template[] = [
       bg: "solid",
       bgColor: "#1a0a0e",
       textColor: "#ffe1e7",
-      btnBg: "#ff2d55",
+      btnBg: "#c91f47",
       btnText: "#ffffff",
       btnStyle: "fill",
       btnShape: "pill",
@@ -384,7 +402,7 @@ export const TEMPLATES: Template[] = [
     theme: "sand",
     design: {
       bg: "solid",
-      bgColor: "#c65f3f",
+      bgColor: "#a9472d",
       textColor: "#fff3ec",
       btnBg: "#fff3ec",
       btnText: "#a2432a",
@@ -501,7 +519,7 @@ export const TEMPLATES: Template[] = [
       bg: "solid",
       bgColor: "#0e0e10",
       textColor: "#ffd9e2",
-      btnBg: "#e75a7c",
+      btnBg: "#be345c",
       btnText: "#ffffff",
       btnStyle: "fill",
       btnShape: "pill",
@@ -509,7 +527,7 @@ export const TEMPLATES: Template[] = [
       fontHeading: "display",
       avatarShape: "circle",
       avatarRing: true,
-      avatarRingColor: "#e75a7c",
+      avatarRingColor: "#be345c",
     },
     starter: [
       { type: "link", title: "Exclusive content" },
@@ -668,7 +686,7 @@ export const TEMPLATES: Template[] = [
       bg: "solid",
       bgColor: "#fffaf3",
       textColor: "#1a1207",
-      btnBg: "#ff6a00",
+      btnBg: "#c2410c",
       btnText: "#ffffff",
       btnStyle: "fill",
       btnShape: "rounded",
@@ -677,7 +695,7 @@ export const TEMPLATES: Template[] = [
       avatarShape: "rounded",
       avatarSize: "lg",
       avatarRing: true,
-      avatarRingColor: "#ff6a00",
+      avatarRingColor: "#c2410c",
     },
     starter: STARTER_LINKS,
   },
@@ -854,7 +872,432 @@ export const TEMPLATES: Template[] = [
       { type: "socials" },
     ],
   },
+
+  /* ---------- Luxury collection ---------- */
+  {
+    key: "maison",
+    label: "Maison",
+    tagline: "Champagne gold, couture typography",
+    category: "Luxury",
+    featured: true,
+    theme: "midnight",
+    design: {
+      bg: "solid",
+      bgColor: "#161513",
+      textColor: "#f5ead7",
+      btnBg: "#d7b46a",
+      btnText: "#211a10",
+      btnStyle: "fill",
+      btnShape: "rounded",
+      btnShadow: "subtle",
+      btnBorder: "thin",
+      btnSpacing: "relaxed",
+      btnWeight: "medium",
+      font: "manrope",
+      fontHeading: "cormorant",
+      avatarShape: "rounded",
+      avatarAspect: "portrait",
+      avatarSize: "xl",
+      avatarFrame: "double",
+      avatarRingColor: "#d7b46a",
+      avatarPosition: "top",
+    },
+    starter: [
+      { type: "headline", text: "The collection" },
+      { type: "link", title: "Private appointments", width: "half" },
+      { type: "link", title: "Lookbook", width: "half" },
+      { type: "socials" },
+    ],
+  },
+  {
+    key: "emerald-suite",
+    label: "Emerald suite",
+    tagline: "Deep green, ivory and quiet luxury",
+    category: "Luxury",
+    featured: true,
+    theme: "clay",
+    design: {
+      bg: "gradient",
+      bgColor: "#0b2f26",
+      bgColor2: "#123f34",
+      textColor: "#f4ead7",
+      btnBg: "#f4ead7",
+      btnText: "#123f34",
+      btnStyle: "fill",
+      btnShape: "soft",
+      btnShadow: "subtle",
+      btnSpacing: "relaxed",
+      font: "lora",
+      fontHeading: "cormorant",
+      avatarShape: "organic",
+      avatarAspect: "portrait",
+      avatarSize: "lg",
+      avatarFrame: "line",
+      avatarRingColor: "#d8bd7b",
+      avatarPosition: "top",
+    },
+    starter: [
+      { type: "link", title: "Signature collection" },
+      { type: "link", title: "Book a consultation" },
+      { type: "socials" },
+    ],
+  },
+  {
+    key: "silk",
+    label: "Silk",
+    tagline: "Powder blush with editorial depth",
+    category: "Luxury",
+    featured: true,
+    theme: "lavender",
+    design: {
+      bg: "gradient",
+      bgColor: "#f8e9e4",
+      bgColor2: "#e8c7c1",
+      textColor: "#3f252b",
+      btnBg: "#3f252b",
+      btnText: "#fff5f1",
+      btnStyle: "fill",
+      btnShape: "pill",
+      btnShadow: "subtle",
+      btnSpacing: "relaxed",
+      font: "lora",
+      fontHeading: "cormorant",
+      avatarShape: "rounded",
+      avatarAspect: "landscape",
+      avatarSize: "lg",
+      avatarFrame: "line",
+      avatarRingColor: "#fff5f1",
+    },
+    starter: [
+      { type: "link", title: "My journal" },
+      { type: "link", title: "Selected work" },
+      { type: "socials" },
+    ],
+  },
+  {
+    key: "obsidian-gold",
+    label: "Obsidian gold",
+    tagline: "Black glass, warm gold, gallery feel",
+    category: "Luxury",
+    featured: true,
+    theme: "midnight",
+    design: {
+      bg: "gradient",
+      bgColor: "#070707",
+      bgColor2: "#211b12",
+      textColor: "#fff4dc",
+      btnBg: "#e5c27a",
+      btnText: "#1b1408",
+      btnStyle: "fill",
+      btnShape: "square",
+      btnShadow: "floating",
+      btnBorder: "thin",
+      btnSpacing: "normal",
+      btnWeight: "bold",
+      font: "montserrat",
+      fontHeading: "cormorant",
+      avatarShape: "square",
+      avatarAspect: "wide",
+      avatarSize: "lg",
+      avatarFrame: "double",
+      avatarRingColor: "#e5c27a",
+    },
+    starter: [
+      { type: "headline", text: "Featured" },
+      { type: "link", title: "View the collection" },
+      { type: "link", title: "Private access" },
+    ],
+  },
+
+  /* ---------- Experimental collection ---------- */
+  {
+    key: "prism",
+    label: "Prism",
+    tagline: "Night violet with luminous gradients",
+    category: "Experimental",
+    featured: true,
+    theme: "aurora",
+    design: {
+      bg: "gradient",
+      bgColor: "#111827",
+      bgColor2: "#3b0764",
+      textColor: "#ffffff",
+      btnBg: "#fef08a",
+      btnText: "#12231f",
+      btnGradientColor: "#fef08a",
+      btnGradientColor2: "#5eead4",
+      btnStyle: "gradient",
+      btnShape: "soft",
+      btnShadow: "floating",
+      btnSpacing: "relaxed",
+      btnWeight: "bold",
+      font: "manrope",
+      fontHeading: "syne",
+      avatarShape: "organic",
+      avatarAspect: "square",
+      avatarSize: "lg",
+      avatarFrame: "glow",
+      avatarRingColor: "#5eead4",
+    },
+    starter: [
+      { type: "link", title: "Enter the studio", width: "half" },
+      { type: "link", title: "Latest experiment", width: "half" },
+      { type: "socials" },
+    ],
+  },
+  {
+    key: "brutalist",
+    label: "Brutalist",
+    tagline: "Raw type, hard shadows, zero fluff",
+    category: "Experimental",
+    featured: true,
+    theme: "mono",
+    design: {
+      bg: "solid",
+      bgColor: "#f5f0df",
+      textColor: "#0b0b0b",
+      btnBg: "#0b0b0b",
+      btnText: "#f5f0df",
+      btnStyle: "fill",
+      btnShape: "square",
+      btnShadow: "hard",
+      btnBorder: "bold",
+      btnSpacing: "compact",
+      btnWeight: "bold",
+      font: "mono",
+      fontHeading: "syne",
+      avatarShape: "square",
+      avatarAspect: "portrait",
+      avatarSize: "xl",
+      avatarFrame: "line",
+      avatarRingColor: "#0b0b0b",
+      avatarPosition: "top",
+    },
+    starter: [
+      { type: "headline", text: "Selected links" },
+      { type: "link", title: "WORK_01", width: "half" },
+      { type: "link", title: "CONTACT_02", width: "half" },
+    ],
+  },
+  {
+    key: "cobalt-pop",
+    label: "Cobalt pop",
+    tagline: "Electric blue with yellow punch",
+    category: "Experimental",
+    featured: true,
+    theme: "ocean",
+    design: {
+      bg: "gradient",
+      bgColor: "#173ea5",
+      bgColor2: "#0b1e4f",
+      textColor: "#ffffff",
+      btnBg: "#f8d948",
+      btnText: "#16120a",
+      btnStyle: "fill",
+      btnShape: "soft",
+      btnShadow: "hard",
+      btnBorder: "bold",
+      btnSpacing: "normal",
+      btnWeight: "bold",
+      font: "manrope",
+      fontHeading: "syne",
+      avatarShape: "rounded",
+      avatarAspect: "wide",
+      avatarSize: "lg",
+      avatarFrame: "line",
+      avatarRingColor: "#f8d948",
+    },
+    starter: [
+      { type: "link", title: "New release", width: "half" },
+      { type: "link", title: "Join the list", width: "half" },
+      { type: "socials" },
+    ],
+  },
+  {
+    key: "chrome",
+    label: "Chrome",
+    tagline: "Cool silver, ink black, design studio",
+    category: "Experimental",
+    featured: true,
+    theme: "mono",
+    design: {
+      bg: "gradient",
+      bgColor: "#f8fafc",
+      bgColor2: "#cbd5e1",
+      textColor: "#0f172a",
+      btnBg: "#0f172a",
+      btnText: "#f8fafc",
+      btnStyle: "fill",
+      btnShape: "rounded",
+      btnShadow: "hard",
+      btnBorder: "bold",
+      btnSpacing: "compact",
+      btnWeight: "bold",
+      font: "raleway",
+      fontHeading: "syne",
+      avatarShape: "rounded",
+      avatarAspect: "wide",
+      avatarSize: "xl",
+      avatarFrame: "double",
+      avatarRingColor: "#0f172a",
+    },
+    starter: [
+      { type: "link", title: "Selected projects", width: "half" },
+      { type: "link", title: "Work with me", width: "half" },
+      { type: "socials" },
+    ],
+  },
+
+  /* ---------- New creator looks ---------- */
+  {
+    key: "afterglow",
+    label: "Afterglow",
+    tagline: "Plum night with vivid gradient buttons",
+    category: "Creator",
+    featured: true,
+    theme: "aurora",
+    design: {
+      bg: "gradient",
+      bgColor: "#3b0a39",
+      bgColor2: "#7e174f",
+      textColor: "#fff1f8",
+      btnBg: "#be185d",
+      btnText: "#ffffff",
+      btnGradientColor: "#be185d",
+      btnGradientColor2: "#7e22ce",
+      btnStyle: "gradient",
+      btnShape: "pill",
+      btnShadow: "floating",
+      btnSpacing: "relaxed",
+      btnWeight: "bold",
+      font: "manrope",
+      fontHeading: "syne",
+      avatarShape: "organic",
+      avatarAspect: "portrait",
+      avatarSize: "xl",
+      avatarFrame: "glow",
+      avatarRingColor: "#f472b6",
+      avatarPosition: "top",
+    },
+    starter: [
+      { type: "link", title: "Exclusive access", width: "half" },
+      { type: "link", title: "Tonight's drop", width: "half" },
+      { type: "socials" },
+    ],
+  },
+  {
+    key: "cloud-nine",
+    label: "Cloud nine",
+    tagline: "Airy pastel with deep violet contrast",
+    category: "Creator",
+    featured: true,
+    theme: "lavender",
+    design: {
+      bg: "gradient",
+      bgColor: "#eef2ff",
+      bgColor2: "#fce7f3",
+      textColor: "#312e81",
+      btnBg: "#312e81",
+      btnText: "#ffffff",
+      btnStyle: "fill",
+      btnShape: "pill",
+      btnShadow: "subtle",
+      btnSpacing: "relaxed",
+      btnWeight: "medium",
+      font: "raleway",
+      fontHeading: "cormorant",
+      avatarShape: "rounded",
+      avatarAspect: "landscape",
+      avatarSize: "xl",
+      avatarFrame: "glow",
+      avatarRingColor: "#ffffff",
+    },
+    starter: [
+      { type: "link", title: "My favourites", width: "half" },
+      { type: "link", title: "Latest update", width: "half" },
+      { type: "socials" },
+    ],
+  },
 ];
+
+/**
+ * Every template gets a category-specific finish so the full legacy collection
+ * benefits from the new Pro/Business controls without duplicating boilerplate.
+ * A template can still override any value for a deliberately distinctive look.
+ */
+const CATEGORY_POLISH: Record<TemplateCategory, Partial<Design>> = {
+  Minimal: {
+    btnShadow: "none",
+    btnBorder: "thin",
+    btnSpacing: "normal",
+    btnWeight: "medium",
+    avatarFrame: "line",
+    avatarFit: "cover",
+    avatarPosition: "top",
+  },
+  Gradient: {
+    btnShadow: "floating",
+    btnBorder: "none",
+    btnSpacing: "normal",
+    btnWeight: "bold",
+    avatarFrame: "glow",
+    avatarFit: "cover",
+    avatarPosition: "top",
+  },
+  Bold: {
+    btnShadow: "floating",
+    btnBorder: "none",
+    btnSpacing: "compact",
+    btnWeight: "bold",
+    avatarFrame: "line",
+    avatarFit: "cover",
+    avatarPosition: "top",
+  },
+  Warm: {
+    btnShadow: "subtle",
+    btnBorder: "none",
+    btnSpacing: "relaxed",
+    btnWeight: "medium",
+    avatarFrame: "shadow",
+    avatarFit: "cover",
+    avatarPosition: "top",
+  },
+  Creator: {
+    btnShadow: "floating",
+    btnBorder: "none",
+    btnSpacing: "normal",
+    btnWeight: "bold",
+    avatarFrame: "glow",
+    avatarFit: "cover",
+    avatarPosition: "top",
+  },
+  Luxury: {
+    btnShadow: "subtle",
+    btnBorder: "thin",
+    btnSpacing: "relaxed",
+    btnWeight: "medium",
+    avatarFrame: "double",
+    avatarFit: "cover",
+    avatarPosition: "top",
+  },
+  Experimental: {
+    btnShadow: "hard",
+    btnBorder: "bold",
+    btnSpacing: "compact",
+    btnWeight: "bold",
+    avatarFrame: "line",
+    avatarFit: "cover",
+    avatarPosition: "top",
+  },
+};
+
+export const TEMPLATES: Template[] = TEMPLATE_DEFINITIONS.map((template) => ({
+  ...template,
+  design: {
+    ...CATEGORY_POLISH[template.category],
+    ...template.design,
+  },
+}));
 
 export function templateByKey(key: string | null | undefined): Template | null {
   return TEMPLATES.find((t) => t.key === key) ?? null;
@@ -865,7 +1308,17 @@ export function templateBlocks(t: Template): Block[] {
   return t.starter.map((s, i) => {
     const base = { id: crypto.randomUUID(), position: i, is_active: true };
     if (s.type === "link")
-      return { ...base, type: "link" as const, config: { title: s.title ?? "Link", url: "", featured: i === 0 } };
+      return {
+        ...base,
+        type: "link" as const,
+        config: {
+          title: s.title ?? "Link",
+          url: "",
+          featured: i === 0,
+          width: s.width ?? "full",
+          anim: s.anim ?? "none",
+        },
+      };
     if (s.type === "headline")
       return { ...base, type: "headline" as const, config: { text: s.text ?? "Section" } };
     if (s.type === "text")

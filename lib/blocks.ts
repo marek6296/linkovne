@@ -28,17 +28,17 @@ export const LINK_LAYOUT_KEYS = Object.keys(LINK_LAYOUTS) as LinkLayout[];
 export type LinkWidth = "full" | "half";
 
 export const LINK_WIDTHS: Record<LinkWidth, string> = {
-  full: "Full width",
-  half: "Half",
+  full: "Full row",
+  half: "Half / grid",
 };
 
 export type LinkAnim = "none" | "pulse" | "shake" | "glow";
 
 export const LINK_ANIMS: Record<LinkAnim, string> = {
-  none: "None",
-  pulse: "Pulse",
-  shake: "Shake",
-  glow: "Glow",
+  none: "Off",
+  pulse: "Gentle pulse",
+  shake: "Nudge",
+  glow: "Glow ring",
 };
 
 export const ANIM_CLASS: Record<LinkAnim, string> = {
@@ -218,7 +218,14 @@ export const BLOCK_ORDER: BlockType[] = [
 export function defaultConfig(type: BlockType): BlockConfig {
   switch (type) {
     case "link":
-      return { title: "New link", url: "", featured: false, thumb: "" };
+      return {
+        title: "New link",
+        url: "",
+        featured: false,
+        thumb: "",
+        width: "full",
+        anim: "none",
+      };
     case "headline":
       return { text: "Section title" };
     case "text":

@@ -295,9 +295,6 @@ export function resolveTheme(
   if (design.btnShadow && design.btnShadow in BTN_SHADOWS) {
     t.btnShadow = BTN_SHADOWS[design.btnShadow].css;
   }
-  if (design.btnSpacing && design.btnSpacing in BTN_SPACING) {
-    t.btnGap = BTN_SPACING[design.btnSpacing].gap;
-  }
   if (design.btnWeight && design.btnWeight in BTN_WEIGHTS) {
     t.btnWeight = BTN_WEIGHTS[design.btnWeight].value;
   }

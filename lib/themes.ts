@@ -68,7 +68,6 @@ export type Theme = {
   /** Font mena v hlavicke — ak nie je, pouzije sa `font` */
   fontHeading?: string;
   /** Advanced Pro/Business button controls. */
-  btnGap?: string;
   btnWeight?: number;
   avatarBg: string;
   avatarText: string;

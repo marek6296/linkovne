@@ -9,7 +9,6 @@ import {
   BTN_BORDERS,
   BTN_SHAPES,
   BTN_SHADOWS,
-  BTN_SPACING,
   BTN_STYLES,
   BTN_WEIGHTS,
   FONT_KEYS,
@@ -24,7 +23,6 @@ import {
   type BtnShape,
   type BtnBorder,
   type BtnShadow,
-  type BtnSpacing,
   type BtnStyle,
   type BtnWeight,
   type Design,
@@ -753,6 +751,14 @@ export function DesignPanel({
         {/* ---------- Buttons ---------- */}
         {tab === "buttons" && (
           <div className="space-y-4">
+            <div className="rounded-xl border border-line bg-paper px-4 py-3">
+              <p className="text-sm font-medium">Grid &amp; animation are per button</p>
+              <p className="mt-1 text-xs leading-relaxed text-soft">
+                Open a Link inside the Blocks section to choose Full row or Half
+                / grid and to turn Pulse, Nudge or Glow on and off.
+              </p>
+            </div>
+
             <div>
               <GroupLabel>Shape</GroupLabel>
               <div className="mt-2 flex flex-wrap gap-1.5">
@@ -841,7 +847,7 @@ export function DesignPanel({
               />
             </div>
 
-            <div className="grid gap-4 border-t border-line pt-4 sm:grid-cols-2">
+            <div className="border-t border-line pt-4">
               <div>
                 <GroupLabel>Size</GroupLabel>
                 <div className="mt-2 flex flex-wrap gap-1.5">
@@ -857,25 +863,6 @@ export function DesignPanel({
                       }`}
                     >
                       {BTN_SIZE_LABELS[k]}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <GroupLabel>Spacing</GroupLabel>
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  {(Object.keys(BTN_SPACING) as BtnSpacing[]).map((k) => (
-                    <button
-                      key={k}
-                      type="button"
-                      onClick={() => onChange({ btnSpacing: k })}
-                      className={`rounded-full border px-3 py-1.5 text-xs transition ${
-                        (design.btnSpacing ?? "normal") === k
-                          ? "border-ink bg-ink text-paper"
-                          : "border-line hover:border-soft"
-                      }`}
-                    >
-                      {BTN_SPACING[k].label}
                     </button>
                   ))}
                 </div>

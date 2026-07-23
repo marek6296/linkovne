@@ -5,6 +5,7 @@ import { useRef, useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import {
+  ANIM_CLASS,
   BLOCK_META,
   LINK_ANIMS,
   LINK_LAYOUT_KEYS,
@@ -585,6 +586,22 @@ export function BlockCard({
           >
             {summary}
           </span>
+          {block.type === "link" &&
+            (block.config.width === "half" ||
+              (block.config.anim && block.config.anim !== "none")) && (
+              <span className="mt-1 flex flex-wrap gap-1.5">
+                {block.config.width === "half" && (
+                  <span className="rounded-full bg-black/[0.05] px-2 py-0.5 text-[10px] font-medium text-soft">
+                    ½ Grid
+                  </span>
+                )}
+                {block.config.anim && block.config.anim !== "none" && (
+                  <span className="rounded-full bg-black/[0.05] px-2 py-0.5 text-[10px] font-medium text-soft">
+                    Motion · {LINK_ANIMS[block.config.anim]}
+                  </span>
+                )}
+              </span>
+            )}
           {broken && (
             <span className="mt-0.5 inline-flex items-center gap-1 text-[11px] font-medium text-danger">
               ● This link isn&apos;t responding
@@ -628,6 +645,103 @@ export function BlockCard({
                   className="field py-2.5"
                 />
               </Field>
+
+              <div className="rounded-xl border border-line bg-surface p-4">
+                <div>
+                  <p className="text-sm font-semibold">Layout &amp; motion</p>
+                  <p className="mt-1 text-xs leading-relaxed text-soft">
+                    These settings affect only this button. Use half width on two
+                    links to create a two-column grid.
+                  </p>
+                </div>
+
+                <div className="mt-4 grid gap-5 sm:grid-cols-2">
+                  <div>
+                    <span className="mb-2 block text-[11px] font-semibold tracking-wide text-faint uppercase">
+                      Width
+                    </span>
+                    <div className="grid grid-cols-2 gap-2">
+                      {(Object.keys(LINK_WIDTHS) as LinkWidth[]).map((key) => {
+                        const active = (block.config.width ?? "full") === key;
+                        return (
+                          <button
+                            key={key}
+                            type="button"
+                            aria-pressed={active}
+                            onClick={() => patchConfig({ width: key })}
+                            className={`rounded-xl border px-3 py-2.5 text-left transition ${
+                              active
+                                ? "border-ink bg-ink/[0.04] ring-1 ring-ink"
+                                : "border-line hover:border-soft"
+                            }`}
+                          >
+                            <span className="mb-2 flex h-5 w-full items-center gap-1" aria-hidden>
+                              {key === "full" ? (
+                                <span className="h-3.5 w-full rounded border border-current bg-current/10" />
+                              ) : (
+                                <>
+                                  <span className="h-3.5 w-1/2 rounded border border-current bg-current/10" />
+                                  <span className="h-3.5 w-1/2 rounded border border-dashed border-current opacity-35" />
+                                </>
+                              )}
+                            </span>
+                            <span className="block text-xs font-medium">
+                              {LINK_WIDTHS[key]}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {block.config.width === "half" && (
+                      <p className="mt-2 text-[11px] leading-relaxed text-soft">
+                        This button now occupies the left half. Put another
+                        half-width link directly after it to fill the row.
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <span className="mb-2 block text-[11px] font-semibold tracking-wide text-faint uppercase">
+                      Attention animation
+                    </span>
+                    <div className="grid grid-cols-2 gap-2">
+                      {(Object.keys(LINK_ANIMS) as LinkAnim[]).map((key) => {
+                        const active = (block.config.anim ?? "none") === key;
+                        return (
+                          <button
+                            key={key}
+                            type="button"
+                            aria-pressed={active}
+                            onClick={() => patchConfig({ anim: key })}
+                            className={`flex min-h-10 items-center gap-2 rounded-xl border px-2.5 py-2 text-left transition ${
+                              active
+                                ? "border-ink bg-ink/[0.04] ring-1 ring-ink"
+                                : "border-line hover:border-soft"
+                            }`}
+                          >
+                            <span
+                              aria-hidden
+                              className={`h-2.5 w-5 shrink-0 rounded-full bg-current opacity-60 ${
+                                active ? ANIM_CLASS[key] : ""
+                              }`}
+                            />
+                            <span className="text-[11px] font-medium leading-tight">
+                              {LINK_ANIMS[key]}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {block.config.anim && block.config.anim !== "none" && (
+                      <p className="mt-2 text-[11px] leading-relaxed text-soft">
+                        Motion is on for this button. Choose <strong>Off</strong>{" "}
+                        to stop the pulsing or movement.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
               <div>
                 <span className="mb-1.5 block text-xs font-medium text-soft">
                   Button type
@@ -703,58 +817,6 @@ export function BlockCard({
                     ))}
                   </div>
                 </div>
-              )}
-
-              <div className="flex flex-wrap gap-5">
-                <div>
-                  <span className="mb-1.5 block text-xs font-medium text-soft">
-                    Width
-                  </span>
-                  <div className="flex gap-1.5">
-                    {(Object.keys(LINK_WIDTHS) as LinkWidth[]).map((key) => (
-                      <button
-                        key={key}
-                        type="button"
-                        onClick={() => patchConfig({ width: key })}
-                        className={`rounded-full border px-3 py-1.5 text-sm transition ${
-                          (block.config.width ?? "full") === key
-                            ? "border-ink bg-ink text-paper"
-                            : "border-line hover:border-soft"
-                        }`}
-                      >
-                        {LINK_WIDTHS[key]}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <span className="mb-1.5 block text-xs font-medium text-soft">
-                    Animation
-                  </span>
-                  <div className="flex flex-wrap gap-1.5">
-                    {(Object.keys(LINK_ANIMS) as LinkAnim[]).map((key) => (
-                      <button
-                        key={key}
-                        type="button"
-                        onClick={() => patchConfig({ anim: key })}
-                        className={`rounded-full border px-3 py-1.5 text-sm transition ${
-                          (block.config.anim ?? "none") === key
-                            ? "border-ink bg-ink text-paper"
-                            : "border-line hover:border-soft"
-                        }`}
-                      >
-                        {LINK_ANIMS[key]}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {block.config.width === "half" && (
-                <p className="text-xs text-soft">
-                  Two half-width links next to each other share one row.
-                </p>
               )}
 
               <div className="flex flex-wrap items-center gap-5">

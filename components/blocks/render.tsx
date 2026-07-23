@@ -308,7 +308,9 @@ export function BlockList({
   const isHalf = (b: Block | undefined) =>
     !!b && b.type === "link" && b.config.width === "half";
 
-  // Dva susedne half odkazy tvoria jeden riadok; osamoteny half ostane cely.
+  // Dva susedne half odkazy tvoria jeden riadok. Osamoteny half zostane v
+  // lavom stlpci, aby zmena sirky bola v nahlade viditelna okamzite a user
+  // mohol druhy button doplnit alebo presunut vedla neho.
   const rows: Block[][] = [];
   for (let i = 0; i < active.length; i++) {
     if (isHalf(active[i]) && isHalf(active[i + 1])) {
@@ -518,13 +520,12 @@ export function BlockList({
   };
 
   return (
-    <div className="flex flex-col" style={{ gap: theme.btnGap ?? "0.75rem" }}>
+    <div className="flex flex-col gap-3">
       {rows.map((row) =>
-        row.length === 2 ? (
+        row.length === 2 || isHalf(row[0]) ? (
           <div
             key={row[0].id}
-            className="grid grid-cols-2"
-            style={{ gap: theme.btnGap ?? "0.75rem" }}
+            className="grid grid-cols-2 gap-3"
           >
             {row.map(renderOne)}
           </div>
