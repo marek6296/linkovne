@@ -637,11 +637,33 @@ export function BlockCard({
         >
           {block.is_active ? "On" : "Off"}
         </button>
+        {/* Delete rovno v riadku — netreba blok rozklikavat. */}
+        <button
+          type="button"
+          onClick={() => {
+            if (confirm(`Delete “${summary}”?`)) onDelete();
+          }}
+          aria-label="Delete block"
+          className="px-1.5 text-faint transition hover:text-danger"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            className="h-[18px] w-[18px]"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden
+          >
+            <path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" />
+          </svg>
+        </button>
         <button
           type="button"
           onClick={() => setOpen(!open)}
           aria-label="Edit block"
-          className="px-2 text-faint transition hover:text-ink"
+          className="px-1.5 text-faint transition hover:text-ink"
         >
           <Chevron open={open} />
         </button>
