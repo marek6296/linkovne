@@ -6,6 +6,7 @@ import {
   AVATAR_FRAMES,
   AVATAR_SHAPES,
   AVATAR_SIZES,
+  BTN_ANIMATIONS,
   BTN_BORDERS,
   BTN_SHAPES,
   BTN_SHADOWS,
@@ -20,6 +21,7 @@ import {
   type AvatarShape,
   type AvatarSize,
   type BgMode,
+  type BtnAnimation,
   type BtnShape,
   type BtnBorder,
   type BtnShadow,
@@ -752,10 +754,10 @@ export function DesignPanel({
         {tab === "buttons" && (
           <div className="space-y-4">
             <div className="rounded-xl border border-line bg-paper px-4 py-3">
-              <p className="text-sm font-medium">Grid &amp; animation are per button</p>
+              <p className="text-sm font-medium">Button design applies page-wide</p>
               <p className="mt-1 text-xs leading-relaxed text-soft">
-                Open a Link inside the Blocks section to choose Full row or Half
-                / grid and to turn Pulse, Nudge or Glow on and off.
+                Shape, style and animation affect every link button. Grid width
+                stays inside each Link block because it controls page layout.
               </p>
             </div>
 
@@ -867,6 +869,48 @@ export function DesignPanel({
                   ))}
                 </div>
               </div>
+            </div>
+
+            <div className="border-t border-line pt-4">
+              <GroupLabel>Animation</GroupLabel>
+              <p className="mt-1 text-xs text-soft">
+                One consistent attention effect across all link buttons.
+              </p>
+              <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                {(Object.keys(BTN_ANIMATIONS) as BtnAnimation[]).map((k) => {
+                  const active = (design.btnAnimation ?? "none") === k;
+                  return (
+                    <button
+                      key={k}
+                      type="button"
+                      aria-pressed={active}
+                      title={BTN_ANIMATIONS[k].hint}
+                      onClick={() => onChange({ btnAnimation: k })}
+                      className={`rounded-xl border px-3 py-2.5 text-left transition ${
+                        active
+                          ? "border-ink bg-ink/[0.04] ring-1 ring-ink"
+                          : "border-line hover:border-soft"
+                      }`}
+                    >
+                      <span
+                        aria-hidden
+                        className={`mb-2 block h-3 w-full rounded-full border border-current bg-current/10 ${
+                          active ? BTN_ANIMATIONS[k].className : ""
+                        }`}
+                      />
+                      <span className="block text-xs font-medium">
+                        {BTN_ANIMATIONS[k].label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+              {(design.btnAnimation ?? "none") !== "none" && (
+                <p className="mt-2 text-xs leading-relaxed text-soft">
+                  This animation is active on every link button. Choose Off to
+                  stop all automatic button movement.
+                </p>
+              )}
             </div>
 
             <div className="grid gap-4 border-t border-line pt-4 sm:grid-cols-2">

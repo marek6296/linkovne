@@ -29,7 +29,9 @@ import { THEMES, THEME_KEYS } from "@/lib/themes";
 import { resolveTheme, type Design } from "@/lib/design";
 import { allowsBlock, allowsTheme, type PlanFeatures } from "@/lib/plans";
 import {
+  createProfileVersion,
   deleteBlock,
+  deleteBlocks,
   saveBlocks,
   saveProfile,
   setLinkShield,
@@ -40,11 +42,21 @@ import { AiDraft } from "@/components/editor/ai-draft";
 import { BlockCard } from "@/components/editor/block-card";
 import { ImportPanel } from "@/components/editor/import-panel";
 import { TemplateGrid } from "@/components/editor/template-picker";
-import { templateBlocks } from "@/lib/templates";
+import { templateBlocks, type Template } from "@/lib/templates";
 import { DesignPanel } from "@/components/editor/design-panel";
 import { Preview } from "@/components/editor/preview";
 import { Collapse, Chevron } from "@/components/editor/collapse";
 import { BlockGlyph } from "@/components/editor/block-glyph";
+import {
+  BrandKitPanel,
+  DesignChecker,
+  EditorToolbar,
+  PremiumWorkspaceLock,
+  SavedTemplatesPanel,
+  VersionHistory,
+  applyKitDesign,
+} from "@/components/editor/workspace-tools";
+import { auditDesign, autoFixDesign, type BrandKit, type ProfileVersion, type SavedTemplate } from "@/lib/editor-pro";
 
 type ProfileState = {
   id: string;
@@ -98,6 +110,8 @@ function Section({
   badge,
   delay = 0,
   children,
+  open: controlledOpen,
+  onOpenChange,
 }: {
   title: string;
   subtitle?: string;
@@ -106,8 +120,15 @@ function Section({
   /** Poradove oneskorenie nabehu karty pri nacitani (ms). */
   delay?: number;
   children: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
-  const [open, setOpen] = useState(defaultOpen);
+  const [innerOpen, setInnerOpen] = useState(defaultOpen);
+  const open = controlledOpen ?? innerOpen;
+  const setOpen = (next: boolean) => {
+    if (controlledOpen === undefined) setInnerOpen(next);
+    onOpenChange?.(next);
+  };
   return (
     <section
       className="lk-section-in card overflow-hidden"
@@ -115,7 +136,7 @@ function Section({
     >
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => setOpen(!open)}
         aria-expanded={open}
         className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left transition hover:bg-surface"
       >
@@ -174,12 +195,18 @@ export function Editor({
   brokenLinks = [],
   plan,
   userId,
+  initialSavedTemplates = [],
+  initialVersions = [],
+  initialBrandKit = null,
 }: {
   initialProfile: ProfileState;
   initialBlocks: Block[];
   brokenLinks?: string[];
   plan: PlanFeatures;
   userId: string;
+  initialSavedTemplates?: SavedTemplate[];
+  initialVersions?: ProfileVersion[];
+  initialBrandKit?: BrandKit | null;
 }) {
   const broken = new Set(brokenLinks);
   const [profile, setProfile] = useState(initialProfile);
@@ -192,11 +219,83 @@ export function Editor({
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [shieldBusy, setShieldBusy] = useState(false);
   const [escapeBusy, setEscapeBusy] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(true);
+  const [blocksOpen, setBlocksOpen] = useState(true);
+  const [openBlockId, setOpenBlockId] = useState<string | null>(null);
+  const [checkerOpen, setCheckerOpen] = useState(false);
+  const [workspaceOpen, setWorkspaceOpen] = useState(false);
+  const [versionsOpen, setVersionsOpen] = useState(false);
+  const [historyTick, setHistoryTick] = useState(0);
+  const [pendingTemplate, setPendingTemplate] = useState<Template | null>(null);
+
+  type Snapshot = { profile: ProfileState; blocks: Block[] };
+  const undoStack = useRef<Snapshot[]>([]);
+  const redoStack = useRef<Snapshot[]>([]);
+  const lastHistoryAt = useRef(0);
 
   // Bez tychto flagov by autosave vystrelil hned po mounte a prepisoval by
   // server tym istym, co z neho prislo.
   const blocksDirty = useRef(false);
   const profileDirty = useRef(false);
+
+  function snapshot(): Snapshot {
+    return { profile: structuredClone(profile), blocks: structuredClone(blocks) };
+  }
+
+  function recordHistory(force = false) {
+    const now = Date.now();
+    if (!force && now - lastHistoryAt.current < 550) return;
+    undoStack.current.push(snapshot());
+    if (undoStack.current.length > 50) undoStack.current.shift();
+    redoStack.current = [];
+    lastHistoryAt.current = now;
+    setHistoryTick((x) => x + 1);
+  }
+
+  async function restoreLocal(next: Snapshot) {
+    const nextIds = new Set(next.blocks.map((block) => block.id));
+    const removedIds = blocks
+      .filter((block) => !nextIds.has(block.id))
+      .map((block) => block.id);
+    if (removedIds.length > 0) {
+      const result = await deleteBlocks(profile.id, removedIds);
+      if (result?.error) {
+        setNotice(result.error);
+        setStatus("error");
+        return false;
+      }
+    }
+    profileDirty.current = true;
+    blocksDirty.current = true;
+    setProfile(structuredClone(next.profile));
+    setBlocks(structuredClone(next.blocks));
+    setStatus("saving");
+    return true;
+  }
+
+  async function undo() {
+    const next = undoStack.current.pop();
+    if (!next) return;
+    const current = snapshot();
+    if (!(await restoreLocal(next))) {
+      undoStack.current.push(next);
+      return;
+    }
+    redoStack.current.push(current);
+    setHistoryTick((x) => x + 1);
+  }
+
+  async function redo() {
+    const next = redoStack.current.pop();
+    if (!next) return;
+    const current = snapshot();
+    if (!(await restoreLocal(next))) {
+      redoStack.current.push(next);
+      return;
+    }
+    undoStack.current.push(current);
+    setHistoryTick((x) => x + 1);
+  }
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -236,6 +335,7 @@ export function Editor({
   }, [profile, plan.customDesign]);
 
   function patchProfile(patch: Partial<ProfileState>) {
+    recordHistory();
     profileDirty.current = true;
     setProfile((p) => ({ ...p, ...patch }));
   }
@@ -247,6 +347,7 @@ export function Editor({
    * sablony maskovali kazdu novo zvolenu temu.
    */
   function pickTheme(key: string) {
+    recordHistory(true);
     profileDirty.current = true;
     setProfile((p) => ({
       ...p,
@@ -260,6 +361,7 @@ export function Editor({
         btnBorder: p.design.btnBorder,
         btnSpacing: p.design.btnSpacing,
         btnWeight: p.design.btnWeight,
+        btnAnimation: p.design.btnAnimation,
         avatarShape: p.design.avatarShape,
         avatarSize: p.design.avatarSize,
         avatarAspect: p.design.avatarAspect,
@@ -272,6 +374,7 @@ export function Editor({
   }
 
   function patchBlocks(fn: (prev: Block[]) => Block[]) {
+    recordHistory();
     blocksDirty.current = true;
     setBlocks(fn);
   }
@@ -327,9 +430,34 @@ export function Editor({
     setPaletteOpen(false);
   }
 
+  function addSection() {
+    if (!plan.sections) {
+      setNotice("Page sections need Pro.");
+      return;
+    }
+    if (plan.maxBlocks !== null && blocks.length >= plan.maxBlocks) {
+      setNotice(`Your plan is limited to ${plan.maxBlocks} blocks.`);
+      return;
+    }
+    patchBlocks((prev) => [...prev, { id: crypto.randomUUID(), type: "headline", config: { text: "New section", isSection: true, sectionBg: "#ffffff", sectionText: "#191813", sectionBorder: "#e7e4dc", sectionRadius: "rounded", sectionLayout: "stack" }, position: prev.length, is_active: true }]);
+    setPaletteOpen(false);
+  }
+
   async function removeBlock(id: string) {
+    const previous = blocks;
+    recordHistory(true);
     setBlocks((prev) => prev.filter((b) => b.id !== id));
-    await deleteBlock(profile.id, id);
+    setStatus("saving");
+    const result = await deleteBlock(profile.id, id);
+    if (result?.error) {
+      setBlocks(previous);
+      undoStack.current.pop();
+      setHistoryTick((x) => x + 1);
+      setNotice(result.error);
+      setStatus("error");
+      return;
+    }
+    setStatus("saved");
   }
 
   function duplicateBlock(id: string) {
@@ -352,6 +480,40 @@ export function Editor({
     });
   }
 
+  function addHalfPartner(id: string) {
+    if (plan.maxBlocks !== null && blocks.length >= plan.maxBlocks) {
+      setNotice(`Your plan is limited to ${plan.maxBlocks} blocks.`);
+      return;
+    }
+    setNotice(null);
+    patchBlocks((prev) => {
+      const idx = prev.findIndex((b) => b.id === id);
+      if (idx < 0) return prev;
+      const existing = prev[idx + 1];
+      if (
+        existing?.type === "link" &&
+        existing.config.width === "half" &&
+        existing.is_active
+      ) {
+        return prev;
+      }
+      const partner: Block = {
+        id: crypto.randomUUID(),
+        type: "link",
+        config: {
+          ...defaultConfig("link"),
+          title: "New link",
+          width: "half",
+        },
+        position: idx + 1,
+        is_active: true,
+      };
+      const next = [...prev];
+      next.splice(idx + 1, 0, partner);
+      return next;
+    });
+  }
+
   function onDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
@@ -362,10 +524,47 @@ export function Editor({
     });
   }
 
+  function selectFromPreview(target: { kind: "profile" } | { kind: "block"; id: string }) {
+    setTab("edit");
+    if (target.kind === "profile") {
+      setProfileOpen(true);
+      requestAnimationFrame(() => document.getElementById("editor-profile")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+      return;
+    }
+    setBlocksOpen(true);
+    setOpenBlockId(target.id);
+    requestAnimationFrame(() => document.getElementById(`block-editor-${target.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" }));
+  }
+
+  async function resetCurrentSection() {
+    if (!confirm("Reset the current section? You can undo this change.")) return;
+    if (plan.versionDays > 0) await createProfileVersion(profile.id, "Before reset");
+    recordHistory(true);
+    if (openBlockId) {
+      patchBlocks((prev) => prev.map((b) => b.id === openBlockId ? { ...b, config: { ...defaultConfig(b.type), title: b.config.title, url: b.config.url } } : b));
+    } else {
+      patchProfile({ design: {} });
+    }
+  }
+
+  async function applyTemplate(template: Template, withBlocks: boolean) {
+    await createProfileVersion(profile.id, "Before template");
+    recordHistory(true);
+    profileDirty.current = true;
+    setProfile((p) => ({ ...p, theme: template.theme, design: template.design }));
+    if (withBlocks) {
+      blocksDirty.current = true;
+      setBlocks(templateBlocks(template));
+    }
+    setPendingTemplate(null);
+    setNotice(withBlocks ? "Template design and demo blocks applied." : "Template design applied. Your blocks were kept.");
+  }
+
   const theme = resolveTheme(
     profile.theme,
     plan.customDesign ? profile.design : {},
   );
+  const auditIssues = auditDesign(profile.theme, profile.design, blocks, broken);
 
   return (
     <div>
@@ -392,6 +591,23 @@ export function Editor({
             <StatusPill status={status} />
           </div>
 
+          <EditorToolbar
+            canUndo={historyTick >= 0 && undoStack.current.length > 0}
+            canRedo={redoStack.current.length > 0}
+            status={status === "saving" ? "Saving…" : status === "error" ? "Save failed" : "Saved"}
+            onUndo={undo}
+            onRedo={redo}
+            onReset={resetCurrentSection}
+            onAudit={() => setCheckerOpen((v) => !v)}
+          />
+          {checkerOpen && <DesignChecker issues={auditIssues} onClose={() => setCheckerOpen(false)} onOpen={(id) => id ? selectFromPreview({ kind: "block", id }) : (setDesignOpen(true), setCheckerOpen(false))} onFixAll={() => {
+            recordHistory(true);
+            const design = autoFixDesign(profile.design, auditIssues);
+            const missingAlt = new Set(auditIssues.filter((i) => i.fix === "alt").map((i) => i.blockId));
+            patchProfile({ design });
+            patchBlocks((prev) => prev.map((b) => missingAlt.has(b.id) ? { ...b, config: { ...b.config, alt: b.config.alt || `${profile.display_name || profile.username} photo` } } : b));
+          }} />}
+
           {notice && (
             <div className="alert-error mt-4 flex flex-wrap items-center justify-between gap-3">
               <span>{notice}</span>
@@ -412,7 +628,8 @@ export function Editor({
                 <AiDraft
                   bare
                   enabled={plan.ai}
-                  onApply={(draft) => {
+                  onApply={async (draft) => {
+                    if (plan.versionDays > 0) await createProfileVersion(profile.id, "Before AI edit");
                     // Jeden zapis do oboch stavov — autosave sa postara o zvysok
                     profileDirty.current = true;
                     blocksDirty.current = true;
@@ -467,10 +684,11 @@ export function Editor({
             <Section
               title="Profile"
               subtitle="photo, name, bio"
-              defaultOpen
+              open={profileOpen}
+              onOpenChange={setProfileOpen}
               delay={60}
             >
-              <div className="space-y-4">
+              <div id="editor-profile" className="scroll-mt-24 space-y-4">
                 <AvatarRow
                   url={profile.avatar_url}
                   userId={userId}
@@ -578,19 +796,7 @@ export function Editor({
                     <div className="mt-3">
                       <TemplateGrid
                         onPick={(t) => {
-                          profileDirty.current = true;
-                          blocksDirty.current = true;
-                          patchProfile({ theme: t.theme, design: t.design });
-                          // Sablonu naplnime len ak je stranka prazdna, inak by
-                          // sme prepisali robotu usera
-                          if (blocks.length === 0) {
-                            setBlocks(templateBlocks(t));
-                          }
-                          setNotice(
-                            blocks.length === 0
-                              ? null
-                              : "Applied the look. Your existing blocks were kept.",
-                          );
+                          setPendingTemplate(t);
                         }}
                       />
                     </div>
@@ -656,6 +862,17 @@ export function Editor({
                   </Link>
                 </div>
               )}
+            </Section>
+
+            <Section title="Pro workspace" subtitle="templates · brand kit" delay={150} open={workspaceOpen} onOpenChange={setWorkspaceOpen}>
+              <div className="space-y-6">
+                {plan.savedTemplates > 0 ? <><div><p className="mb-3 text-[11px] font-semibold tracking-wide text-faint uppercase">My templates</p><SavedTemplatesPanel profileId={profile.id} templates={initialSavedTemplates} onApply={async (t, withBlocks) => { await createProfileVersion(profile.id, "Before saved template"); recordHistory(true); patchProfile({ theme: t.theme, design: t.design }); if (withBlocks && t.blocks) { blocksDirty.current = true; setBlocks(t.blocks.map((b) => ({ ...b, id: crypto.randomUUID() }))); } }} /></div></> : <PremiumWorkspaceLock label="Save reusable templates" />}
+                {plan.brandKit ? <div className="border-t border-line pt-6"><p className="mb-3 text-[11px] font-semibold tracking-wide text-faint uppercase">Business Brand Kit</p><BrandKitPanel profileId={profile.id} initial={initialBrandKit} onApply={(kit) => patchProfile({ design: applyKitDesign(profile.design, kit) })} /></div> : <PremiumWorkspaceLock label="Business Brand Kit and shared client styles" />}
+              </div>
+            </Section>
+
+            <Section title="Version history" subtitle={plan.versionDays ? `${plan.versionDays} days` : "restore points"} delay={165} open={versionsOpen} onOpenChange={setVersionsOpen}>
+              {plan.versionDays > 0 ? <VersionHistory profileId={profile.id} versions={initialVersions} days={plan.versionDays} /> : <PremiumWorkspaceLock label="Automatic restore points" />}
             </Section>
 
             {/* Protection — Link Shield + escape z in-app prehliadaca v JEDNEJ
@@ -739,7 +956,8 @@ export function Editor({
             <Section
               title="Blocks"
               subtitle="your links & content"
-              defaultOpen
+              open={blocksOpen}
+              onOpenChange={setBlocksOpen}
               delay={240}
               badge={
                 <span className="text-xs text-faint">
@@ -761,6 +979,7 @@ export function Editor({
 
               <Collapse open={paletteOpen}>
                 <div className="mt-3 flex flex-wrap gap-2">
+                  <button type="button" onClick={addSection} className={`flex items-center gap-2 rounded-full border border-line bg-surface px-3.5 py-2 text-sm transition hover:border-ink ${plan.sections ? "" : "opacity-55"}`}><span aria-hidden>▣</span>Section{!plan.sections && <Lock />}</button>
                   {BLOCK_ORDER.map((type) => {
                     const locked = !allowsBlock(plan, type);
                     return (
@@ -792,9 +1011,8 @@ export function Editor({
                     items={blocks.map((b) => b.id)}
                     strategy={verticalListSortingStrategy}
                   >
-                    {blocks.map((block) => (
-                      <BlockCard
-                        key={block.id}
+                    {blocks.map((block, index) => (
+                      <div key={block.id} id={`block-editor-${block.id}`} className="scroll-mt-24"><BlockCard
                         block={block}
                         broken={broken.has(block.id)}
                         userId={userId}
@@ -808,7 +1026,16 @@ export function Editor({
                         }
                         onDelete={() => removeBlock(block.id)}
                         onDuplicate={() => duplicateBlock(block.id)}
-                      />
+                        hasHalfPartner={
+                          block.config.width === "half" &&
+                          blocks[index + 1]?.type === "link" &&
+                          blocks[index + 1]?.config.width === "half" &&
+                          blocks[index + 1]?.is_active
+                        }
+                        onAddHalfPartner={() => addHalfPartner(block.id)}
+                        open={openBlockId === block.id}
+                        onOpenChange={(open) => setOpenBlockId(open ? block.id : null)}
+                      /></div>
                     ))}
                   </SortableContext>
                 </DndContext>
@@ -835,9 +1062,11 @@ export function Editor({
             avatarUrl={profile.avatar_url}
             blocks={blocks}
             theme={theme}
+            onSelect={selectFromPreview}
           />
         </div>
       </div>
+      {pendingTemplate && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4" role="dialog" aria-modal="true"><div className="w-full max-w-md rounded-3xl bg-paper p-6 shadow-2xl"><p className="text-xs font-semibold tracking-wide text-faint uppercase">Preview selected</p><h2 className="mt-1 font-grotesk text-xl font-bold">Apply {pendingTemplate.label}?</h2><p className="mt-2 text-sm leading-relaxed text-soft">The card preview shows the final colours and buttons. A restore point will be saved before anything changes.</p><div className="mt-5 grid gap-2"><button type="button" onClick={() => applyTemplate(pendingTemplate, false)} className="btn-ink py-3 text-sm">Apply design only</button><button type="button" onClick={() => applyTemplate(pendingTemplate, true)} className="rounded-xl border border-line py-3 text-sm font-medium">Apply design + demo blocks</button><button type="button" onClick={() => setPendingTemplate(null)} className="py-2 text-sm text-soft">Cancel and keep previewing</button></div></div></div>}
     </div>
   );
 }

@@ -5,9 +5,7 @@ import { useRef, useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import {
-  ANIM_CLASS,
   BLOCK_META,
-  LINK_ANIMS,
   LINK_LAYOUT_KEYS,
   LINK_LAYOUTS,
   LINK_WIDTHS,
@@ -18,7 +16,6 @@ import {
   SOCIAL_SIZES,
   type Block,
   type BlockConfig,
-  type LinkAnim,
   type LinkLayout,
   type LinkWidth,
   type SocialPlatform,
@@ -68,7 +65,7 @@ function ImagePicker({
 }: {
   value: string;
   userId: string;
-  onChange: (url: string) => void;
+  onChange: (url: string, bytes?: number) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -79,7 +76,7 @@ function ImagePicker({
     setBusy(true);
     setError(null);
     try {
-      onChange(await uploadImage(file, userId));
+      onChange(await uploadImage(file, userId), file.size);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Upload failed.");
     } finally {
@@ -139,7 +136,7 @@ function MediaPicker({
   value: string;
   mediaType: "image" | "video";
   userId: string;
-  onChange: (patch: { src: string; mediaType: "image" | "video" }) => void;
+  onChange: (patch: { src: string; mediaType: "image" | "video"; mediaBytes?: number }) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -154,7 +151,7 @@ function MediaPicker({
       const src = isVideo
         ? await uploadVideo(file, userId)
         : await uploadImage(file, userId);
-      onChange({ src, mediaType: isVideo ? "video" : "image" });
+      onChange({ src, mediaType: isVideo ? "video" : "image", mediaBytes: file.size });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Upload failed.");
     } finally {
@@ -512,6 +509,10 @@ export function BlockCard({
   onChange,
   onDelete,
   onDuplicate,
+  hasHalfPartner = false,
+  onAddHalfPartner,
+  open: controlledOpen,
+  onOpenChange,
 }: {
   block: Block;
   /** Odkaz pri poslednej kontrole neodpovedal */
@@ -522,8 +523,17 @@ export function BlockCard({
   onChange: (patch: Partial<Block>) => void;
   onDelete: () => void;
   onDuplicate: () => void;
+  hasHalfPartner?: boolean;
+  onAddHalfPartner: () => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [innerOpen, setInnerOpen] = useState(false);
+  const open = controlledOpen ?? innerOpen;
+  const setOpen = (next: boolean) => {
+    if (controlledOpen === undefined) setInnerOpen(next);
+    onOpenChange?.(next);
+  };
   const {
     attributes,
     listeners,
@@ -573,7 +583,7 @@ export function BlockCard({
 
         <button
           type="button"
-          onClick={() => setOpen((v) => !v)}
+          onClick={() => setOpen(!open)}
           className="min-w-0 flex-1 text-left"
         >
           <span className="block text-[11px] tracking-wide text-faint uppercase">
@@ -586,22 +596,13 @@ export function BlockCard({
           >
             {summary}
           </span>
-          {block.type === "link" &&
-            (block.config.width === "half" ||
-              (block.config.anim && block.config.anim !== "none")) && (
-              <span className="mt-1 flex flex-wrap gap-1.5">
-                {block.config.width === "half" && (
-                  <span className="rounded-full bg-black/[0.05] px-2 py-0.5 text-[10px] font-medium text-soft">
-                    ½ Grid
-                  </span>
-                )}
-                {block.config.anim && block.config.anim !== "none" && (
-                  <span className="rounded-full bg-black/[0.05] px-2 py-0.5 text-[10px] font-medium text-soft">
-                    Motion · {LINK_ANIMS[block.config.anim]}
-                  </span>
-                )}
+          {block.type === "link" && block.config.width === "half" && (
+            <span className="mt-1 flex flex-wrap gap-1.5">
+              <span className="rounded-full bg-black/[0.05] px-2 py-0.5 text-[10px] font-medium text-soft">
+                ½ Grid
               </span>
-            )}
+            </span>
+          )}
           {broken && (
             <span className="mt-0.5 inline-flex items-center gap-1 text-[11px] font-medium text-danger">
               ● This link isn&apos;t responding
@@ -618,7 +619,7 @@ export function BlockCard({
         </button>
         <button
           type="button"
-          onClick={() => setOpen((v) => !v)}
+          onClick={() => setOpen(!open)}
           aria-label="Edit block"
           className="px-2 text-faint transition hover:text-ink"
         >
@@ -630,6 +631,7 @@ export function BlockCard({
         <div className="space-y-3 border-t border-line bg-paper/60 p-4">
           {block.type === "link" && (
             <>
+              <p className="rounded-lg bg-ink/[0.04] px-3 py-2 text-[11px] font-semibold tracking-wide text-soft uppercase">Content</p>
               <Field label="Title">
                 <input
                   value={block.config.title ?? ""}
@@ -646,16 +648,17 @@ export function BlockCard({
                 />
               </Field>
 
+              <p className="mt-2 rounded-lg bg-ink/[0.04] px-3 py-2 text-[11px] font-semibold tracking-wide text-soft uppercase">Layout</p>
               <div className="rounded-xl border border-line bg-surface p-4">
                 <div>
-                  <p className="text-sm font-semibold">Layout &amp; motion</p>
+                  <p className="text-sm font-semibold">Grid layout</p>
                   <p className="mt-1 text-xs leading-relaxed text-soft">
-                    These settings affect only this button. Use half width on two
-                    links to create a two-column grid.
+                    Choose how much of the row this link occupies. Button
+                    animation is controlled globally in Design studio.
                   </p>
                 </div>
 
-                <div className="mt-4 grid gap-5 sm:grid-cols-2">
+                <div className="mt-4">
                   <div>
                     <span className="mb-2 block text-[11px] font-semibold tracking-wide text-faint uppercase">
                       Width
@@ -693,50 +696,27 @@ export function BlockCard({
                       })}
                     </div>
                     {block.config.width === "half" && (
-                      <p className="mt-2 text-[11px] leading-relaxed text-soft">
-                        This button now occupies the left half. Put another
-                        half-width link directly after it to fill the row.
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <span className="mb-2 block text-[11px] font-semibold tracking-wide text-faint uppercase">
-                      Attention animation
-                    </span>
-                    <div className="grid grid-cols-2 gap-2">
-                      {(Object.keys(LINK_ANIMS) as LinkAnim[]).map((key) => {
-                        const active = (block.config.anim ?? "none") === key;
-                        return (
-                          <button
-                            key={key}
-                            type="button"
-                            aria-pressed={active}
-                            onClick={() => patchConfig({ anim: key })}
-                            className={`flex min-h-10 items-center gap-2 rounded-xl border px-2.5 py-2 text-left transition ${
-                              active
-                                ? "border-ink bg-ink/[0.04] ring-1 ring-ink"
-                                : "border-line hover:border-soft"
-                            }`}
-                          >
-                            <span
-                              aria-hidden
-                              className={`h-2.5 w-5 shrink-0 rounded-full bg-current opacity-60 ${
-                                active ? ANIM_CLASS[key] : ""
-                              }`}
-                            />
-                            <span className="text-[11px] font-medium leading-tight">
-                              {LINK_ANIMS[key]}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                    {block.config.anim && block.config.anim !== "none" && (
-                      <p className="mt-2 text-[11px] leading-relaxed text-soft">
-                        Motion is on for this button. Choose <strong>Off</strong>{" "}
-                        to stop the pulsing or movement.
-                      </p>
+                      <div className="mt-3 rounded-xl border border-line bg-paper px-3 py-3">
+                        {hasHalfPartner ? (
+                          <p className="text-xs font-medium text-ok">
+                            ✓ Paired with the next half-width button.
+                          </p>
+                        ) : (
+                          <div className="flex flex-wrap items-center justify-between gap-3">
+                            <p className="max-w-xs text-xs leading-relaxed text-soft">
+                              This button occupies the left half. Add a blank
+                              matching button to complete the row.
+                            </p>
+                            <button
+                              type="button"
+                              onClick={onAddHalfPartner}
+                              className="rounded-full bg-ink px-3.5 py-2 text-xs font-medium text-paper transition hover:opacity-85"
+                            >
+                              + Add button beside it
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -785,7 +765,7 @@ export function BlockCard({
                 <ImagePicker
                   value={block.config.thumb ?? ""}
                   userId={userId}
-                  onChange={(thumb) => patchConfig({ thumb })}
+                  onChange={(thumb, thumbBytes) => patchConfig({ thumb, thumbBytes })}
                 />
               </div>
 
@@ -819,6 +799,7 @@ export function BlockCard({
                 </div>
               )}
 
+              <p className="mt-2 rounded-lg bg-ink/[0.04] px-3 py-2 text-[11px] font-semibold tracking-wide text-soft uppercase">Style</p>
               <div className="flex flex-wrap items-center gap-5">
                 <label className="flex items-center gap-2 text-sm">
                   <span className="text-xs font-medium text-soft">
@@ -864,6 +845,9 @@ export function BlockCard({
                 Highlight this link
               </label>
 
+              <div className="rounded-xl border border-line bg-surface p-3 text-xs text-soft"><span className="font-medium text-ink">Motion</span><span className="ml-2">Button animation is managed globally in Design → Customise → Buttons.</span></div>
+
+              <p className="mt-2 rounded-lg bg-ink/[0.04] px-3 py-2 text-[11px] font-semibold tracking-wide text-soft uppercase">Access</p>
               {/* VIP zamok — Pro+ */}
               {vip ? (
                 <div className="space-y-2 rounded-lg border border-line p-3">
@@ -912,7 +896,7 @@ export function BlockCard({
           )}
 
           {(block.type === "headline" || block.type === "text") && (
-            <Field label={block.type === "headline" ? "Heading" : "Text"}>
+            <div className="space-y-3"><Field label={block.config.isSection ? "Section title" : block.type === "headline" ? "Heading" : "Text"}>
               {block.type === "headline" ? (
                 <input
                   value={block.config.text ?? ""}
@@ -928,6 +912,8 @@ export function BlockCard({
                 />
               )}
             </Field>
+            {block.type === "headline" && block.config.isSection && <div className="grid gap-3 rounded-xl border border-line bg-surface p-4 sm:grid-cols-2"><label className="text-xs text-soft">Background<input type="color" value={block.config.sectionBg ?? "#ffffff"} onChange={(e) => patchConfig({ sectionBg: e.target.value })} className="mt-1 block h-9 w-full rounded-lg border border-line p-1" /></label><label className="text-xs text-soft">Text<input type="color" value={block.config.sectionText ?? "#191813"} onChange={(e) => patchConfig({ sectionText: e.target.value })} className="mt-1 block h-9 w-full rounded-lg border border-line p-1" /></label><label className="text-xs text-soft">Border<input type="color" value={block.config.sectionBorder ?? "#e7e4dc"} onChange={(e) => patchConfig({ sectionBorder: e.target.value })} className="mt-1 block h-9 w-full rounded-lg border border-line p-1" /></label><label className="text-xs text-soft">Content layout<select value={block.config.sectionLayout ?? "stack"} onChange={(e) => patchConfig({ sectionLayout: e.target.value as "stack" | "grid" })} className="field mt-1 py-2"><option value="stack">Stack</option><option value="grid">Two-column grid</option></select></label><label className="text-xs text-soft sm:col-span-2">Corners<select value={block.config.sectionRadius ?? "rounded"} onChange={(e) => patchConfig({ sectionRadius: e.target.value as "soft" | "rounded" | "square" })} className="field mt-1 py-2"><option value="soft">Soft</option><option value="rounded">Rounded</option><option value="square">Square</option></select></label></div>}
+            </div>
           )}
 
           {block.type === "image" && (
@@ -938,6 +924,7 @@ export function BlockCard({
                 userId={userId}
                 onChange={(patch) => patchConfig(patch)}
               />
+              {block.config.mediaType !== "video" && <Field label="Alt text (describe the image)"><input value={block.config.alt ?? ""} placeholder="Portrait in a studio" onChange={(e) => patchConfig({ alt: e.target.value })} className="field py-2.5" /></Field>}
               <Field label="Links to (optional)">
                 <input
                   value={block.config.href ?? ""}

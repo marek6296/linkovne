@@ -44,6 +44,11 @@ export type PlanFeatures = {
    * HTML). Free ju nema.
    */
   vipLinks: boolean;
+  /** Premium editor workspace. */
+  sections: boolean;
+  savedTemplates: number;
+  versionDays: number;
+  brandKit: boolean;
 };
 
 export const PLANS: Record<Plan, PlanFeatures> = {
@@ -65,6 +70,10 @@ export const PLANS: Record<Plan, PlanFeatures> = {
     linkShield: false,
     escapeInApp: false,
     vipLinks: false,
+    sections: false,
+    savedTemplates: 0,
+    versionDays: 0,
+    brandKit: false,
   },
   pro: {
     label: "Pro",
@@ -84,6 +93,10 @@ export const PLANS: Record<Plan, PlanFeatures> = {
     linkShield: true,
     escapeInApp: true,
     vipLinks: true,
+    sections: true,
+    savedTemplates: 10,
+    versionDays: 7,
+    brandKit: false,
   },
   business: {
     label: "Business",
@@ -103,6 +116,10 @@ export const PLANS: Record<Plan, PlanFeatures> = {
     linkShield: true,
     escapeInApp: true,
     vipLinks: true,
+    sections: true,
+    savedTemplates: 50,
+    versionDays: 30,
+    brandKit: true,
   },
   admin: {
     label: "Admin",
@@ -122,6 +139,10 @@ export const PLANS: Record<Plan, PlanFeatures> = {
     linkShield: true,
     escapeInApp: true,
     vipLinks: true,
+    sections: true,
+    savedTemplates: 100,
+    versionDays: 30,
+    brandKit: true,
   },
 };
 

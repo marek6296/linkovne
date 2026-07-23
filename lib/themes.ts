@@ -69,6 +69,8 @@ export type Theme = {
   fontHeading?: string;
   /** Advanced Pro/Business button controls. */
   btnWeight?: number;
+  /** Global link-button motion selected in Design studio. */
+  btnAnimation?: "none" | "pulse" | "shake" | "glow";
   avatarBg: string;
   avatarText: string;
   /** Tvar/velkost/prstenec profilovky — doplna resolveTheme z `design`.

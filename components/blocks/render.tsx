@@ -6,7 +6,6 @@ import {
   SOCIAL_SIZE_PX,
   SOCIAL_SHAPE_RADIUS,
   type Block,
-  type LinkAnim,
   type LinkLayout,
   type SocialPlatform,
 } from "@/lib/blocks";
@@ -89,7 +88,10 @@ function LinkBlock({
   // takze card/cover maju strop.
   const mediaRadius = theme.btnRadius === "999px" ? "18px" : theme.btnRadius;
 
-  const anim = ANIM_CLASS[(cfg.anim ?? "none") as LinkAnim] ?? "";
+  // Motion is a global Design studio choice. Legacy per-link values are
+  // intentionally ignored so the visible global "Off" state really stops all
+  // buttons and no hidden block setting can keep one pulsing.
+  const anim = ANIM_CLASS[theme.btnAnimation ?? "none"] ?? "";
   const base = `block w-full font-medium transition duration-200 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.985] ${anim}`;
 
   const iconKey = cfg.icon as IconKey | undefined;
@@ -294,6 +296,7 @@ export function BlockList({
   hrefFor,
   profileId,
   preview = false,
+  onSelect,
 }: {
   blocks: Block[];
   theme: Theme;
@@ -302,24 +305,32 @@ export function BlockList({
   profileId: string;
   /** In the editor nothing is actually submitted. */
   preview?: boolean;
+  onSelect?: (blockId: string) => void;
 }) {
   const active = blocks.filter((b) => b.is_active);
 
   const isHalf = (b: Block | undefined) =>
     !!b && b.type === "link" && b.config.width === "half";
 
-  // Dva susedne half odkazy tvoria jeden riadok. Osamoteny half zostane v
-  // lavom stlpci, aby zmena sirky bola v nahlade viditelna okamzite a user
-  // mohol druhy button doplnit alebo presunut vedla neho.
-  const rows: Block[][] = [];
-  for (let i = 0; i < active.length; i++) {
-    if (isHalf(active[i]) && isHalf(active[i + 1])) {
-      rows.push([active[i], active[i + 1]]);
-      i++;
-    } else {
-      rows.push([active[i]]);
-    }
+  // Section markers remain headline blocks in storage, so older databases and
+  // published snapshots stay compatible. Every marker owns following blocks
+  // until the next marker.
+  const groups: { section?: Block; items: Block[] }[] = [{ items: [] }];
+  for (const block of active) {
+    if (block.type === "headline" && block.config.isSection) groups.push({ section: block, items: [] });
+    else groups[groups.length - 1].items.push(block);
   }
+
+  const makeRows = (items: Block[]) => {
+    const rows: Block[][] = [];
+    for (let i = 0; i < items.length; i++) {
+      if (isHalf(items[i]) && isHalf(items[i + 1])) {
+        rows.push([items[i], items[i + 1]]);
+        i++;
+      } else rows.push([items[i]]);
+    }
+    return rows;
+  };
 
   const renderOne = (block: Block) => {
     {
@@ -519,20 +530,47 @@ export function BlockList({
     }
   };
 
-  return (
-    <div className="flex flex-col gap-3">
-      {rows.map((row) =>
+  const selectable = (block: Block) => {
+    const node = renderOne(block);
+    if (!onSelect) return node;
+    return (
+      <div key={block.id} className="group relative rounded-xl">
+        {node}
+        <button
+          type="button"
+          aria-label={`Edit ${block.type} block`}
+          onClick={() => onSelect(block.id)}
+          className="absolute inset-0 z-10 cursor-pointer rounded-xl outline-none ring-offset-2 transition group-hover:ring-2 group-hover:ring-current/30 focus-visible:ring-2"
+        />
+      </div>
+    );
+  };
+
+  const renderRows = (items: Block[], forceGrid = false) => (
+    <div className={forceGrid ? "grid grid-cols-2 gap-3" : "flex flex-col gap-3"}>
+      {makeRows(items).map((row) =>
         row.length === 2 || isHalf(row[0]) ? (
           <div
             key={row[0].id}
-            className="grid grid-cols-2 gap-3"
+            className={forceGrid ? "contents" : "grid grid-cols-2 gap-3"}
           >
-            {row.map(renderOne)}
+            {row.map(selectable)}
           </div>
         ) : (
-          renderOne(row[0])
+          selectable(row[0])
         ),
       )}
+    </div>
+  );
+
+  return (
+    <div className="flex flex-col gap-3">
+      {groups.map((group, index) => {
+        if (!group.section) return <div key={`root-${index}`}>{renderRows(group.items)}</div>;
+        const cfg = group.section.config;
+        const radius = cfg.sectionRadius === "square" ? "2px" : cfg.sectionRadius === "soft" ? "28px" : "16px";
+        return <section key={group.section.id} style={{ background: safeColor(cfg.sectionBg) ?? "rgba(255,255,255,.12)", color: safeColor(cfg.sectionText) ?? theme.text, border: `1px solid ${safeColor(cfg.sectionBorder) ?? "rgba(127,127,127,.25)"}`, borderRadius: radius }} className="p-4"><h2 className="mb-3 text-sm font-semibold tracking-wide uppercase">{cfg.text || "Section"}</h2>{renderRows(group.items, cfg.sectionLayout === "grid")}</section>;
+      })}
     </div>
   );
 }
@@ -543,12 +581,14 @@ export function ProfileHeader({
   bio,
   avatarUrl,
   theme,
+  onSelect,
 }: {
   displayName: string | null;
   username: string;
   bio: string | null;
   avatarUrl: string | null;
   theme: Theme;
+  onSelect?: () => void;
 }) {
   // Prazdne display name = klient ho vypol (chce iba foto + tlacidla).
   // Fallback na username je len pre iniciálu v placeholder avatare, nikdy sa
@@ -574,8 +614,8 @@ export function ProfileHeader({
     background: theme.avatarBg,
     boxShadow: avatarShadow,
   };
-  return (
-    <div className="text-center">
+  const content = (
+    <>
       {avatarUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -618,6 +658,13 @@ export function ProfileHeader({
           {bio}
         </p>
       )}
-    </div>
+    </>
+  );
+  return onSelect ? (
+    <button type="button" onClick={onSelect} className="w-full rounded-2xl text-center outline-none ring-offset-2 transition hover:ring-2 hover:ring-current/30 focus-visible:ring-2">
+      {content}
+    </button>
+  ) : (
+    <div className="text-center">{content}</div>
   );
 }

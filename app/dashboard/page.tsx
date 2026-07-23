@@ -8,6 +8,7 @@ import { UpgradedWelcome } from "@/components/dashboard/upgraded-welcome";
 import { planOf } from "@/lib/plans";
 import type { Block } from "@/lib/blocks";
 import type { Design } from "@/lib/design";
+import type { BrandKit, ProfileVersion, SavedTemplate } from "@/lib/editor-pro";
 
 export default async function DashboardPage({
   searchParams,
@@ -57,13 +58,28 @@ export default async function DashboardPage({
       new Date(current.updated_at as string).getTime() >
         new Date(current.published_at as string).getTime() + 1000);
 
-  const [{ data: blocks }, { data: health }] = await Promise.all([
+  const [
+    { data: blocks },
+    { data: health },
+    { data: savedTemplates },
+    { data: versions },
+    { data: brandKit },
+  ] = await Promise.all([
     supabase
       .from("blocks")
       .select("id, type, config, position, is_active, starts_at, ends_at")
       .eq("profile_id", current.id)
       .order("position"),
     supabase.from("link_health").select("block_id, ok"),
+    plan.savedTemplates > 0
+      ? supabase.from("saved_templates").select("id,name,theme,design,blocks,is_shared,created_at").eq("owner_id", user.id).order("created_at", { ascending: false })
+      : Promise.resolve({ data: [] }),
+    plan.versionDays > 0
+      ? supabase.from("profile_versions").select("id,reason,created_at").eq("profile_id", current.id).gte("created_at", new Date(Date.now() - plan.versionDays * 864e5).toISOString()).order("created_at", { ascending: false }).limit(30)
+      : Promise.resolve({ data: [] }),
+    plan.brandKit
+      ? supabase.from("brand_kits").select("name,logo_url,colors,font,font_heading,button,locked").eq("owner_id", user.id).maybeSingle()
+      : Promise.resolve({ data: null }),
   ]);
 
   const brokenLinks = (health ?? [])
@@ -150,6 +166,9 @@ export default async function DashboardPage({
           brokenLinks={brokenLinks}
           plan={plan}
           userId={user.id}
+          initialSavedTemplates={(savedTemplates ?? []) as SavedTemplate[]}
+          initialVersions={(versions ?? []) as ProfileVersion[]}
+          initialBrandKit={(brandKit ?? null) as BrandKit | null}
         />
       </div>
 

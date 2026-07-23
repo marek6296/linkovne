@@ -2,7 +2,6 @@ import type { Design } from "@/lib/design";
 import type {
   Block,
   BlockType,
-  LinkAnim,
   LinkWidth,
 } from "@/lib/blocks";
 
@@ -47,9 +46,8 @@ export type Template = {
     type: BlockType;
     title?: string;
     text?: string;
-    /** Optional per-link grid and motion presets. */
+    /** Optional per-link grid preset. */
     width?: LinkWidth;
-    anim?: LinkAnim;
   }[];
 };
 
@@ -1316,7 +1314,6 @@ export function templateBlocks(t: Template): Block[] {
           url: "",
           featured: i === 0,
           width: s.width ?? "full",
-          anim: s.anim ?? "none",
         },
       };
     if (s.type === "headline")

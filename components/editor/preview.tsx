@@ -21,6 +21,7 @@ export function Preview({
   blocks,
   theme,
   showBranding = true,
+  onSelect,
 }: {
   profileId: string;
   displayName: string;
@@ -31,6 +32,7 @@ export function Preview({
   theme: Theme;
   /** Ci sa ukaze „Powered by" (free vzdy, Pro ked branding nevypol). */
   showBranding?: boolean;
+  onSelect?: (target: { kind: "profile" } | { kind: "block"; id: string }) => void;
 }) {
   // Rovnaky styl plavajucich tlacidiel ako na verejnej stranke — drzi farby,
   // obrys aj tien/odlesk temy, takze aj tie sedia 1:1.
@@ -116,6 +118,7 @@ export function Preview({
               bio={bio}
               avatarUrl={avatarUrl}
               theme={theme}
+              onSelect={onSelect ? () => onSelect({ kind: "profile" }) : undefined}
             />
             <div className="mt-8">
               <BlockList
@@ -124,6 +127,7 @@ export function Preview({
                 hrefFor={() => "#"}
                 profileId={profileId}
                 preview
+                onSelect={onSelect ? (id) => onSelect({ kind: "block", id }) : undefined}
               />
             </div>
             {blocks.length === 0 && (

@@ -132,7 +132,7 @@ export type BlockConfig = {
   icon?: string;
   /** Sirka — dva half buttony vedla seba tvoria riadok */
   width?: LinkWidth;
-  /** Upozornovacia animacia */
+  /** Legacy per-link motion. Kept for old saved data; global Design wins. */
   anim?: LinkAnim;
   /** VIP zamok — ked je nastaveny, odkaz sa odomkne az po zadani tohto kodu.
    *  Overuje sa vylucne na serveri; do verejneho HTML sa nikdy nedostane. */
@@ -145,6 +145,8 @@ export type BlockConfig = {
   href?: string;
   /** Ci `src` je foto alebo nahrate video. Chyba = "image" (spatna kompatibilita). */
   mediaType?: "image" | "video";
+  mediaBytes?: number;
+  thumbBytes?: number;
   // socials — kazda polozka moze mat vlastnu farbu (per-icon override)
   items?: { platform: SocialPlatform; url: string; color?: string }[];
   /** Styl ikon: `line` (jednotny obrys) alebo `brand` (znackove farby). */
@@ -163,6 +165,13 @@ export type BlockConfig = {
   target?: string;
   // form
   buttonLabel?: string;
+  /** Premium visual section. Stored on a headline block for DB compatibility. */
+  isSection?: boolean;
+  sectionBg?: string;
+  sectionText?: string;
+  sectionBorder?: string;
+  sectionRadius?: "soft" | "rounded" | "square";
+  sectionLayout?: "stack" | "grid";
 };
 
 export type Block = {
@@ -224,7 +233,6 @@ export function defaultConfig(type: BlockType): BlockConfig {
         featured: false,
         thumb: "",
         width: "full",
-        anim: "none",
       };
     case "headline":
       return { text: "Section title" };

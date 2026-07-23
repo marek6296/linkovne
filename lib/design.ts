@@ -9,6 +9,7 @@ export type BtnShadow = "none" | "subtle" | "floating" | "hard";
 export type BtnBorder = "none" | "thin" | "bold";
 export type BtnSpacing = "compact" | "normal" | "relaxed";
 export type BtnWeight = "regular" | "medium" | "bold";
+export type BtnAnimation = "none" | "pulse" | "shake" | "glow";
 export type AvatarShape = "circle" | "rounded" | "square" | "organic";
 export type AvatarSize = "xs" | "sm" | "md" | "lg" | "xl";
 export type AvatarAspect = "square" | "portrait" | "landscape" | "wide";
@@ -44,6 +45,8 @@ export type Design = {
   btnBorder?: BtnBorder;
   btnSpacing?: BtnSpacing;
   btnWeight?: BtnWeight;
+  /** Global motion applied to every link button. */
+  btnAnimation?: BtnAnimation;
   btnGradientColor?: string;
   btnGradientColor2?: string;
   /** Font textu a buttonov */
@@ -133,6 +136,28 @@ export const BTN_WEIGHTS: Record<BtnWeight, { label: string; value: number }> = 
   regular: { label: "Regular", value: 400 },
   medium: { label: "Medium", value: 500 },
   bold: { label: "Bold", value: 700 },
+};
+
+export const BTN_ANIMATIONS: Record<
+  BtnAnimation,
+  { label: string; hint: string; className: string }
+> = {
+  none: { label: "Off", hint: "No automatic movement", className: "" },
+  pulse: {
+    label: "Gentle pulse",
+    hint: "Slowly grows and returns",
+    className: "anim-pulse",
+  },
+  shake: {
+    label: "Nudge",
+    hint: "A short occasional side movement",
+    className: "anim-shake",
+  },
+  glow: {
+    label: "Glow ring",
+    hint: "A soft ring expands around the button",
+    className: "anim-glow",
+  },
 };
 
 export const AVATAR_SHAPES: Record<
@@ -297,6 +322,9 @@ export function resolveTheme(
   }
   if (design.btnWeight && design.btnWeight in BTN_WEIGHTS) {
     t.btnWeight = BTN_WEIGHTS[design.btnWeight].value;
+  }
+  if (design.btnAnimation && design.btnAnimation in BTN_ANIMATIONS) {
+    t.btnAnimation = design.btnAnimation;
   }
 
   if (design.font && design.font in FONTS) t.font = FONTS[design.font].css;
