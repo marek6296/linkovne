@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { SetPlanForm } from "@/components/admin/set-plan-form";
+import { UserDiscount } from "@/components/admin/user-discount";
 import { PLANS } from "@/lib/plans";
 import { SITE_DOMAIN } from "@/lib/site";
 import {
@@ -154,6 +155,17 @@ export default async function ClientDetailPage({
             {a.plan_expires_at && <>Plan expires {fmt(a.plan_expires_at)}</>}
           </p>
         )}
+
+        {/* Zlava na predplatne (kamarat / fixna cena) */}
+        <section className="mt-8">
+          <h2 className="text-sm font-semibold">Discount</h2>
+          <div className="card mt-3 p-4">
+            <UserDiscount
+              customerId={a.stripe_customer_id}
+              canDiscount={isPaidPlan && !!a.stripe_customer_id}
+            />
+          </div>
+        </section>
 
         {/* Stranky */}
         <section className="mt-8">

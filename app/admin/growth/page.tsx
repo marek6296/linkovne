@@ -1,5 +1,6 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { savePromo, createInvite, deleteInvite } from "@/app/admin/actions";
+import { savePromo, deleteInvite } from "@/app/admin/actions";
 import { fmtDate } from "@/lib/crm";
 import { SITE_DOMAIN } from "@/lib/site";
 
@@ -132,62 +133,27 @@ export default async function AdminGrowthPage() {
         </form>
       </section>
 
-      {/* Invite kody */}
+      {/* Invite kody — legacy. Nove kody (vratane zadarmo cez 100% zlavu) idu
+          cez Stripe na stranke Discounts. Stare kody ostavaju funkcne. */}
       <section className="card p-6">
-        <h2 className="text-sm font-semibold">Invite codes — grant Pro free</h2>
+        <h2 className="text-sm font-semibold">Promo &amp; free codes</h2>
         <p className="mt-1 text-xs text-soft">
-          Share {SITE_DOMAIN}/i/&lt;code&gt; or let people type the code during
-          onboarding. They get the plan instantly for the chosen time — no card.
+          Discount and free codes now live in Stripe — one place, tied to real
+          billing. For free access, create a{" "}
+          <span className="font-medium">100% off</span> code.
         </p>
-
-        <form
-          action={createInvite}
-          className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
+        <Link
+          href="/admin/discounts"
+          className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-ink px-4 py-2 text-sm font-medium text-paper transition hover:opacity-90"
         >
-          <label className="block">
-            <span className="mb-1 block text-xs text-soft">Grants plan</span>
-            <select name="plan" className="field" defaultValue="pro">
-              <option value="pro">Pro</option>
-              <option value="business">Business</option>
-            </select>
-          </label>
-          <label className="block">
-            <span className="mb-1 block text-xs text-soft">For</span>
-            <select name="duration" className="field" defaultValue="month">
-              <option value="month">1 month</option>
-              <option value="year">1 year</option>
-              <option value="unlimited">Unlimited</option>
-            </select>
-          </label>
-          <label className="block">
-            <span className="mb-1 block text-xs text-soft">Max uses</span>
-            <input
-              name="max_uses"
-              type="number"
-              min="1"
-              placeholder="∞"
-              className="field"
-            />
-          </label>
-          <label className="block">
-            <span className="mb-1 block text-xs text-soft">Code valid until</span>
-            <input type="datetime-local" name="expires_at" className="field" />
-          </label>
-          <label className="block">
-            <span className="mb-1 block text-xs text-soft">Note</span>
-            <input
-              name="note"
-              placeholder="e.g. Instagram promo"
-              className="field"
-            />
-          </label>
-          <div className="flex items-end">
-            <button type="submit" className="btn-ink px-5 py-2.5 text-sm">
-              Create code
-            </button>
-          </div>
-        </form>
+          Manage codes in Discounts →
+        </Link>
 
+        {invites.length > 0 && (
+          <p className="mt-6 text-xs font-semibold tracking-wide text-faint uppercase">
+            Legacy invite codes (still redeemable at {SITE_DOMAIN}/i/&lt;code&gt;)
+          </p>
+        )}
         {invites.length > 0 && (
           <div className="mt-6 overflow-x-auto">
             <table className="w-full text-left text-sm">

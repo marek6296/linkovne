@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Not signed in." }, { status: 401 });
   }
 
-  let body: { plan?: string };
+  let body: { plan?: string; promo?: string };
   try {
     body = await request.json();
   } catch {
@@ -46,15 +46,38 @@ export async function POST(request: NextRequest) {
     .eq("id", user.id)
     .maybeSingle();
 
-  const baseParams = {
-    mode: "subscription" as const,
+  // Promo kod z linku (?promo=KOD) — ak sedi na aktivny promotion code, zlavu
+  // predvyplnime. Inak necha zakaznika zadat kod rucne v checkoute.
+  let promotionCodeId: string | null = null;
+  const promoCode = String(body.promo ?? "").trim().toUpperCase();
+  if (promoCode && /^[A-Z0-9]{3,40}$/.test(promoCode)) {
+    try {
+      const found = await stripe.promotionCodes.list({
+        code: promoCode,
+        active: true,
+        limit: 1,
+      });
+      promotionCodeId = found.data[0]?.id ?? null;
+    } catch {
+      promotionCodeId = null;
+    }
+  }
+
+  const baseParams: Parameters<typeof stripe.checkout.sessions.create>[0] = {
+    mode: "subscription",
     line_items: [{ price, quantity: 1 }],
     client_reference_id: user.id,
-    allow_promotion_codes: true,
+    // 100% zlava = suma €0 → Stripe vtedy nepyta kartu (inak by ju vyzadoval).
+    payment_method_collection: "if_required",
     success_url: `${SITE_URL}/dashboard?upgraded=1`,
     cancel_url: `${SITE_URL}/#pricing`,
     subscription_data: { metadata: { user_id: user.id, plan } },
     metadata: { user_id: user.id, plan },
+    // discounts a allow_promotion_codes sa VYLUCUJU — bud predvyplnime kod,
+    // alebo necháme pole na rucne zadanie.
+    ...(promotionCodeId
+      ? { discounts: [{ promotion_code: promotionCodeId }] }
+      : { allow_promotion_codes: true }),
   };
 
   let session;

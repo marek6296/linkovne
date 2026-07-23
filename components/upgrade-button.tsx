@@ -28,10 +28,14 @@ export function UpgradeButton({
     setBusy(true);
     setNote(null);
     try {
+      // Promo kod z linku (?promo=KOD) — ak tam je, posleme ho a checkout ho
+      // predvyplni. Bez neho user zada kod priamo v Stripe checkoute.
+      const promo =
+        new URLSearchParams(window.location.search).get("promo") ?? undefined;
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan }),
+        body: JSON.stringify({ plan, promo }),
       });
       if (res.status === 401) {
         window.location.href = "/register";

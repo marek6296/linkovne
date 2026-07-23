@@ -193,6 +193,18 @@ export async function POST(request: NextRequest) {
         // signal "plati dalej". Prve invoice pri zalozeni preskocime.
         const inv = event.data.object as Stripe.Invoice;
         const reason = (inv as unknown as { billing_reason?: string }).billing_reason;
+        // Realne zaplatena suma (po zlave) = mesacne MRR uctu. Ukladame ju pri
+        // zalozeni aj obnove, nech admin metriky ukazu skutocny prijem (nie
+        // fixnu cenu planu). €0 pri 100% zlave je spravne 0.
+        if (
+          inv.customer &&
+          (reason === "subscription_create" || reason === "subscription_cycle")
+        ) {
+          await admin()
+            .from("accounts")
+            .update({ mrr_cents: inv.amount_paid })
+            .eq("stripe_customer_id", String(inv.customer));
+        }
         if (inv.customer && reason === "subscription_cycle") {
           const acct = await accountByCustomer(String(inv.customer));
           if (acct) {
@@ -236,11 +248,43 @@ export async function POST(request: NextRequest) {
             plan_expires_at: null,
             subscription_status: "canceled",
             stripe_subscription_id: null,
+            mrr_cents: 0,
           })
           .eq("stripe_customer_id", String(sub.customer));
         if (acct) {
           await logEvent(acct.id, "subscription_canceled", acct.plan, "free", {});
         }
+        break;
+      }
+      case "customer.discount.created":
+      case "customer.discount.updated":
+      case "customer.discount.deleted": {
+        // Zlava priradena/odobrana konkretnemu zakaznikovi — zalogujeme komu
+        // (Growth prehlad). Coupon detail berieme z discountu.
+        const disc = event.data.object as Stripe.Discount;
+        if (!disc.customer) break;
+        const acct = await accountByCustomer(String(disc.customer));
+        if (!acct) break;
+        // Coupon je vo v22 pod source.coupon (string id alebo objekt).
+        const rawCoupon = disc.source?.coupon;
+        const c =
+          typeof rawCoupon === "object" && rawCoupon !== null ? rawCoupon : null;
+        const type =
+          event.type === "customer.discount.deleted"
+            ? "discount_removed"
+            : "discount_applied";
+        await logEvent(acct.id, type, acct.plan, acct.plan, {
+          coupon: c?.id ?? (typeof rawCoupon === "string" ? rawCoupon : null),
+          percent_off: c?.percent_off ?? null,
+          amount_off: c?.amount_off ?? null,
+          currency: c?.currency ?? null,
+          duration: c?.duration ?? null,
+          duration_in_months: c?.duration_in_months ?? null,
+          promotion_code:
+            typeof disc.promotion_code === "string"
+              ? disc.promotion_code
+              : (disc.promotion_code?.id ?? null),
+        });
         break;
       }
     }
