@@ -49,6 +49,7 @@ export const ANIM_CLASS: Record<LinkAnim, string> = {
 };
 
 export type SocialPlatform =
+  | "website"
   | "instagram"
   | "tiktok"
   | "youtube"
@@ -101,8 +102,9 @@ export const SOCIAL_SHAPE_RADIUS: Record<SocialShape, string> = {
   square: "6px",
 };
 
-/** Znackove farby pre `brand` styl. Email/telefon nie su znacky → neutral. */
+/** Znackove farby pre `brand` styl. Web/email/telefon nie su znacky → neutral. */
 export const SOCIAL_BRAND: Record<SocialPlatform, string> = {
+  website: "#6B7280",
   instagram: "#E1306C",
   tiktok: "#010101",
   youtube: "#FF0000",
@@ -262,6 +264,7 @@ export function defaultConfig(type: BlockType): BlockConfig {
 }
 
 export const SOCIAL_LABELS: Record<SocialPlatform, string> = {
+  website: "Website",
   instagram: "Instagram",
   tiktok: "TikTok",
   youtube: "YouTube",

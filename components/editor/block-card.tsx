@@ -428,7 +428,9 @@ function SocialsEditor({
                   ? "you@example.com"
                   : item.platform === "phone"
                     ? "+421…"
-                    : "instagram.com/you"
+                    : item.platform === "website"
+                      ? "yourwebsite.com"
+                      : "instagram.com/you"
               }
               onChange={(e) => {
                 const next = [...items];
