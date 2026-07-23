@@ -2,7 +2,21 @@
 
 import Link from "next/link";
 import { useRef, useState } from "react";
-import { useSortable } from "@dnd-kit/sortable";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
+import {
+  SortableContext,
+  arrayMove,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import {
   BLOCK_META,
@@ -162,6 +176,47 @@ function MediaPicker({
 
 type SocialItem = { platform: SocialPlatform; url: string; color?: string };
 
+/** Jeden riadok socialneho uctu s grip handlom na presuvanie (dnd-kit). */
+function SortableSocialRow({
+  id,
+  children,
+}: {
+  id: string;
+  children: React.ReactNode;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id });
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.55 : 1,
+      }}
+      className="flex items-center gap-2"
+    >
+      <button
+        type="button"
+        aria-label="Drag to reorder"
+        {...attributes}
+        {...listeners}
+        className="shrink-0 cursor-grab touch-none px-0.5 text-faint transition hover:text-ink active:cursor-grabbing"
+      >
+        <svg viewBox="0 0 20 20" className="h-4 w-4" fill="currentColor" aria-hidden>
+          <circle cx="7" cy="5" r="1.4" />
+          <circle cx="13" cy="5" r="1.4" />
+          <circle cx="7" cy="10" r="1.4" />
+          <circle cx="13" cy="10" r="1.4" />
+          <circle cx="7" cy="15" r="1.4" />
+          <circle cx="13" cy="15" r="1.4" />
+        </svg>
+      </button>
+      {children}
+    </div>
+  );
+}
+
 /** Skupina chipov s malym vizualnym nahladom vlavo. */
 function SocialChips<T extends string>({
   label,
@@ -248,6 +303,18 @@ function SocialsEditor({
 
   const setItems = (next: SocialItem[]) => onPatch({ items: next });
 
+  const socialSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+  );
+  const onSocialDragEnd = (e: DragEndEvent) => {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    const from = Number(String(active.id).slice(2));
+    const to = Number(String(over.id).slice(2));
+    if (Number.isNaN(from) || Number.isNaN(to)) return;
+    setItems(arrayMove(items, from, to));
+  };
+
   return (
     <div className="space-y-4">
       {/* ---------- Vzhlad ikon (vsetky naraz) ---------- */}
@@ -329,8 +396,19 @@ function SocialsEditor({
 
       {/* ---------- Ucty (kazdy zvlast + volitelna farba) ---------- */}
       <div className="space-y-2">
-        {items.map((item, i) => (
-          <div key={i} className="flex items-center gap-2">
+        <DndContext
+          sensors={socialSensors}
+          collisionDetection={closestCenter}
+          modifiers={[restrictToVerticalAxis]}
+          onDragEnd={onSocialDragEnd}
+        >
+          <SortableContext
+            items={items.map((_, i) => `s-${i}`)}
+            strategy={verticalListSortingStrategy}
+          >
+            <div className="space-y-2">
+              {items.map((item, i) => (
+                <SortableSocialRow key={i} id={`s-${i}`}>
             <select
               value={item.platform}
               onChange={(e) => {
@@ -412,8 +490,11 @@ function SocialsEditor({
             >
               ×
             </button>
-          </div>
-        ))}
+                </SortableSocialRow>
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
         <button
           type="button"
           onClick={() =>
@@ -489,6 +570,9 @@ export function BlockCard({
           : (block.config.text ?? block.config.url ?? "").slice(0, 40) ||
             BLOCK_META[block.type].label;
 
+  const isSection =
+    block.type === "headline" && block.config.isSection === true;
+
   return (
     <div
       ref={setNodeRef}
@@ -497,7 +581,9 @@ export function BlockCard({
         transition,
         opacity: isDragging ? 0.5 : 1,
       }}
-      className="card overflow-hidden"
+      className={`card overflow-hidden ${
+        isSection ? "border-l-2 border-l-ink/35" : ""
+      }`}
     >
       <div className="flex items-center gap-2 p-3">
         <button
@@ -516,7 +602,7 @@ export function BlockCard({
           className="min-w-0 flex-1 text-left"
         >
           <span className="block text-[11px] tracking-wide text-faint uppercase">
-            {BLOCK_META[block.type].label}
+            {isSection ? "Section" : BLOCK_META[block.type].label}
           </span>
           <span
             className={`block truncate text-sm font-medium ${
@@ -525,6 +611,11 @@ export function BlockCard({
           >
             {summary}
           </span>
+          {isSection && (
+            <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-ink/[0.06] px-2 py-0.5 text-[10px] font-medium text-soft">
+              Drag to move this section with its links
+            </span>
+          )}
           {block.type === "link" && block.config.width === "half" && (
             <span className="mt-1 flex flex-wrap gap-1.5">
               <span className="rounded-full bg-black/[0.05] px-2 py-0.5 text-[10px] font-medium text-soft">

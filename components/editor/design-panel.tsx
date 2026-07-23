@@ -42,6 +42,7 @@ import {
   type LinkTextSize,
 } from "@/lib/blocks";
 import { Icon, ICON_KEYS } from "@/components/blocks/icon";
+import type { DesignCaps } from "@/lib/design-tiers";
 
 /**
  * Customizacia dizajnu — 4 taby (Background · Photo · Buttons · Font) namiesto
@@ -98,6 +99,47 @@ export type ThemeOption = {
   locked: boolean;
 };
 
+/** Ikonka tabu — jemny vizualny kluc, aby tab bar posobil premiovejsie. */
+function TabIcon({ tab }: { tab: DesignTab }) {
+  const cn = "h-4 w-4";
+  const p = { fill: "none", stroke: "currentColor", strokeWidth: 1.7 } as const;
+  switch (tab) {
+    case "theme":
+      return (
+        <svg viewBox="0 0 24 24" className={cn} {...p} aria-hidden>
+          <circle cx="12" cy="12" r="8.5" />
+          <path d="M12 3.5v17M3.5 12h17" strokeOpacity="0.5" />
+        </svg>
+      );
+    case "bg":
+      return (
+        <svg viewBox="0 0 24 24" className={cn} {...p} aria-hidden>
+          <rect x="3.5" y="4.5" width="17" height="15" rx="2.5" />
+          <path d="M3.5 15l4-4 4 4 4-5 5 5" />
+        </svg>
+      );
+    case "avatar":
+      return (
+        <svg viewBox="0 0 24 24" className={cn} {...p} aria-hidden>
+          <circle cx="12" cy="9" r="3.5" />
+          <path d="M5 19c1.4-3.2 4-4.6 7-4.6s5.6 1.4 7 4.6" />
+        </svg>
+      );
+    case "buttons":
+      return (
+        <svg viewBox="0 0 24 24" className={cn} {...p} aria-hidden>
+          <rect x="3.5" y="8" width="17" height="8" rx="4" />
+        </svg>
+      );
+    case "font":
+      return (
+        <svg viewBox="0 0 24 24" className={cn} {...p} aria-hidden>
+          <path d="M6 19l5-14 5 14M8 13.5h6" />
+        </svg>
+      );
+  }
+}
+
 /** Maly zamok pre uzamknute (platene) temy. */
 function LockGlyph() {
   return (
@@ -124,17 +166,108 @@ function GroupLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
+/** Maly „Pro" odznak pri premium skupine. */
+function ProPill() {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-ink px-2 py-0.5 text-[9px] font-bold tracking-widest text-paper uppercase">
+      <LockGlyph />
+      Pro
+    </span>
+  );
+}
+
+/**
+ * Obal pre premium ovladac. Ked je `locked`, ukaze obsah stlmene a preklikom
+ * spusti upsell (namiesto samotnej zmeny). Free tak VIDI, co by odomkol.
+ */
+function Locked({
+  locked,
+  onUpsell,
+  children,
+}: {
+  locked: boolean;
+  onUpsell: () => void;
+  children: React.ReactNode;
+}) {
+  if (!locked) return <>{children}</>;
+  return (
+    <div className="relative">
+      <div className="pointer-events-none select-none opacity-45">{children}</div>
+      <button
+        type="button"
+        onClick={onUpsell}
+        aria-label="Upgrade to unlock"
+        className="absolute inset-0 flex items-center justify-center rounded-xl bg-paper/5 transition hover:bg-paper/15"
+      >
+        <ProPill />
+      </button>
+    </div>
+  );
+}
+
+/**
+ * Krokovy slider nad diskretnymi hodnotami (napr. velkost). Tahaci ovladac
+ * s live labelom a bodkami krokov — plynulejsi a premiovejsi ako rad chipov.
+ */
+function StepSlider<T extends string>({
+  label,
+  keys,
+  value,
+  labelOf,
+  onChange,
+}: {
+  label: string;
+  keys: readonly T[];
+  value: T;
+  labelOf: (k: T) => string;
+  onChange: (v: T) => void;
+}) {
+  const idx = Math.max(0, keys.indexOf(value));
+  return (
+    <div>
+      <div className="flex items-center justify-between gap-2">
+        <GroupLabel>{label}</GroupLabel>
+        <span className="rounded-full bg-ink/[0.06] px-2 py-0.5 text-[11px] font-semibold text-ink">
+          {labelOf(keys[idx])}
+        </span>
+      </div>
+      <input
+        type="range"
+        min={0}
+        max={keys.length - 1}
+        step={1}
+        value={idx}
+        onChange={(e) => onChange(keys[Number(e.target.value)])}
+        aria-label={label}
+        className="mt-2.5 w-full cursor-pointer accent-ink"
+      />
+      <div className="mt-1 flex justify-between px-1">
+        {keys.map((k) => (
+          <span
+            key={k}
+            className={`h-1 w-1 rounded-full transition ${
+              k === value ? "bg-ink" : "bg-line"
+            }`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /** Chip s vizualnym nahladom (tvar/styl) + textom. */
 function VisualChip({
   active,
   onClick,
   glyph,
   label,
+  locked = false,
 }: {
   active: boolean;
   onClick: () => void;
   glyph: React.ReactNode;
   label: string;
+  locked?: boolean;
 }) {
   return (
     <button
@@ -145,10 +278,11 @@ function VisualChip({
         active
           ? "border-ink bg-ink/[0.04] font-medium"
           : "border-line hover:border-soft"
-      }`}
+      } ${locked ? "opacity-60" : ""}`}
     >
       {glyph}
       {label}
+      {locked && <LockGlyph />}
     </button>
   );
 }
@@ -205,9 +339,12 @@ function ColorRow({
   return (
     <div className="flex items-center justify-between gap-4 py-2">
       <span className="text-sm text-soft">{label}</span>
-      <label className="flex cursor-pointer items-center gap-2 rounded-full border border-line py-1 pr-3 pl-1 transition hover:border-soft">
+      <label className="group flex cursor-pointer items-center gap-2.5 rounded-full border border-line bg-paper/50 py-1 pr-1 pl-3 transition hover:border-ink/40">
+        <code className="text-xs font-medium tracking-wide text-faint uppercase transition group-hover:text-ink">
+          {current}
+        </code>
         <span
-          className="relative h-6 w-6 overflow-hidden rounded-full border border-line"
+          className="relative h-7 w-7 overflow-hidden rounded-full border border-black/10 shadow-[inset_0_1px_2px_rgba(0,0,0,0.15)] ring-1 ring-black/5"
           style={{ background: current }}
         >
           <input
@@ -217,7 +354,6 @@ function ColorRow({
             className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
           />
         </span>
-        <code className="text-xs text-faint uppercase">{current}</code>
       </label>
     </div>
   );
@@ -225,12 +361,14 @@ function ColorRow({
 
 export function DesignPanel({
   design,
+  caps,
   userId,
   themes,
   activeTheme,
   onPickTheme,
   onChange,
   onReset,
+  onUpsell,
   tab,
   onTabChange,
   linkBlocks,
@@ -239,12 +377,14 @@ export function DesignPanel({
   onLinkChange,
 }: {
   design: Design;
+  caps: DesignCaps;
   userId: string;
   themes: ThemeOption[];
   activeTheme: string;
   onPickTheme: (key: string) => void;
   onChange: (patch: Design) => void;
   onReset: () => void;
+  onUpsell: () => void;
   tab: DesignTab;
   onTabChange: (tab: DesignTab) => void;
   linkBlocks: Block[];
@@ -274,12 +414,25 @@ export function DesignPanel({
         <div>
           <div className="flex items-center gap-2">
             <p className="text-sm font-semibold">Design studio</p>
-            <span className="rounded-full bg-ink px-2 py-0.5 text-[9px] font-bold tracking-widest text-paper uppercase">
-              Premium
-            </span>
+            {caps.full ? (
+              <span className="rounded-full bg-ink px-2 py-0.5 text-[9px] font-bold tracking-widest text-paper uppercase">
+                Premium
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={onUpsell}
+                className="inline-flex items-center gap-1 rounded-full border border-ink/20 px-2 py-0.5 text-[9px] font-bold tracking-widest text-ink uppercase transition hover:bg-ink hover:text-paper"
+              >
+                <LockGlyph />
+                Unlock Pro
+              </button>
+            )}
           </div>
           <p className="mt-1 text-xs text-soft">
-            Every change appears instantly in your live preview.
+            {caps.full
+              ? "Every change appears instantly in your live preview."
+              : "Style your page freely — a few extras unlock with Pro."}
           </p>
         </div>
       </div>
@@ -291,13 +444,14 @@ export function DesignPanel({
               key={t.key}
               type="button"
               onClick={() => onTabChange(t.key)}
-              className={`min-w-[88px] flex-1 rounded-full px-3 py-1.5 text-sm font-medium transition ${
+              className={`flex min-w-[76px] flex-1 items-center justify-center gap-1.5 rounded-full px-3 py-2 text-sm font-medium transition ${
                 tab === t.key
-                  ? "bg-ink text-paper"
+                  ? "bg-ink text-paper shadow-[0_4px_14px_rgba(25,24,19,0.18)]"
                   : "text-soft hover:bg-black/[0.04] hover:text-ink"
               }`}
             >
-              {t.label}
+              <TabIcon tab={t.key} />
+              <span>{t.label}</span>
             </button>
           ))}
         </div>
@@ -356,20 +510,24 @@ export function DesignPanel({
             <div>
               <GroupLabel>Style</GroupLabel>
               <div className="mt-2 flex flex-wrap gap-1.5">
-                {BG_MODES.map((o) => (
-                  <button
-                    key={o.key}
-                    type="button"
-                    onClick={() => onChange({ bg: o.key })}
-                    className={`rounded-full border px-3.5 py-1.5 text-sm transition ${
-                      bg === o.key
-                        ? "border-ink bg-ink text-paper"
-                        : "border-line hover:border-soft"
-                    }`}
-                  >
-                    {o.label}
-                  </button>
-                ))}
+                {BG_MODES.map((o) => {
+                  const locked = o.key === "image" && !caps.bgImage;
+                  return (
+                    <button
+                      key={o.key}
+                      type="button"
+                      onClick={() => (locked ? onUpsell() : onChange({ bg: o.key }))}
+                      className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm transition ${
+                        bg === o.key
+                          ? "border-ink bg-ink text-paper"
+                          : "border-line hover:border-soft"
+                      } ${locked ? "opacity-60" : ""}`}
+                    >
+                      {o.label}
+                      {locked && <LockGlyph />}
+                    </button>
+                  );
+                })}
               </div>
               {bg === "theme" && (
                 <p className="mt-3 text-xs text-soft">
@@ -492,26 +650,35 @@ export function DesignPanel({
 
             {/* ---- Desktop backdrop (pozadie za kartou, len PC) ---- */}
             <div className="border-t border-line pt-4">
-              <GroupLabel>Behind the card · desktop</GroupLabel>
+              <div className="flex items-center gap-2">
+                <GroupLabel>Behind the card · desktop</GroupLabel>
+                {!caps.deskBackdrop && <ProPill />}
+              </div>
               <p className="mt-1 text-xs text-soft">
                 The area around your card on wide screens. On phones the card
                 fills the screen, so this only shows on desktop.
               </p>
               <div className="mt-2.5 flex flex-wrap gap-1.5">
-                {DESK_BG_MODES.map((o) => (
-                  <button
-                    key={o.key}
-                    type="button"
-                    onClick={() => onChange({ deskBg: o.key })}
-                    className={`rounded-full border px-3.5 py-1.5 text-sm transition ${
-                      deskBg === o.key
-                        ? "border-ink bg-ink text-paper"
-                        : "border-line hover:border-soft"
-                    }`}
-                  >
-                    {o.label}
-                  </button>
-                ))}
+                {DESK_BG_MODES.map((o) => {
+                  const locked = o.key !== "auto" && !caps.deskBackdrop;
+                  return (
+                    <button
+                      key={o.key}
+                      type="button"
+                      onClick={() =>
+                        locked ? onUpsell() : onChange({ deskBg: o.key })
+                      }
+                      className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm transition ${
+                        deskBg === o.key
+                          ? "border-ink bg-ink text-paper"
+                          : "border-line hover:border-soft"
+                      } ${locked ? "opacity-60" : ""}`}
+                    >
+                      {o.label}
+                      {locked && <LockGlyph />}
+                    </button>
+                  );
+                })}
               </div>
               {deskBg === "auto" && (
                 <p className="mt-2 text-xs text-soft">
@@ -685,45 +852,42 @@ export function DesignPanel({
               </div>
             </div>
 
-            <div>
-              <GroupLabel>Size</GroupLabel>
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {(Object.keys(AVATAR_SIZES) as AvatarSize[]).map((k) => (
-                  <button
-                    key={k}
-                    type="button"
-                    onClick={() => onChange({ avatarSize: k })}
-                    className={`rounded-full border px-3.5 py-1.5 text-sm transition ${
-                      (design.avatarSize ?? "md") === k
-                        ? "border-ink bg-ink text-paper"
-                        : "border-line hover:border-soft"
-                    }`}
-                  >
-                    {AVATAR_SIZES[k].label}
-                  </button>
-                ))}
-              </div>
-            </div>
+            <StepSlider
+              label="Size"
+              keys={Object.keys(AVATAR_SIZES) as AvatarSize[]}
+              value={design.avatarSize ?? "md"}
+              labelOf={(k) => AVATAR_SIZES[k].label}
+              onChange={(avatarSize) => onChange({ avatarSize })}
+            />
 
             <div className="border-t border-line pt-4">
-              <GroupLabel>Frame</GroupLabel>
+              <div className="flex items-center gap-2">
+                <GroupLabel>Frame</GroupLabel>
+                {!caps.avatarFrames && <ProPill />}
+              </div>
               <div className="mt-2 grid grid-cols-3 gap-1.5 sm:grid-cols-5">
-                {(Object.keys(AVATAR_FRAMES) as AvatarFrame[]).map((k) => (
+                {(Object.keys(AVATAR_FRAMES) as AvatarFrame[]).map((k) => {
+                  const locked = k !== "none" && !caps.avatarFrames;
+                  return (
                   <button
                     key={k}
                     type="button"
                     onClick={() =>
-                      onChange({ avatarFrame: k, avatarRing: false })
+                      locked
+                        ? onUpsell()
+                        : onChange({ avatarFrame: k, avatarRing: false })
                     }
-                    className={`rounded-xl border px-2 py-2 text-xs transition ${
+                    className={`inline-flex items-center justify-center gap-1 rounded-xl border px-2 py-2 text-xs transition ${
                       (design.avatarFrame ?? (design.avatarRing ? "line" : "shadow")) === k
                         ? "border-ink bg-ink/[0.04] font-medium"
                         : "border-line hover:border-soft"
-                    }`}
+                    } ${locked ? "opacity-60" : ""}`}
                   >
                     {AVATAR_FRAMES[k]}
+                    {locked && <LockGlyph />}
                   </button>
-                ))}
+                  );
+                })}
               </div>
               {design.avatarFrame &&
                 design.avatarFrame !== "none" &&
@@ -1006,14 +1170,20 @@ export function DesignPanel({
             <div>
               <GroupLabel>Style</GroupLabel>
               <div className="mt-2 flex flex-wrap gap-1.5">
-                {(Object.keys(BTN_STYLES) as BtnStyle[]).map((k) => (
+                {(Object.keys(BTN_STYLES) as BtnStyle[]).map((k) => {
+                  const locked =
+                    (k === "glass" || k === "gradient") && !caps.btnFancy;
+                  return (
                   <VisualChip
                     key={k}
+                    locked={locked}
                     active={
                       (selectedConfig?.buttonStyle ?? design.btnStyle) === k
                     }
                     onClick={() =>
-                      selectedButton
+                      locked
+                        ? onUpsell()
+                        : selectedButton
                         ? patchSelected({ buttonStyle: k })
                         : onChange({ btnStyle: k })
                     }
@@ -1034,7 +1204,8 @@ export function DesignPanel({
                       />
                     }
                   />
-                ))}
+                  );
+                })}
               </div>
             </div>
 
@@ -1094,30 +1265,17 @@ export function DesignPanel({
             </div>
 
             <div className="grid gap-4 border-t border-line pt-4 sm:grid-cols-2">
-              <div>
-                <GroupLabel>Size</GroupLabel>
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  {(Object.keys(BTN_SIZE_LABELS) as BtnSize[]).map((k) => (
-                    <button
-                      key={k}
-                      type="button"
-                      onClick={() =>
-                        selectedButton
-                          ? patchSelected({ buttonSize: k })
-                          : onChange({ btnSize: k })
-                      }
-                      className={`rounded-full border px-3 py-1.5 text-xs transition ${
-                        (selectedConfig?.buttonSize ?? design.btnSize ?? "md") ===
-                        k
-                          ? "border-ink bg-ink text-paper"
-                          : "border-line hover:border-soft"
-                      }`}
-                    >
-                      {BTN_SIZE_LABELS[k]}
-                    </button>
-                  ))}
-                </div>
-              </div>
+              <StepSlider
+                label="Size"
+                keys={Object.keys(BTN_SIZE_LABELS) as BtnSize[]}
+                value={selectedConfig?.buttonSize ?? design.btnSize ?? "md"}
+                labelOf={(k) => BTN_SIZE_LABELS[k]}
+                onChange={(v) =>
+                  selectedButton
+                    ? patchSelected({ buttonSize: v })
+                    : onChange({ btnSize: v })
+                }
+              />
               <div>
                 <GroupLabel>Text size</GroupLabel>
                 <div className="mt-2 flex flex-wrap gap-1.5">
@@ -1146,12 +1304,16 @@ export function DesignPanel({
             </div>
 
             <div className="border-t border-line pt-4">
-              <GroupLabel>Animation</GroupLabel>
+              <div className="flex items-center gap-2">
+                <GroupLabel>Animation</GroupLabel>
+                {!caps.btnAnimation && <ProPill />}
+              </div>
               <p className="mt-1 text-xs text-soft">
                 {selectedButton
                   ? "Choose an independent effect for this button. Off overrides any page animation."
                   : "Set the default effect. Individual buttons can override it."}
               </p>
+              <Locked locked={!caps.btnAnimation} onUpsell={onUpsell}>
               <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
                 {(Object.keys(BTN_ANIMATIONS) as BtnAnimation[]).map((k) => {
                   const active =
@@ -1187,6 +1349,7 @@ export function DesignPanel({
                   );
                 })}
               </div>
+              </Locked>
             </div>
 
             <div className="grid gap-4 border-t border-line pt-4 sm:grid-cols-2">

@@ -11,6 +11,7 @@ import { LogoMark } from "@/components/logo-mark";
 import { resolveTheme, type Design } from "@/lib/design";
 import { BRAND_TITLE, SITE_URL, SITE_DOMAIN, stripAltPrefix } from "@/lib/site";
 import { planOf } from "@/lib/plans";
+import { designForPlan } from "@/lib/design-tiers";
 import { isVisibleNow, type Block } from "@/lib/blocks";
 
 export const revalidate = 60;
@@ -125,11 +126,10 @@ export default async function PublicProfilePage({
   const snap = profile.snapshot;
   const plan = planOf(profile.plan);
 
-  // Vlastny dizajn je platena funkcia — po downgrade sa ignoruje aj tu
-  const theme = resolveTheme(
-    snap.theme,
-    plan.customDesign ? snap.design : {},
-  );
+  // Dizajn sa ocisti podla planu — free ma zakladnu customizaciu, premium
+  // polia (obrazkove pozadie, animacie, glass buttony, avatar ramy, desktop
+  // backdrop) sa po downgrade ignoruju.
+  const theme = resolveTheme(snap.theme, designForPlan(snap.design, plan));
 
   // Naplanovane bloky sa filtruju az pri renderi (ISR 60 s = dost jemne)
   const blockList = (snap.blocks ?? []).filter(isVisibleNow);

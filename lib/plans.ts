@@ -57,7 +57,7 @@ export const PLANS: Record<Plan, PlanFeatures> = {
     maxBlocks: 8,
     hideBranding: false,
     customDesign: false,
-    themes: ["classic", "noir"],
+    themes: null,
     blockTypes: ["link", "headline", "text", "socials"],
     leads: false,
     analyticsDays: 7,
@@ -150,12 +150,21 @@ export function allowsBlock(plan: PlanFeatures, type: BlockType): boolean {
 
 /** Co presne dostane zakaznik navyse — pouziva sa na landing page. */
 export const PLAN_BULLETS: Record<Plan, string[]> = {
-  free: ["1 page", "8 blocks", "2 themes", "Basic analytics"],
+  free: [
+    "1 page",
+    "8 blocks",
+    "All themes",
+    "Colors, gradients & fonts",
+    "Button & avatar styling",
+    "Basic analytics",
+  ],
   pro: [
     "Up to 4 pages",
     "Unlimited blocks",
     "All 9 block types",
-    "Full design control",
+    "Image backgrounds & desktop scenes",
+    "Button animations & glass/gradient styles",
+    "Avatar frames & glow",
     "No linkovne branding",
     "Contact forms & leads",
     "AI page builder",

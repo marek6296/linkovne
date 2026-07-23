@@ -28,6 +28,7 @@ import {
 import { THEMES, THEME_KEYS } from "@/lib/themes";
 import { resolveTheme, type Design } from "@/lib/design";
 import { allowsBlock, allowsTheme, type PlanFeatures } from "@/lib/plans";
+import { designCaps, designForPlan } from "@/lib/design-tiers";
 import {
   deleteBlock,
   saveBlocks,
@@ -40,7 +41,7 @@ import { AiDraft } from "@/components/editor/ai-draft";
 import { BlockCard } from "@/components/editor/block-card";
 import { ImportPanel } from "@/components/editor/import-panel";
 import { TemplateGrid } from "@/components/editor/template-picker";
-import { templateBlocks, type Template } from "@/lib/templates";
+import { type Template } from "@/lib/templates";
 import {
   DesignPanel,
   type DesignTab,
@@ -209,7 +210,6 @@ export function Editor({
   const [profileOpen, setProfileOpen] = useState(true);
   const [blocksOpen, setBlocksOpen] = useState(true);
   const [openBlockId, setOpenBlockId] = useState<string | null>(null);
-  const [pendingTemplate, setPendingTemplate] = useState<Template | null>(null);
 
   // Bez tychto flagov by autosave vystrelil hned po mounte a prepisoval by
   // server tym istym, co z neho prislo.
@@ -244,14 +244,16 @@ export function Editor({
         bio: profile.bio,
         avatar_url: profile.avatar_url,
         theme: profile.theme,
-        ...(plan.customDesign ? { design: profile.design } : {}),
+        // Design posielame vzdy — server ho ocisti podla planu (free = zakladna
+        // customizacia). Premium polia sa pre free odstrania na serveri.
+        design: profile.design,
       });
       profileDirty.current = false;
       setStatus(res?.error ? "error" : "saved");
       if (res?.error) setNotice(res.error);
     }, 700);
     return () => clearTimeout(t);
-  }, [profile, plan.customDesign]);
+  }, [profile]);
 
   function patchProfile(patch: Partial<ProfileState>) {
     profileDirty.current = true;
@@ -433,6 +435,25 @@ export function Editor({
     patchBlocks((prev) => {
       const from = prev.findIndex((b) => b.id === active.id);
       const to = prev.findIndex((b) => b.id === over.id);
+      if (from < 0 || to < 0) return prev;
+
+      const isSection = (b: Block) =>
+        b.type === "headline" && b.config?.isSection === true;
+
+      // Sekciu presuvame AJ s obsahom pod nou (bloky az po dalsiu sekciu) —
+      // cela skupina sa hybe ako celok.
+      if (isSection(prev[from])) {
+        let end = from + 1;
+        while (end < prev.length && !isSection(prev[end])) end++;
+        // Pustenie vnutri vlastnej skupiny nic nemeni.
+        if (to >= from && to < end) return prev;
+        const group = prev.slice(from, end);
+        const rest = [...prev.slice(0, from), ...prev.slice(end)];
+        const overIdx = rest.findIndex((b) => b.id === prev[to].id);
+        const insertAt = overIdx < 0 ? rest.length : overIdx;
+        return [...rest.slice(0, insertAt), ...group, ...rest.slice(insertAt)];
+      }
+
       return arrayMove(prev, from, to);
     });
   }
@@ -460,20 +481,18 @@ export function Editor({
     );
   }
 
-  function applyTemplate(template: Template, withBlocks: boolean) {
+  // Template aplikuje IBA dizajn (tema + farby/buttony) — bloky uzivatela
+  // ostavaju nedotknute. Ziadny medzi-dialog, klik = okamzita zmena vzhladu.
+  function applyTemplate(template: Template) {
     profileDirty.current = true;
     setProfile((p) => ({ ...p, theme: template.theme, design: template.design }));
-    if (withBlocks) {
-      blocksDirty.current = true;
-      setBlocks(templateBlocks(template));
-    }
-    setPendingTemplate(null);
-    setNotice(withBlocks ? "Template design and demo blocks applied." : "Template design applied. Your blocks were kept.");
+    setNotice("Template design applied — your links were kept.");
   }
 
+  const caps = designCaps(plan);
   const theme = resolveTheme(
     profile.theme,
-    plan.customDesign ? profile.design : {},
+    designForPlan(profile.design, plan),
   );
   return (
     <div>
@@ -620,156 +639,102 @@ export function Editor({
               subtitle="theme, template, colours"
               delay={120}
             >
-              {/* Tema — pre free usera (bez Customise) zostava hned viditelna.
-                  Pre Pro sa presuva do Customise ako prvy tab (nizsie). */}
-              {!plan.customDesign && (
-                <>
-                  <p className="text-[11px] font-semibold tracking-wide text-faint uppercase">
-                    Theme
-                  </p>
-                  <div className="mt-2.5 flex flex-wrap gap-2">
-                    {THEME_KEYS.map((key) => {
-                      const locked = !allowsTheme(plan, key);
-                      return (
-                        <button
-                          key={key}
-                          onClick={() =>
-                            locked
-                              ? setNotice("That theme needs a paid plan.")
-                              : pickTheme(key)
-                          }
-                          className={`flex items-center gap-2 rounded-full border px-3 py-2 text-sm transition ${
-                            profile.theme === key
-                              ? "border-ink"
-                              : "border-line hover:border-soft"
-                          } ${locked ? "opacity-55" : ""}`}
-                        >
-                          <span
-                            className="h-4 w-4 rounded-full border border-line"
-                            style={{ background: THEMES[key].swatch }}
-                          />
-                          {THEMES[key].label}
-                          {locked && <Lock />}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </>
-              )}
-
-              {/* Druha skupina — hlbsie upravy vzhladu (sablony + customizacia).
-                  Oddelovac hore len ked je nad nim Theme blok (free plan). */}
-              <p
-                className={`text-[11px] font-semibold tracking-wide text-faint uppercase ${
-                  plan.customDesign ? "" : "mt-6 border-t border-line pt-4"
-                }`}
-              >
+              {/* Vsetky plany maju Templates + Customise. Premium ovladace
+                  (obrazkove pozadie, animacie, glass buttony, avatar ramy,
+                  desktop backdrop) su zamknute vnutri panela s upsellom. */}
+              <p className="text-[11px] font-semibold tracking-wide text-faint uppercase">
                 Make it yours
               </p>
 
               {/* Templates — cely vzhlad na jeden klik */}
-              {plan.customDesign && (
-                <div className="mt-2.5">
-                  <button
-                    type="button"
-                    onClick={() => setTplOpen((v) => !v)}
-                    className="flex w-full items-center justify-between rounded-xl border border-line bg-surface px-4 py-3 text-sm transition hover:border-soft"
-                  >
-                    <span>
-                      <span className="font-medium">Start from a template</span>
-                      <span className="ml-2 text-soft">
-                        a full look in one click
-                      </span>
+              <div className="mt-2.5">
+                <button
+                  type="button"
+                  onClick={() => setTplOpen((v) => !v)}
+                  className="flex w-full items-center justify-between rounded-xl border border-line bg-surface px-4 py-3 text-sm transition hover:border-soft"
+                >
+                  <span>
+                    <span className="font-medium">Start from a template</span>
+                    <span className="ml-2 text-soft">
+                      a full look in one click
                     </span>
-                    <Chevron open={tplOpen} />
-                  </button>
-                  <Collapse open={tplOpen}>
-                    <div className="mt-3">
-                      <TemplateGrid
-                        onPick={(t) => {
-                          setPendingTemplate(t);
-                        }}
-                      />
-                    </div>
-                  </Collapse>
-                </div>
-              )}
+                  </span>
+                  <Chevron open={tplOpen} />
+                </button>
+                <Collapse open={tplOpen}>
+                  <div className="mt-3">
+                    <TemplateGrid onPick={(t) => applyTemplate(t)} />
+                  </div>
+                </Collapse>
+              </div>
 
               {/* Customise */}
-              {plan.customDesign ? (
-                <div className="mt-2.5">
-                  <button
-                    type="button"
-                    onClick={() => setDesignOpen((v) => !v)}
-                    className="flex w-full items-center justify-between rounded-xl border border-line bg-surface px-4 py-3 text-sm transition hover:border-soft"
-                  >
-                    <span>
-                      <span className="font-medium">Customise</span>
-                      <span className="ml-2 text-soft">
-                        themes, photo, frames, buttons, fonts
-                      </span>
+              <div className="mt-2.5">
+                <button
+                  type="button"
+                  onClick={() => setDesignOpen((v) => !v)}
+                  className="flex w-full items-center justify-between rounded-xl border border-line bg-surface px-4 py-3 text-sm transition hover:border-soft"
+                >
+                  <span>
+                    <span className="font-medium">Customise</span>
+                    <span className="ml-2 text-soft">
+                      themes, photo, frames, buttons, fonts
                     </span>
-                    <Chevron open={designOpen} />
-                  </button>
-
-                  <Collapse open={designOpen}>
-                    <div id="editor-design-studio" className="mt-3 scroll-mt-24">
-                      <DesignPanel
-                        design={profile.design}
-                        userId={userId}
-                        activeTheme={profile.theme}
-                        themes={THEME_KEYS.map((key) => ({
-                          key,
-                          label: THEMES[key].label,
-                          swatch: THEMES[key].swatch,
-                          page: THEMES[key].page,
-                          text: THEMES[key].text,
-                          button: THEMES[key].btnBg,
-                          locked: !allowsTheme(plan, key),
-                        }))}
-                        onPickTheme={(key) =>
-                          allowsTheme(plan, key as (typeof THEME_KEYS)[number])
-                            ? pickTheme(key as (typeof THEME_KEYS)[number])
-                            : setNotice("That theme needs a paid plan.")
-                        }
-                        onChange={(patch) =>
-                          patchProfile({
-                            design: { ...profile.design, ...patch },
-                          })
-                        }
-                        onReset={() => patchProfile({ design: {} })}
-                        tab={designTab}
-                        onTabChange={setDesignTab}
-                        linkBlocks={blocks.filter((block) => block.type === "link")}
-                        buttonTarget={buttonTarget}
-                        onButtonTargetChange={setButtonTarget}
-                        onLinkChange={(id, configPatch) =>
-                          patchBlocks((prev) =>
-                            prev.map((block) =>
-                              block.id === id
-                                ? {
-                                    ...block,
-                                    config: { ...block.config, ...configPatch },
-                                  }
-                                : block,
-                            ),
-                          )
-                        }
-                      />
-                    </div>
-                  </Collapse>
-                </div>
-              ) : (
-                <div className="mt-2.5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-line px-4 py-3 text-sm">
-                  <span className="flex items-center gap-2 text-soft">
-                    <Lock />
-                    Templates, custom background, buttons &amp; fonts
                   </span>
-                  <Link href="/#pricing" className="btn-ink px-4 py-2 text-sm">
-                    Upgrade
-                  </Link>
-                </div>
-              )}
+                  <Chevron open={designOpen} />
+                </button>
+
+                <Collapse open={designOpen}>
+                  <div id="editor-design-studio" className="mt-3 scroll-mt-24">
+                    <DesignPanel
+                      design={profile.design}
+                      caps={caps}
+                      userId={userId}
+                      activeTheme={profile.theme}
+                      themes={THEME_KEYS.map((key) => ({
+                        key,
+                        label: THEMES[key].label,
+                        swatch: THEMES[key].swatch,
+                        page: THEMES[key].page,
+                        text: THEMES[key].text,
+                        button: THEMES[key].btnBg,
+                        locked: !allowsTheme(plan, key),
+                      }))}
+                      onPickTheme={(key) =>
+                        allowsTheme(plan, key as (typeof THEME_KEYS)[number])
+                          ? pickTheme(key as (typeof THEME_KEYS)[number])
+                          : setNotice("That theme needs a paid plan.")
+                      }
+                      onChange={(patch) =>
+                        patchProfile({
+                          design: { ...profile.design, ...patch },
+                        })
+                      }
+                      onReset={() => patchProfile({ design: {} })}
+                      onUpsell={() =>
+                        setNotice("That's a Pro design feature — upgrade to unlock it.")
+                      }
+                      tab={designTab}
+                      onTabChange={setDesignTab}
+                      linkBlocks={blocks.filter((block) => block.type === "link")}
+                      buttonTarget={buttonTarget}
+                      onButtonTargetChange={setButtonTarget}
+                      onLinkChange={(id, configPatch) =>
+                        patchBlocks((prev) =>
+                          prev.map((block) =>
+                            block.id === id
+                              ? {
+                                  ...block,
+                                  config: { ...block.config, ...configPatch },
+                                }
+                              : block,
+                          ),
+                        )
+                      }
+                    />
+                  </div>
+                </Collapse>
+              </div>
             </Section>
 
             {/* Protection — Link Shield + escape z in-app prehliadaca v JEDNEJ
@@ -964,7 +929,6 @@ export function Editor({
           />
         </div>
       </div>
-      {pendingTemplate && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4" role="dialog" aria-modal="true"><div className="w-full max-w-md rounded-3xl bg-paper p-6 shadow-2xl"><p className="text-xs font-semibold tracking-wide text-faint uppercase">Preview selected</p><h2 className="mt-1 font-grotesk text-xl font-bold">Apply {pendingTemplate.label}?</h2><p className="mt-2 text-sm leading-relaxed text-soft">The card preview shows the final colours and buttons. Choose exactly what should change.</p><div className="mt-5 grid gap-2"><button type="button" onClick={() => applyTemplate(pendingTemplate, false)} className="btn-ink py-3 text-sm">Apply design only</button><button type="button" onClick={() => applyTemplate(pendingTemplate, true)} className="rounded-xl border border-line py-3 text-sm font-medium">Apply design + demo blocks</button><button type="button" onClick={() => setPendingTemplate(null)} className="py-2 text-sm text-soft">Cancel and keep previewing</button></div></div></div>}
     </div>
   );
 }

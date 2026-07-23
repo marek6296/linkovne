@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { planOf, allowsBlock, allowsTheme } from "@/lib/plans";
 import type { Block, BlockType } from "@/lib/blocks";
 import type { Design } from "@/lib/design";
+import { designForPlan } from "@/lib/design-tiers";
 
 export type ActionState = { error?: string } | undefined;
 
@@ -243,10 +244,10 @@ export async function saveProfile(
   }
 
   if (patch.design !== undefined) {
-    if (!plan.customDesign) {
-      return { error: "Custom design needs a paid plan." };
-    }
-    clean.design = patch.design;
+    // Premium polia (obrazkove pozadie, animacie, glass/gradient buttony,
+    // avatar ramy, desktop backdrop) sa pre free ocistia uz pri zapise —
+    // nedaju sa podstrcit upravenym klientskym requestom.
+    clean.design = designForPlan(patch.design, plan);
   }
 
   const { error } = await supabase
