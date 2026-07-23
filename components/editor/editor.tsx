@@ -45,7 +45,6 @@ import { DesignPanel } from "@/components/editor/design-panel";
 import { Preview } from "@/components/editor/preview";
 import { Collapse, Chevron } from "@/components/editor/collapse";
 import { BlockGlyph } from "@/components/editor/block-glyph";
-import { EditorToolbar } from "@/components/editor/workspace-tools";
 
 type ProfileState = {
   id: string;
@@ -445,15 +444,6 @@ export function Editor({
     requestAnimationFrame(() => document.getElementById(`block-editor-${target.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" }));
   }
 
-  function resetCurrentSection() {
-    if (!confirm("Reset the current section? This cannot be undone.")) return;
-    if (openBlockId) {
-      patchBlocks((prev) => prev.map((b) => b.id === openBlockId ? { ...b, config: { ...defaultConfig(b.type), title: b.config.title, url: b.config.url } } : b));
-    } else {
-      patchProfile({ design: {} });
-    }
-  }
-
   function applyTemplate(template: Template, withBlocks: boolean) {
     profileDirty.current = true;
     setProfile((p) => ({ ...p, theme: template.theme, design: template.design }));
@@ -493,11 +483,6 @@ export function Editor({
             <h1 className="font-grotesk font-bold text-2xl tracking-tight">Your page</h1>
             <StatusPill status={status} />
           </div>
-
-          <EditorToolbar
-            status={status === "saving" ? "Saving…" : status === "error" ? "Save failed" : "Saved"}
-            onReset={resetCurrentSection}
-          />
 
           {notice && (
             <div className="alert-error mt-4 flex flex-wrap items-center justify-between gap-3">
