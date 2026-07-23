@@ -177,6 +177,19 @@ export async function saveBlocks(
     if (error) return { error: "Couldn't save your changes." };
   }
 
+  // saveBlocks dostava VZDY kompletny stav editora, takze je autoritativny:
+  // riadky, ktore uz v nom nie su, treba zmazat. Bez toho by „nahradzacie"
+  // cesty (AI draft / import / sablona s demo blokmi) — ktore generuju nove
+  // ID — nechali stare bloky v DB a profil by po ulozeni ukazal duplikaty.
+  // Prazdny stav (keepIds = []) korektne zmaze vsetky bloky profilu.
+  const keepIds = rows.map((r) => r.id);
+  let del = supabase.from("blocks").delete().eq("profile_id", profileId);
+  if (keepIds.length > 0) {
+    del = del.not("id", "in", `(${keepIds.join(",")})`);
+  }
+  const { error: delError } = await del;
+  if (delError) return { error: "Couldn't save your changes." };
+
   revalidatePath("/dashboard");
   return undefined;
 }
