@@ -16,9 +16,11 @@ import { resolveTheme } from "@/lib/design";
 function TemplateCard({
   t,
   onPick,
+  selected,
 }: {
   t: Template;
   onPick: (t: Template) => void;
+  selected: boolean;
 }) {
   const theme = resolveTheme(t.theme, t.design);
   const sourceWidth = theme.avatarWidthPx ?? theme.avatarSizePx ?? 96;
@@ -54,12 +56,26 @@ function TemplateCard({
     <button
       type="button"
       onClick={() => onPick(t)}
-      className="group relative overflow-hidden rounded-2xl border border-line bg-surface text-left transition duration-200 hover:-translate-y-1 hover:border-ink hover:shadow-[0_14px_34px_rgba(25,24,19,0.13)]"
+      aria-pressed={selected}
+      className={`group relative overflow-hidden rounded-2xl border bg-surface text-left transition duration-200 hover:-translate-y-1 hover:shadow-[0_14px_34px_rgba(25,24,19,0.13)] ${
+        selected
+          ? "border-ink ring-2 ring-ink shadow-[0_14px_34px_rgba(25,24,19,0.16)]"
+          : "border-line hover:border-ink"
+      }`}
     >
-      {t.featured && (
-        <span className="absolute top-2.5 right-2.5 z-20 rounded-full bg-black/70 px-2 py-1 text-[9px] font-bold tracking-wider text-white uppercase backdrop-blur-sm">
-          New
+      {selected ? (
+        <span className="absolute top-2.5 right-2.5 z-20 inline-flex items-center gap-1 rounded-full bg-ink px-2 py-1 text-[9px] font-bold tracking-wider text-paper uppercase shadow">
+          <svg viewBox="0 0 20 20" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden>
+            <path d="M4 10.5l4 4 8-9" />
+          </svg>
+          Applied
         </span>
+      ) : (
+        t.featured && (
+          <span className="absolute top-2.5 right-2.5 z-20 rounded-full bg-black/70 px-2 py-1 text-[9px] font-bold tracking-wider text-white uppercase backdrop-blur-sm">
+            New
+          </span>
+        )
       )}
       <div
         className="relative flex h-48 flex-col items-center overflow-hidden px-5 pt-5"
@@ -145,10 +161,17 @@ function TemplateCard({
   );
 }
 
-export function TemplateGrid({ onPick }: { onPick: (t: Template) => void }) {
+export function TemplateGrid({
+  onPick,
+  selectedKey,
+}: {
+  onPick: (t: Template) => void;
+  selectedKey?: string | null;
+}) {
   type Filter = "Featured" | "All" | Template["category"];
   const [filter, setFilter] = useState<Filter>("Featured");
   const filters: Filter[] = ["Featured", "All", ...TEMPLATE_CATEGORIES];
+  const activeTemplate = TEMPLATES.find((t) => t.key === selectedKey) ?? null;
 
   const groups =
     filter === "Featured"
@@ -179,6 +202,17 @@ export function TemplateGrid({ onPick }: { onPick: (t: Template) => void }) {
             {TEMPLATES.length} looks
           </span>
         </div>
+        {activeTemplate && (
+          <div className="mt-2.5 flex items-center gap-2 rounded-xl border border-ink/15 bg-ink/[0.04] px-3 py-2 text-xs">
+            <svg viewBox="0 0 20 20" className="h-3.5 w-3.5 shrink-0 text-ink" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden>
+              <path d="M4 10.5l4 4 8-9" />
+            </svg>
+            <span className="text-ink">
+              <span className="font-semibold">{activeTemplate.label}</span> is
+              applied. Pick another to switch.
+            </span>
+          </div>
+        )}
         <div className="mt-3 flex gap-1.5 overflow-x-auto pb-1">
           {filters.map((item) => (
             <button
@@ -207,7 +241,12 @@ export function TemplateGrid({ onPick }: { onPick: (t: Template) => void }) {
               </p>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               {items.map((t) => (
-                <TemplateCard key={t.key} t={t} onPick={onPick} />
+                <TemplateCard
+                  key={t.key}
+                  t={t}
+                  onPick={onPick}
+                  selected={t.key === selectedKey}
+                />
               ))}
             </div>
             </div>

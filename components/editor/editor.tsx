@@ -210,6 +210,10 @@ export function Editor({
   const [profileOpen, setProfileOpen] = useState(true);
   const [blocksOpen, setBlocksOpen] = useState(true);
   const [openBlockId, setOpenBlockId] = useState<string | null>(null);
+  // Ktora template bola naposledy aplikovana — cisto pre vizualne oznacenie v
+  // pickeri (hlavne na mobile, kde nevidno live preview). Manualna uprava
+  // temy/dizajnu oznacenie zrusi (uz to nie je „ta template").
+  const [appliedTemplate, setAppliedTemplate] = useState<string | null>(null);
 
   // Bez tychto flagov by autosave vystrelil hned po mounte a prepisoval by
   // server tym istym, co z neho prislo.
@@ -257,6 +261,8 @@ export function Editor({
 
   function patchProfile(patch: Partial<ProfileState>) {
     profileDirty.current = true;
+    // Manualna zmena temy/dizajnu = uz to nie je cisty template → zrus oznacenie.
+    if ("theme" in patch || "design" in patch) setAppliedTemplate(null);
     setProfile((p) => ({ ...p, ...patch }));
   }
 
@@ -268,6 +274,7 @@ export function Editor({
    */
   function pickTheme(key: string) {
     profileDirty.current = true;
+    setAppliedTemplate(null);
     setProfile((p) => ({
       ...p,
       theme: key,
@@ -486,7 +493,8 @@ export function Editor({
   function applyTemplate(template: Template) {
     profileDirty.current = true;
     setProfile((p) => ({ ...p, theme: template.theme, design: template.design }));
-    setNotice("Template design applied — your links were kept.");
+    setAppliedTemplate(template.key);
+    setNotice(`“${template.label}” applied — your links were kept.`);
   }
 
   const caps = designCaps(plan);
@@ -663,7 +671,10 @@ export function Editor({
                 </button>
                 <Collapse open={tplOpen}>
                   <div className="mt-3">
-                    <TemplateGrid onPick={(t) => applyTemplate(t)} />
+                    <TemplateGrid
+                      onPick={(t) => applyTemplate(t)}
+                      selectedKey={appliedTemplate}
+                    />
                   </div>
                 </Collapse>
               </div>
