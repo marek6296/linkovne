@@ -1,4 +1,11 @@
 import { BTN_SIZES, getTheme, type BtnSize, type Theme } from "@/lib/themes";
+import {
+  ANIM_CLASS,
+  LINK_ANIMS,
+  LINK_TEXT_SIZES,
+  type LinkAnim,
+  type LinkTextSize,
+} from "@/lib/blocks";
 
 export type BgMode = "theme" | "solid" | "gradient" | "image";
 /** Rezim pozadia za kartou na PC. „auto" = rozmazany glow z pozadia karty. */
@@ -9,7 +16,7 @@ export type BtnShadow = "none" | "subtle" | "floating" | "hard";
 export type BtnBorder = "none" | "thin" | "bold";
 export type BtnSpacing = "compact" | "normal" | "relaxed";
 export type BtnWeight = "regular" | "medium" | "bold";
-export type BtnAnimation = "none" | "pulse" | "shake" | "glow";
+export type BtnAnimation = LinkAnim;
 export type AvatarShape = "circle" | "rounded" | "square" | "organic";
 export type AvatarSize = "xs" | "sm" | "md" | "lg" | "xl";
 export type AvatarAspect = "square" | "portrait" | "landscape" | "wide";
@@ -45,7 +52,8 @@ export type Design = {
   btnBorder?: BtnBorder;
   btnSpacing?: BtnSpacing;
   btnWeight?: BtnWeight;
-  /** Global motion applied to every link button. */
+  btnTextSize?: LinkTextSize;
+  /** Default motion inherited by link buttons without an individual override. */
   btnAnimation?: BtnAnimation;
   btnGradientColor?: string;
   btnGradientColor2?: string;
@@ -142,22 +150,22 @@ export const BTN_ANIMATIONS: Record<
   BtnAnimation,
   { label: string; hint: string; className: string }
 > = {
-  none: { label: "Off", hint: "No automatic movement", className: "" },
-  pulse: {
-    label: "Gentle pulse",
-    hint: "Slowly grows and returns",
-    className: "anim-pulse",
-  },
-  shake: {
-    label: "Nudge",
-    hint: "A short occasional side movement",
-    className: "anim-shake",
-  },
-  glow: {
-    label: "Glow ring",
-    hint: "A soft ring expands around the button",
-    className: "anim-glow",
-  },
+  none: { label: "Off", hint: "No automatic movement", className: ANIM_CLASS.none },
+  pulse: { label: LINK_ANIMS.pulse, hint: "Slowly grows and returns", className: ANIM_CLASS.pulse },
+  shake: { label: LINK_ANIMS.shake, hint: "An occasional side nudge", className: ANIM_CLASS.shake },
+  glow: { label: LINK_ANIMS.glow, hint: "A soft ring expands around the button", className: ANIM_CLASS.glow },
+  bounce: { label: LINK_ANIMS.bounce, hint: "A gentle vertical bounce", className: ANIM_CLASS.bounce },
+  float: { label: LINK_ANIMS.float, hint: "Slow continuous floating", className: ANIM_CLASS.float },
+  heartbeat: { label: LINK_ANIMS.heartbeat, hint: "A subtle double pulse", className: ANIM_CLASS.heartbeat },
+  swing: { label: LINK_ANIMS.swing, hint: "A soft hanging swing", className: ANIM_CLASS.swing },
+  wobble: { label: LINK_ANIMS.wobble, hint: "A playful occasional wobble", className: ANIM_CLASS.wobble },
+  pop: { label: LINK_ANIMS.pop, hint: "An occasional quick pop", className: ANIM_CLASS.pop },
+  slide: { label: LINK_ANIMS.slide, hint: "A short side-to-side slide", className: ANIM_CLASS.slide },
+  shimmer: { label: LINK_ANIMS.shimmer, hint: "A polished light sweep", className: ANIM_CLASS.shimmer },
+  tilt: { label: LINK_ANIMS.tilt, hint: "A restrained alternating tilt", className: ANIM_CLASS.tilt },
+  breathe: { label: LINK_ANIMS.breathe, hint: "Very slow calm emphasis", className: ANIM_CLASS.breathe },
+  jelly: { label: LINK_ANIMS.jelly, hint: "A soft elastic movement", className: ANIM_CLASS.jelly },
+  flip: { label: LINK_ANIMS.flip, hint: "A subtle perspective flip", className: ANIM_CLASS.flip },
 };
 
 export const AVATAR_SHAPES: Record<
@@ -322,6 +330,9 @@ export function resolveTheme(
   }
   if (design.btnWeight && design.btnWeight in BTN_WEIGHTS) {
     t.btnWeight = BTN_WEIGHTS[design.btnWeight].value;
+  }
+  if (design.btnTextSize && design.btnTextSize in LINK_TEXT_SIZES) {
+    t.btnFontSize = LINK_TEXT_SIZES[design.btnTextSize].css;
   }
   if (design.btnAnimation && design.btnAnimation in BTN_ANIMATIONS) {
     t.btnAnimation = design.btnAnimation;

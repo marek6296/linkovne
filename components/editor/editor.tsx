@@ -41,7 +41,10 @@ import { BlockCard } from "@/components/editor/block-card";
 import { ImportPanel } from "@/components/editor/import-panel";
 import { TemplateGrid } from "@/components/editor/template-picker";
 import { templateBlocks, type Template } from "@/lib/templates";
-import { DesignPanel } from "@/components/editor/design-panel";
+import {
+  DesignPanel,
+  type DesignTab,
+} from "@/components/editor/design-panel";
 import { Preview } from "@/components/editor/preview";
 import { Collapse, Chevron } from "@/components/editor/collapse";
 import { BlockGlyph } from "@/components/editor/block-glyph";
@@ -197,6 +200,8 @@ export function Editor({
   const [tab, setTab] = useState<"edit" | "preview">("edit");
   const [notice, setNotice] = useState<string | null>(null);
   const [designOpen, setDesignOpen] = useState(false);
+  const [designTab, setDesignTab] = useState<DesignTab>("theme");
+  const [buttonTarget, setButtonTarget] = useState("all");
   const [tplOpen, setTplOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [shieldBusy, setShieldBusy] = useState(false);
@@ -442,6 +447,17 @@ export function Editor({
     setBlocksOpen(true);
     setOpenBlockId(target.id);
     requestAnimationFrame(() => document.getElementById(`block-editor-${target.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" }));
+  }
+
+  function customizeButton(id: string) {
+    setDesignOpen(true);
+    setDesignTab("buttons");
+    setButtonTarget(id);
+    requestAnimationFrame(() =>
+      document
+        .getElementById("editor-design-studio")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" }),
+    );
   }
 
   function applyTemplate(template: Template, withBlocks: boolean) {
@@ -697,7 +713,7 @@ export function Editor({
                   </button>
 
                   <Collapse open={designOpen}>
-                    <div className="mt-3">
+                    <div id="editor-design-studio" className="mt-3 scroll-mt-24">
                       <DesignPanel
                         design={profile.design}
                         userId={userId}
@@ -722,6 +738,23 @@ export function Editor({
                           })
                         }
                         onReset={() => patchProfile({ design: {} })}
+                        tab={designTab}
+                        onTabChange={setDesignTab}
+                        linkBlocks={blocks.filter((block) => block.type === "link")}
+                        buttonTarget={buttonTarget}
+                        onButtonTargetChange={setButtonTarget}
+                        onLinkChange={(id, configPatch) =>
+                          patchBlocks((prev) =>
+                            prev.map((block) =>
+                              block.id === id
+                                ? {
+                                    ...block,
+                                    config: { ...block.config, ...configPatch },
+                                  }
+                                : block,
+                            ),
+                          )
+                        }
                       />
                     </div>
                   </Collapse>
@@ -897,6 +930,7 @@ export function Editor({
                           blocks[index + 1]?.is_active
                         }
                         onAddHalfPartner={() => addHalfPartner(block.id)}
+                        onCustomizeButton={() => customizeButton(block.id)}
                         open={openBlockId === block.id}
                         onOpenChange={(open) => setOpenBlockId(open ? block.id : null)}
                       /></div>

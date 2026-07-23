@@ -1,3 +1,5 @@
+import type { LinkAnim } from "@/lib/blocks";
+
 export type ThemeKey =
   | "classic"
   | "noir"
@@ -70,7 +72,9 @@ export type Theme = {
   /** Advanced Pro/Business button controls. */
   btnWeight?: number;
   /** Global link-button motion selected in Design studio. */
-  btnAnimation?: "none" | "pulse" | "shake" | "glow";
+  btnAnimation?: LinkAnim;
+  /** Text size independent from the button's vertical padding preset. */
+  btnFontSize?: string;
   avatarBg: string;
   avatarText: string;
   /** Tvar/velkost/prstenec profilovky — doplna resolveTheme z `design`.

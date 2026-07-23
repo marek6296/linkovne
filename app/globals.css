@@ -99,6 +99,79 @@ body {
   }
 }
 
+@keyframes lk-button-bounce {
+  0%, 80%, 100% { transform: translateY(0); }
+  86% { transform: translateY(-6px); }
+  92% { transform: translateY(1px); }
+}
+
+@keyframes lk-button-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes lk-heartbeat {
+  0%, 76%, 100% { transform: scale(1); }
+  82% { transform: scale(1.035); }
+  87% { transform: scale(1); }
+  92% { transform: scale(1.022); }
+}
+
+@keyframes lk-swing {
+  0%, 80%, 100% { transform: rotate(0); }
+  85% { transform: rotate(1.8deg); }
+  90% { transform: rotate(-1.4deg); }
+  95% { transform: rotate(0.7deg); }
+}
+
+@keyframes lk-wobble {
+  0%, 78%, 100% { transform: translateX(0) rotate(0); }
+  84% { transform: translateX(-3px) rotate(-1deg); }
+  90% { transform: translateX(3px) rotate(1deg); }
+  96% { transform: translateX(-1px) rotate(-0.4deg); }
+}
+
+@keyframes lk-pop {
+  0%, 82%, 100% { transform: scale(1); }
+  88% { transform: scale(1.045); }
+  94% { transform: scale(0.992); }
+}
+
+@keyframes lk-slide {
+  0%, 80%, 100% { transform: translateX(0); }
+  86% { transform: translateX(5px); }
+  93% { transform: translateX(-2px); }
+}
+
+@keyframes lk-shimmer {
+  0%, 72% { transform: translateX(-150%) skewX(-18deg); }
+  100% { transform: translateX(250%) skewX(-18deg); }
+}
+
+@keyframes lk-tilt {
+  0%, 78%, 100% { transform: rotate(0); }
+  85% { transform: rotate(-1.2deg); }
+  93% { transform: rotate(1.2deg); }
+}
+
+@keyframes lk-breathe {
+  0%, 100% { transform: scale(1); filter: brightness(1); }
+  50% { transform: scale(1.018); filter: brightness(1.045); }
+}
+
+@keyframes lk-jelly {
+  0%, 80%, 100% { transform: scale3d(1, 1, 1); }
+  86% { transform: scale3d(1.025, 0.975, 1); }
+  92% { transform: scale3d(0.99, 1.018, 1); }
+  97% { transform: scale3d(1.008, 0.995, 1); }
+}
+
+@keyframes lk-flip {
+  0%, 78%, 100% { transform: perspective(700px) rotateX(0); }
+  88% { transform: perspective(700px) rotateX(7deg); }
+  95% { transform: perspective(700px) rotateX(-2deg); }
+}
+
 .anim-pulse {
   animation: lk-pulse 2.4s ease-in-out infinite;
 }
@@ -107,6 +180,54 @@ body {
 }
 .anim-glow {
   animation: lk-glow 2.2s ease-out infinite;
+}
+.anim-bounce {
+  animation: lk-button-bounce 3.4s ease-in-out infinite;
+}
+.anim-float-button {
+  animation: lk-button-float 3.2s ease-in-out infinite;
+}
+.anim-heartbeat {
+  animation: lk-heartbeat 3.6s ease-in-out infinite;
+}
+.anim-swing {
+  animation: lk-swing 4s ease-in-out infinite;
+  transform-origin: 50% 0;
+}
+.anim-wobble {
+  animation: lk-wobble 4.2s ease-in-out infinite;
+}
+.anim-pop {
+  animation: lk-pop 3.8s ease-in-out infinite;
+}
+.anim-slide {
+  animation: lk-slide 3.7s ease-in-out infinite;
+}
+.anim-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.anim-shimmer::after {
+  position: absolute;
+  inset: -35% auto -35% 0;
+  width: 34%;
+  content: "";
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.48), transparent);
+  animation: lk-shimmer 3.4s ease-in-out infinite;
+}
+.anim-tilt {
+  animation: lk-tilt 4s ease-in-out infinite;
+}
+.anim-breathe {
+  animation: lk-breathe 3.8s ease-in-out infinite;
+}
+.anim-jelly {
+  animation: lk-jelly 4s ease-in-out infinite;
+}
+.anim-flip {
+  animation: lk-flip 4.2s ease-in-out infinite;
+  transform-origin: 50% 50%;
 }
 
 /* Plynule rozbalovanie/zbalovanie sekcii editora.
@@ -234,6 +355,19 @@ body {
   .anim-pulse,
   .anim-shake,
   .anim-glow,
+  .anim-bounce,
+  .anim-float-button,
+  .anim-heartbeat,
+  .anim-swing,
+  .anim-wobble,
+  .anim-pop,
+  .anim-slide,
+  .anim-shimmer,
+  .anim-shimmer::after,
+  .anim-tilt,
+  .anim-breathe,
+  .anim-jelly,
+  .anim-flip,
   .lk-section-in {
     animation: none;
   }

@@ -6,8 +6,6 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import {
   BLOCK_META,
-  LINK_LAYOUT_KEYS,
-  LINK_LAYOUTS,
   LINK_WIDTHS,
   SOCIAL_LABELS,
   SOCIAL_PLATFORMS,
@@ -16,11 +14,9 @@ import {
   SOCIAL_SIZES,
   type Block,
   type BlockConfig,
-  type LinkLayout,
   type LinkWidth,
   type SocialPlatform,
 } from "@/lib/blocks";
-import { Icon, ICON_KEYS } from "@/components/blocks/icon";
 import { Collapse, Chevron } from "@/components/editor/collapse";
 import { uploadImage, uploadVideo } from "@/lib/upload";
 
@@ -53,77 +49,6 @@ function Field({
       <span className="mb-1 block text-xs font-medium text-soft">{label}</span>
       {children}
     </label>
-  );
-}
-
-/** Jednoducha verzia len pre obrazky — pouziva ju miniatura tlacidla (thumb),
- *  ktora video nepodporuje. Photo/Video blok pouziva MediaPicker nizsie. */
-function ImagePicker({
-  value,
-  userId,
-  onChange,
-}: {
-  value: string;
-  userId: string;
-  onChange: (url: string, bytes?: number) => void;
-}) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function handle(file: File | undefined) {
-    if (!file) return;
-    setBusy(true);
-    setError(null);
-    try {
-      onChange(await uploadImage(file, userId), file.size);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Upload failed.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <div className="space-y-2">
-      <div className="flex items-center gap-3">
-        {value ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={value}
-            alt=""
-            className="h-14 w-14 rounded-lg border border-line object-cover"
-          />
-        ) : (
-          <div className="h-14 w-14 rounded-lg border border-dashed border-line" />
-        )}
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/*"
-          hidden
-          onChange={(e) => handle(e.target.files?.[0])}
-        />
-        <button
-          type="button"
-          onClick={() => inputRef.current?.click()}
-          disabled={busy}
-          className="rounded-full border border-line px-4 py-2 text-sm transition hover:border-ink disabled:opacity-50"
-        >
-          {busy ? "Uploading…" : value ? "Replace" : "Upload image"}
-        </button>
-        {value && (
-          <button
-            type="button"
-            onClick={() => onChange("")}
-            className="text-sm text-danger"
-          >
-            Remove
-          </button>
-        )}
-      </div>
-      {error && <p className="text-xs text-danger">{error}</p>}
-    </div>
   );
 }
 
@@ -513,6 +438,7 @@ export function BlockCard({
   onDuplicate,
   hasHalfPartner = false,
   onAddHalfPartner,
+  onCustomizeButton,
   open: controlledOpen,
   onOpenChange,
 }: {
@@ -527,6 +453,7 @@ export function BlockCard({
   onDuplicate: () => void;
   hasHalfPartner?: boolean;
   onAddHalfPartner: () => void;
+  onCustomizeButton: () => void;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }) {
@@ -655,8 +582,8 @@ export function BlockCard({
                 <div>
                   <p className="text-sm font-semibold">Grid layout</p>
                   <p className="mt-1 text-xs leading-relaxed text-soft">
-                    Choose how much of the row this link occupies. Button
-                    animation is controlled globally in Design studio.
+                    Choose how much of the row this link occupies. Visual style
+                    and motion are managed in Design studio.
                   </p>
                 </div>
 
@@ -724,130 +651,22 @@ export function BlockCard({
                 </div>
               </div>
 
-              <div>
-                <span className="mb-1.5 block text-xs font-medium text-soft">
-                  Button type
-                </span>
-                <div className="flex flex-wrap gap-1.5">
-                  {LINK_LAYOUT_KEYS.map((key) => {
-                    const active =
-                      (block.config.layout ??
-                        (block.config.thumb ? "thumb" : "bar")) === key;
-                    return (
-                      <button
-                        key={key}
-                        type="button"
-                        title={LINK_LAYOUTS[key].hint}
-                        onClick={() => patchConfig({ layout: key })}
-                        className={`rounded-full border px-3 py-1.5 text-sm transition ${
-                          active
-                            ? "border-ink bg-ink text-paper"
-                            : "border-line hover:border-soft"
-                        }`}
-                      >
-                        {LINK_LAYOUTS[key].label}
-                      </button>
-                    );
-                  })}
-                </div>
-                {LINK_LAYOUTS[
-                  (block.config.layout ?? "bar") as LinkLayout
-                ].needsImage &&
-                  !block.config.thumb && (
-                    <p className="mt-2 text-xs text-soft">
-                      This type needs an image — upload one below.
-                    </p>
-                  )}
-              </div>
-
-              <div>
-                <span className="mb-1 block text-xs font-medium text-soft">
-                  Image
-                </span>
-                <ImagePicker
-                  value={block.config.thumb ?? ""}
-                  userId={userId}
-                  onChange={(thumb, thumbBytes) => patchConfig({ thumb, thumbBytes })}
-                />
-              </div>
-
-              {!block.config.thumb && (
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-surface p-3">
                 <div>
-                  <span className="mb-1.5 block text-xs font-medium text-soft">
-                    …or pick an icon
-                  </span>
-                  <div className="flex flex-wrap gap-1.5">
-                    {ICON_KEYS.map((key) => (
-                      <button
-                        key={key}
-                        type="button"
-                        title={key}
-                        aria-label={key}
-                        onClick={() =>
-                          patchConfig({
-                            icon: block.config.icon === key ? undefined : key,
-                          })
-                        }
-                        className={`flex h-9 w-9 items-center justify-center rounded-lg border transition ${
-                          block.config.icon === key
-                            ? "border-ink bg-ink text-paper"
-                            : "border-line text-soft hover:border-soft hover:text-ink"
-                        }`}
-                      >
-                        <Icon name={key} className="h-[18px] w-[18px]" />
-                      </button>
-                    ))}
-                  </div>
+                  <p className="text-sm font-medium">Button appearance</p>
+                  <p className="mt-0.5 text-xs text-soft">
+                    Type, media, colours, text size and motion are together in
+                    Customise → Buttons.
+                  </p>
                 </div>
-              )}
-
-              <p className="mt-2 rounded-lg bg-ink/[0.04] px-3 py-2 text-[11px] font-semibold tracking-wide text-soft uppercase">Style</p>
-              <div className="flex flex-wrap items-center gap-5">
-                <label className="flex items-center gap-2 text-sm">
-                  <span className="text-xs font-medium text-soft">
-                    Button colour
-                  </span>
-                  <input
-                    type="color"
-                    value={block.config.color ?? "#ffffff"}
-                    onChange={(e) => patchConfig({ color: e.target.value })}
-                    className="h-8 w-12 cursor-pointer rounded-lg border border-line bg-surface p-1"
-                  />
-                </label>
-                <label className="flex items-center gap-2 text-sm">
-                  <span className="text-xs font-medium text-soft">Text</span>
-                  <input
-                    type="color"
-                    value={block.config.textColor ?? "#191813"}
-                    onChange={(e) =>
-                      patchConfig({ textColor: e.target.value })
-                    }
-                    className="h-8 w-12 cursor-pointer rounded-lg border border-line bg-surface p-1"
-                  />
-                </label>
-                {(block.config.color || block.config.textColor) && (
-                  <button
-                    type="button"
-                    onClick={() =>
-                      patchConfig({ color: undefined, textColor: undefined })
-                    }
-                    className="text-xs text-soft underline underline-offset-2 hover:text-ink"
-                  >
-                    Use theme colours
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={onCustomizeButton}
+                  className="rounded-full bg-ink px-3.5 py-2 text-xs font-medium text-paper transition hover:opacity-85"
+                >
+                  Customize this button
+                </button>
               </div>
-
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={block.config.featured === true}
-                  onChange={(e) => patchConfig({ featured: e.target.checked })}
-                />
-                Highlight this link
-              </label>
-
-              <div className="rounded-xl border border-line bg-surface p-3 text-xs text-soft"><span className="font-medium text-ink">Motion</span><span className="ml-2">Button animation is managed globally in Design → Customise → Buttons.</span></div>
 
               <p className="mt-2 rounded-lg bg-ink/[0.04] px-3 py-2 text-[11px] font-semibold tracking-wide text-soft uppercase">Access</p>
               {/* VIP zamok — Pro+ */}

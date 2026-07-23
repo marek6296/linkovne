@@ -32,6 +32,16 @@ import {
 } from "@/lib/design";
 import { BTN_SIZE_LABELS, type BtnSize } from "@/lib/themes";
 import { uploadImage } from "@/lib/upload";
+import {
+  LINK_LAYOUT_KEYS,
+  LINK_LAYOUTS,
+  LINK_TEXT_SIZES,
+  type Block,
+  type BlockConfig,
+  type LinkLayout,
+  type LinkTextSize,
+} from "@/lib/blocks";
+import { Icon, ICON_KEYS } from "@/components/blocks/icon";
 
 /**
  * Customizacia dizajnu — 4 taby (Background · Photo · Buttons · Font) namiesto
@@ -68,9 +78,9 @@ const GRADIENT_PRESETS: { from: string; to: string; text: string }[] = [
   { from: "#141e30", to: "#243b55", text: "#eaf0ff" }, // navy night
 ];
 
-type Tab = "theme" | "bg" | "avatar" | "buttons" | "font";
+export type DesignTab = "theme" | "bg" | "avatar" | "buttons" | "font";
 
-const TABS: { key: Tab; label: string }[] = [
+const TABS: { key: DesignTab; label: string }[] = [
   { key: "theme", label: "Theme" },
   { key: "bg", label: "Background" },
   { key: "avatar", label: "Photo" },
@@ -221,6 +231,12 @@ export function DesignPanel({
   onPickTheme,
   onChange,
   onReset,
+  tab,
+  onTabChange,
+  linkBlocks,
+  buttonTarget,
+  onButtonTargetChange,
+  onLinkChange,
 }: {
   design: Design;
   userId: string;
@@ -229,14 +245,28 @@ export function DesignPanel({
   onPickTheme: (key: string) => void;
   onChange: (patch: Design) => void;
   onReset: () => void;
+  tab: DesignTab;
+  onTabChange: (tab: DesignTab) => void;
+  linkBlocks: Block[];
+  buttonTarget: string;
+  onButtonTargetChange: (target: string) => void;
+  onLinkChange: (id: string, patch: Partial<BlockConfig>) => void;
 }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const deskFileRef = useRef<HTMLInputElement>(null);
+  const buttonFileRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [deskBusy, setDeskBusy] = useState(false);
-  const [tab, setTab] = useState<Tab>("theme");
+  const [buttonBusy, setButtonBusy] = useState(false);
+  const [buttonError, setButtonError] = useState<string | null>(null);
   const bg = design.bg ?? "theme";
   const deskBg = design.deskBg ?? "auto";
+  const selectedButton = linkBlocks.find((block) => block.id === buttonTarget);
+  const selectedConfig = selectedButton?.config;
+  const activeButtonTarget = selectedButton?.id ?? "all";
+  const patchSelected = (patch: Partial<BlockConfig>) => {
+    if (selectedButton) onLinkChange(selectedButton.id, patch);
+  };
 
   return (
     <div className="overflow-hidden rounded-2xl border border-line bg-surface shadow-[0_12px_35px_rgba(25,24,19,0.05)]">
@@ -260,7 +290,7 @@ export function DesignPanel({
             <button
               key={t.key}
               type="button"
-              onClick={() => setTab(t.key)}
+              onClick={() => onTabChange(t.key)}
               className={`min-w-[88px] flex-1 rounded-full px-3 py-1.5 text-sm font-medium transition ${
                 tab === t.key
                   ? "bg-ink text-paper"
@@ -754,12 +784,191 @@ export function DesignPanel({
         {tab === "buttons" && (
           <div className="space-y-4">
             <div className="rounded-xl border border-line bg-paper px-4 py-3">
-              <p className="text-sm font-medium">Button design applies page-wide</p>
-              <p className="mt-1 text-xs leading-relaxed text-soft">
-                Shape, style and animation affect every link button. Grid width
-                stays inside each Link block because it controls page layout.
-              </p>
+              <label className="text-sm font-medium" htmlFor="button-style-target">
+                Customize
+              </label>
+              <select
+                id="button-style-target"
+                value={activeButtonTarget}
+                onChange={(event) => onButtonTargetChange(event.target.value)}
+                className="field mt-2 py-2.5 text-sm"
+              >
+                <option value="all">All buttons · page default</option>
+                {linkBlocks.map((block) => (
+                  <option key={block.id} value={block.id}>
+                    {block.config.title?.trim() || "Untitled link"}
+                    {block.config.width === "half" ? " · ½ grid" : ""}
+                  </option>
+                ))}
+              </select>
+              <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                <p className="text-xs leading-relaxed text-soft">
+                  {selectedButton
+                    ? "This button inherits the page style until you change an option below."
+                    : "These defaults apply to every button without its own override."}
+                </p>
+                {selectedButton && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      patchSelected({
+                        color: undefined,
+                        textColor: undefined,
+                        buttonStyle: undefined,
+                        buttonShape: undefined,
+                        buttonSize: undefined,
+                        buttonTextSize: undefined,
+                        buttonShadow: undefined,
+                        buttonBorder: undefined,
+                        buttonWeight: undefined,
+                        buttonGradientColor: undefined,
+                        buttonGradientColor2: undefined,
+                        anim: undefined,
+                        featured: undefined,
+                      })
+                    }
+                    className="text-xs text-soft underline underline-offset-4 hover:text-ink"
+                  >
+                    Clear this button&apos;s overrides
+                  </button>
+                )}
+              </div>
             </div>
+
+            {selectedButton && selectedConfig && (
+              <div className="space-y-4 rounded-xl border border-line bg-paper/60 p-4">
+                <div>
+                  <GroupLabel>Button type</GroupLabel>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {LINK_LAYOUT_KEYS.map((key) => {
+                      const active =
+                        (selectedConfig.layout ??
+                          (selectedConfig.thumb ? "thumb" : "bar")) === key;
+                      return (
+                        <button
+                          key={key}
+                          type="button"
+                          title={LINK_LAYOUTS[key].hint}
+                          aria-pressed={active}
+                          onClick={() => patchSelected({ layout: key })}
+                          className={`rounded-full border px-3 py-1.5 text-sm transition ${
+                            active
+                              ? "border-ink bg-ink text-paper"
+                              : "border-line hover:border-soft"
+                          }`}
+                        >
+                          {LINK_LAYOUTS[key].label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {LINK_LAYOUTS[
+                    (selectedConfig.layout ?? "bar") as LinkLayout
+                  ].needsImage &&
+                    !selectedConfig.thumb && (
+                      <p className="mt-2 text-xs text-soft">
+                        This type needs an image. Upload one below.
+                      </p>
+                    )}
+                </div>
+
+                <div className="border-t border-line pt-4">
+                  <GroupLabel>Image or icon</GroupLabel>
+                  <input
+                    ref={buttonFileRef}
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={async (event) => {
+                      const file = event.target.files?.[0];
+                      if (!file) return;
+                      setButtonError(null);
+                      setButtonBusy(true);
+                      try {
+                        const thumb = await uploadImage(file, userId);
+                        patchSelected({
+                          thumb,
+                          thumbBytes: file.size,
+                          icon: undefined,
+                        });
+                      } catch (error) {
+                        setButtonError(
+                          error instanceof Error
+                            ? error.message
+                            : "The image could not be uploaded. Please try again.",
+                        );
+                      } finally {
+                        setButtonBusy(false);
+                        event.target.value = "";
+                      }
+                    }}
+                  />
+                  {selectedConfig.thumb ? (
+                    <div className="mt-2 flex items-center gap-3">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={selectedConfig.thumb}
+                        alt=""
+                        className="h-14 w-14 rounded-xl border border-line object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setButtonError(null);
+                          patchSelected({
+                            thumb: undefined,
+                            thumbBytes: undefined,
+                          });
+                        }}
+                        className="text-sm text-danger"
+                      >
+                        Remove image
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        disabled={buttonBusy}
+                        onClick={() => buttonFileRef.current?.click()}
+                        className="mt-2 rounded-full border border-line px-4 py-2 text-sm transition hover:border-ink disabled:opacity-50"
+                      >
+                        {buttonBusy ? "Uploading…" : "Upload image"}
+                      </button>
+                      <div className="mt-3 flex max-h-40 flex-wrap gap-1.5 overflow-y-auto pr-1">
+                        {ICON_KEYS.map((key) => (
+                          <button
+                            key={key}
+                            type="button"
+                            title={key}
+                            aria-label={key}
+                            aria-pressed={selectedConfig.icon === key}
+                            onClick={() =>
+                              patchSelected({
+                                icon:
+                                  selectedConfig.icon === key ? undefined : key,
+                              })
+                            }
+                            className={`flex h-9 w-9 items-center justify-center rounded-lg border transition ${
+                              selectedConfig.icon === key
+                                ? "border-ink bg-ink text-paper"
+                                : "border-line text-soft hover:border-soft hover:text-ink"
+                            }`}
+                          >
+                            <Icon name={key} className="h-[18px] w-[18px]" />
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                  {buttonError && (
+                    <p role="alert" className="mt-2 text-xs text-danger">
+                      {buttonError}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
 
             <div>
               <GroupLabel>Shape</GroupLabel>
@@ -767,8 +976,14 @@ export function DesignPanel({
                 {(Object.keys(BTN_SHAPES) as BtnShape[]).map((k) => (
                   <VisualChip
                     key={k}
-                    active={design.btnShape === k}
-                    onClick={() => onChange({ btnShape: k })}
+                    active={
+                      (selectedConfig?.buttonShape ?? design.btnShape) === k
+                    }
+                    onClick={() =>
+                      selectedButton
+                        ? patchSelected({ buttonShape: k })
+                        : onChange({ btnShape: k })
+                    }
                     label={BTN_SHAPES[k].label}
                     glyph={
                       <span
@@ -794,8 +1009,14 @@ export function DesignPanel({
                 {(Object.keys(BTN_STYLES) as BtnStyle[]).map((k) => (
                   <VisualChip
                     key={k}
-                    active={design.btnStyle === k}
-                    onClick={() => onChange({ btnStyle: k })}
+                    active={
+                      (selectedConfig?.buttonStyle ?? design.btnStyle) === k
+                    }
+                    onClick={() =>
+                      selectedButton
+                        ? patchSelected({ buttonStyle: k })
+                        : onChange({ btnStyle: k })
+                    }
                     label={BTN_STYLES[k]}
                     glyph={
                       <span
@@ -818,38 +1039,61 @@ export function DesignPanel({
             </div>
 
             <div className="divide-y divide-line/60 border-t border-line pt-1">
-              {design.btnStyle === "gradient" ? (
+              {(selectedConfig?.buttonStyle ?? design.btnStyle) ===
+              "gradient" ? (
                 <>
                   <ColorRow
                     label="Gradient from"
-                    value={design.btnGradientColor}
+                    value={
+                      selectedConfig?.buttonGradientColor ??
+                      design.btnGradientColor
+                    }
                     fallback="#7c3aed"
-                    onChange={(btnGradientColor) => onChange({ btnGradientColor })}
+                    onChange={(buttonGradientColor) =>
+                      selectedButton
+                        ? patchSelected({ buttonGradientColor })
+                        : onChange({ btnGradientColor: buttonGradientColor })
+                    }
                   />
                   <ColorRow
                     label="Gradient to"
-                    value={design.btnGradientColor2}
+                    value={
+                      selectedConfig?.buttonGradientColor2 ??
+                      design.btnGradientColor2
+                    }
                     fallback="#0ea5e9"
-                    onChange={(btnGradientColor2) => onChange({ btnGradientColor2 })}
+                    onChange={(buttonGradientColor2) =>
+                      selectedButton
+                        ? patchSelected({ buttonGradientColor2 })
+                        : onChange({ btnGradientColor2: buttonGradientColor2 })
+                    }
                   />
                 </>
               ) : (
                 <ColorRow
                   label="Button colour"
-                  value={design.btnBg}
+                  value={selectedConfig?.color ?? design.btnBg}
                   fallback="#ffffff"
-                  onChange={(btnBg) => onChange({ btnBg })}
+                  onChange={(color) =>
+                    selectedButton
+                      ? patchSelected({ color })
+                      : onChange({ btnBg: color })
+                  }
                 />
               )}
               <ColorRow
                 label="Button text"
-                value={design.btnText}
+                value={selectedConfig?.textColor ?? design.btnText}
                 fallback="#191813"
-                onChange={(btnText) => onChange({ btnText })}
+                onChange={(textColor) =>
+                  selectedButton
+                    ? patchSelected({ textColor })
+                    : onChange({ btnText: textColor })
+                }
               />
             </div>
 
-            <div className="border-t border-line pt-4">
+            <div className="grid gap-4 border-t border-line pt-4 sm:grid-cols-2">
               <div>
                 <GroupLabel>Size</GroupLabel>
                 <div className="mt-2 flex flex-wrap gap-1.5">
@@ -857,9 +1101,14 @@ export function DesignPanel({
                     <button
                       key={k}
                       type="button"
-                      onClick={() => onChange({ btnSize: k })}
+                      onClick={() =>
+                        selectedButton
+                          ? patchSelected({ buttonSize: k })
+                          : onChange({ btnSize: k })
+                      }
                       className={`rounded-full border px-3 py-1.5 text-xs transition ${
-                        (design.btnSize ?? "md") === k
+                        (selectedConfig?.buttonSize ?? design.btnSize ?? "md") ===
+                        k
                           ? "border-ink bg-ink text-paper"
                           : "border-line hover:border-soft"
                       }`}
@@ -869,23 +1118,56 @@ export function DesignPanel({
                   ))}
                 </div>
               </div>
+              <div>
+                <GroupLabel>Text size</GroupLabel>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {(Object.keys(LINK_TEXT_SIZES) as LinkTextSize[]).map((k) => (
+                    <button
+                      key={k}
+                      type="button"
+                      onClick={() =>
+                        selectedButton
+                          ? patchSelected({ buttonTextSize: k })
+                          : onChange({ btnTextSize: k })
+                      }
+                      className={`rounded-full border px-3 py-1.5 text-xs transition ${
+                        (selectedConfig?.buttonTextSize ??
+                          design.btnTextSize ??
+                          "md") === k
+                          ? "border-ink bg-ink text-paper"
+                          : "border-line hover:border-soft"
+                      }`}
+                    >
+                      {LINK_TEXT_SIZES[k].label}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
 
             <div className="border-t border-line pt-4">
               <GroupLabel>Animation</GroupLabel>
               <p className="mt-1 text-xs text-soft">
-                One consistent attention effect across all link buttons.
+                {selectedButton
+                  ? "Choose an independent effect for this button. Off overrides any page animation."
+                  : "Set the default effect. Individual buttons can override it."}
               </p>
-              <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
                 {(Object.keys(BTN_ANIMATIONS) as BtnAnimation[]).map((k) => {
-                  const active = (design.btnAnimation ?? "none") === k;
+                  const active =
+                    (selectedConfig?.anim ?? design.btnAnimation ?? "none") ===
+                    k;
                   return (
                     <button
                       key={k}
                       type="button"
                       aria-pressed={active}
                       title={BTN_ANIMATIONS[k].hint}
-                      onClick={() => onChange({ btnAnimation: k })}
+                      onClick={() =>
+                        selectedButton
+                          ? patchSelected({ anim: k })
+                          : onChange({ btnAnimation: k })
+                      }
                       className={`rounded-xl border px-3 py-2.5 text-left transition ${
                         active
                           ? "border-ink bg-ink/[0.04] ring-1 ring-ink"
@@ -905,12 +1187,6 @@ export function DesignPanel({
                   );
                 })}
               </div>
-              {(design.btnAnimation ?? "none") !== "none" && (
-                <p className="mt-2 text-xs leading-relaxed text-soft">
-                  This animation is active on every link button. Choose Off to
-                  stop all automatic button movement.
-                </p>
-              )}
             </div>
 
             <div className="grid gap-4 border-t border-line pt-4 sm:grid-cols-2">
@@ -921,9 +1197,13 @@ export function DesignPanel({
                     <button
                       key={k}
                       type="button"
-                      onClick={() => onChange({ btnShadow: k })}
+                      onClick={() =>
+                        selectedButton
+                          ? patchSelected({ buttonShadow: k })
+                          : onChange({ btnShadow: k })
+                      }
                       className={`rounded-xl border px-2 py-2 text-xs transition ${
-                        design.btnShadow === k
+                        (selectedConfig?.buttonShadow ?? design.btnShadow) === k
                           ? "border-ink bg-ink/[0.04] font-medium"
                           : "border-line hover:border-soft"
                       }`}
@@ -940,9 +1220,13 @@ export function DesignPanel({
                     <button
                       key={k}
                       type="button"
-                      onClick={() => onChange({ btnBorder: k })}
+                      onClick={() =>
+                        selectedButton
+                          ? patchSelected({ buttonBorder: k })
+                          : onChange({ btnBorder: k })
+                      }
                       className={`rounded-xl border px-2 py-2 text-xs transition ${
-                        design.btnBorder === k
+                        (selectedConfig?.buttonBorder ?? design.btnBorder) === k
                           ? "border-ink bg-ink/[0.04] font-medium"
                           : "border-line hover:border-soft"
                       }`}
@@ -961,10 +1245,16 @@ export function DesignPanel({
                   <button
                     key={k}
                     type="button"
-                    onClick={() => onChange({ btnWeight: k })}
+                    onClick={() =>
+                      selectedButton
+                        ? patchSelected({ buttonWeight: k })
+                        : onChange({ btnWeight: k })
+                    }
                     style={{ fontWeight: BTN_WEIGHTS[k].value }}
                     className={`rounded-full border px-3.5 py-1.5 text-sm transition ${
-                      (design.btnWeight ?? "medium") === k
+                      (selectedConfig?.buttonWeight ??
+                        design.btnWeight ??
+                        "medium") === k
                         ? "border-ink bg-ink text-paper"
                         : "border-line hover:border-soft"
                     }`}
@@ -974,6 +1264,19 @@ export function DesignPanel({
                 ))}
               </div>
             </div>
+
+            {selectedButton && (
+              <label className="flex items-center gap-2 border-t border-line pt-4 text-sm">
+                <input
+                  type="checkbox"
+                  checked={selectedConfig?.featured === true}
+                  onChange={(event) =>
+                    patchSelected({ featured: event.target.checked })
+                  }
+                />
+                Highlight this button
+              </label>
+            )}
           </div>
         )}
 
@@ -1019,7 +1322,9 @@ export function DesignPanel({
           onClick={onReset}
           className="text-xs text-soft underline underline-offset-4 transition hover:text-ink"
         >
-          Reset to theme defaults
+          {selectedButton
+            ? "Reset page design to theme defaults"
+            : "Reset to theme defaults"}
         </button>
       </div>
     </div>

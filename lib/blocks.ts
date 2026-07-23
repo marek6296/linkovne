@@ -32,13 +32,41 @@ export const LINK_WIDTHS: Record<LinkWidth, string> = {
   half: "Half / grid",
 };
 
-export type LinkAnim = "none" | "pulse" | "shake" | "glow";
+export type LinkAnim =
+  | "none"
+  | "pulse"
+  | "shake"
+  | "glow"
+  | "bounce"
+  | "float"
+  | "heartbeat"
+  | "swing"
+  | "wobble"
+  | "pop"
+  | "slide"
+  | "shimmer"
+  | "tilt"
+  | "breathe"
+  | "jelly"
+  | "flip";
 
 export const LINK_ANIMS: Record<LinkAnim, string> = {
   none: "Off",
   pulse: "Gentle pulse",
   shake: "Nudge",
   glow: "Glow ring",
+  bounce: "Soft bounce",
+  float: "Floating",
+  heartbeat: "Heartbeat",
+  swing: "Swing",
+  wobble: "Wobble",
+  pop: "Pop",
+  slide: "Side slide",
+  shimmer: "Light sweep",
+  tilt: "Tilt",
+  breathe: "Breathe",
+  jelly: "Jelly",
+  flip: "Soft flip",
 };
 
 export const ANIM_CLASS: Record<LinkAnim, string> = {
@@ -46,6 +74,31 @@ export const ANIM_CLASS: Record<LinkAnim, string> = {
   pulse: "anim-pulse",
   shake: "anim-shake",
   glow: "anim-glow",
+  bounce: "anim-bounce",
+  float: "anim-float-button",
+  heartbeat: "anim-heartbeat",
+  swing: "anim-swing",
+  wobble: "anim-wobble",
+  pop: "anim-pop",
+  slide: "anim-slide",
+  shimmer: "anim-shimmer",
+  tilt: "anim-tilt",
+  breathe: "anim-breathe",
+  jelly: "anim-jelly",
+  flip: "anim-flip",
+};
+
+export type LinkTextSize = "xs" | "sm" | "md" | "lg" | "xl";
+
+export const LINK_TEXT_SIZES: Record<
+  LinkTextSize,
+  { label: string; css: string }
+> = {
+  xs: { label: "XS", css: "0.75rem" },
+  sm: { label: "Small", css: "0.875rem" },
+  md: { label: "Medium", css: "1rem" },
+  lg: { label: "Large", css: "1.125rem" },
+  xl: { label: "XL", css: "1.25rem" },
 };
 
 export type SocialPlatform =
@@ -127,14 +180,23 @@ export type BlockConfig = {
   thumb?: string;
   /** Typ buttonu */
   layout?: LinkLayout;
-  /** Vlastna farba len pre tento button */
+  /** Vlastny vizualny styl len pre tento button. Chybajuca hodnota dedi globalny Design. */
   color?: string;
   textColor?: string;
+  buttonStyle?: "fill" | "outline" | "soft" | "glass" | "gradient";
+  buttonShape?: "pill" | "soft" | "rounded" | "square";
+  buttonSize?: "sm" | "md" | "lg";
+  buttonTextSize?: LinkTextSize;
+  buttonShadow?: "none" | "subtle" | "floating" | "hard";
+  buttonBorder?: "none" | "thin" | "bold";
+  buttonWeight?: "regular" | "medium" | "bold";
+  buttonGradientColor?: string;
+  buttonGradientColor2?: string;
   /** Ikona namiesto nahrateho obrazka */
   icon?: string;
   /** Sirka — dva half buttony vedla seba tvoria riadok */
   width?: LinkWidth;
-  /** Legacy per-link motion. Kept for old saved data; global Design wins. */
+  /** Vlastna animacia. Chybajuca hodnota dedi globalnu animaciu. */
   anim?: LinkAnim;
   /** VIP zamok — ked je nastaveny, odkaz sa odomkne az po zadani tohto kodu.
    *  Overuje sa vylucne na serveri; do verejneho HTML sa nikdy nedostane. */

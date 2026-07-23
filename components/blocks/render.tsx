@@ -5,13 +5,21 @@ import {
   SOCIAL_BRAND,
   SOCIAL_SIZE_PX,
   SOCIAL_SHAPE_RADIUS,
+  LINK_TEXT_SIZES,
   type Block,
   type LinkLayout,
   type SocialPlatform,
 } from "@/lib/blocks";
 import { Icon, ICON_KEYS, type IconKey } from "@/components/blocks/icon";
 import { BTN_SIZES, type Theme } from "@/lib/themes";
-import { readableText, safeColor } from "@/lib/design";
+import {
+  BTN_BORDERS,
+  BTN_SHAPES,
+  BTN_SHADOWS,
+  BTN_WEIGHTS,
+  readableText,
+  safeColor,
+} from "@/lib/design";
 import { SocialIcon } from "@/components/blocks/social-icon";
 import { Countdown } from "@/components/blocks/countdown";
 import { Faq } from "@/components/blocks/faq";
@@ -32,7 +40,11 @@ function LinkBlock({
 }) {
   const cfg = block.config;
   const featured = cfg.featured === true;
-  const size = theme.size ?? BTN_SIZES.md;
+  const isHalf = cfg.width === "half";
+  const size =
+    cfg.buttonSize && cfg.buttonSize in BTN_SIZES
+      ? BTN_SIZES[cfg.buttonSize]
+      : (theme.size ?? BTN_SIZES.md);
   // Ide do src atributu (nie do CSS), takze staci trvat na https
   const image = /^https:\/\//i.test(cfg.thumb ?? "") ? cfg.thumb! : null;
   const title = cfg.title || "Untitled link";
@@ -52,47 +64,107 @@ function LinkBlock({
 
   const customBg = safeColor(cfg.color);
   const customFg = safeColor(cfg.textColor);
-
-  const background = customBg ?? (featured ? theme.text : theme.btnBg);
+  let background = customBg ?? (featured ? theme.text : theme.btnBg);
   // Featured tlacidlo ma pozadie vo farbe textu temy. Farbu popisu preto NEsmie
   // urcovat pozadie stranky (pri svetlom textColor + gradiente vysiel biely text
   // na svetlom buttone — neviditelny). Namiesto toho ju odvodime z JASU pozadia
   // buttonu, takze kontrast je zaruceny na kazdej teme aj custom farbe.
-  const color = customFg ?? (featured ? readableText(background) : theme.btnText);
+  let color = customFg ?? (featured ? readableText(background) : theme.btnText);
+  let border = customBg
+    ? `1px solid ${customBg}`
+    : featured
+      ? `1px solid ${theme.text}`
+      : theme.btnBorder;
+  let boxShadow = featured ? "0 10px 30px rgba(0,0,0,0.18)" : theme.btnShadow;
+  let backdropFilter = theme.btnBackdrop;
+
+  switch (cfg.buttonStyle) {
+    case "fill":
+      border = `1px solid ${customBg ?? theme.btnBg}`;
+      break;
+    case "outline":
+      background = "transparent";
+      color = customFg ?? theme.btnText;
+      border = `1.5px solid ${color}`;
+      boxShadow = "none";
+      backdropFilter = undefined;
+      break;
+    case "soft":
+      background = `color-mix(in oklab, ${customBg ?? theme.btnBg} 22%, transparent)`;
+      color = customFg ?? theme.btnText;
+      border = "1px solid transparent";
+      boxShadow = "none";
+      backdropFilter = undefined;
+      break;
+    case "glass":
+      background = "rgba(255,255,255,0.16)";
+      color = customFg ?? theme.btnText;
+      border = "1px solid rgba(255,255,255,0.38)";
+      boxShadow = "0 8px 26px rgba(0,0,0,0.14)";
+      backdropFilter = "blur(10px)";
+      break;
+    case "gradient": {
+      const from = safeColor(cfg.buttonGradientColor) ?? customBg ?? "#7c3aed";
+      const to = safeColor(cfg.buttonGradientColor2) ?? "#0ea5e9";
+      background = `linear-gradient(135deg, ${from}, ${to})`;
+      color = customFg ?? readableText(from);
+      border = "1px solid transparent";
+      boxShadow = "0 10px 26px rgba(0,0,0,0.16)";
+      backdropFilter = undefined;
+      break;
+    }
+  }
+
+  if (cfg.buttonBorder && cfg.buttonBorder in BTN_BORDERS) {
+    const width = BTN_BORDERS[cfg.buttonBorder].width;
+    border =
+      width === "0px"
+        ? "0 solid transparent"
+        : `${width} solid ${customBg ?? color}`;
+  }
+  if (cfg.buttonShadow && cfg.buttonShadow in BTN_SHADOWS) {
+    boxShadow = BTN_SHADOWS[cfg.buttonShadow].css;
+  }
+  const borderRadius =
+    cfg.buttonShape && cfg.buttonShape in BTN_SHAPES
+      ? BTN_SHAPES[cfg.buttonShape].radius
+      : theme.btnRadius;
+  const fontSize =
+    cfg.buttonTextSize && cfg.buttonTextSize in LINK_TEXT_SIZES
+      ? LINK_TEXT_SIZES[cfg.buttonTextSize].css
+      : (theme.btnFontSize ?? size.font);
+  const fontWeight =
+    cfg.buttonWeight && cfg.buttonWeight in BTN_WEIGHTS
+      ? BTN_WEIGHTS[cfg.buttonWeight].value
+      : (theme.btnWeight ?? 500);
 
   const shell: React.CSSProperties = {
     background,
     color,
-    border: customBg
-      ? `1px solid ${customBg}`
-      : featured
-        ? `1px solid ${theme.text}`
-        : theme.btnBorder,
-    borderRadius: theme.btnRadius,
-    boxShadow: featured ? "0 10px 30px rgba(0,0,0,0.18)" : theme.btnShadow,
-    backdropFilter: theme.btnBackdrop,
-    WebkitBackdropFilter: theme.btnBackdrop,
-    fontSize: size.font,
-    fontWeight: theme.btnWeight ?? 500,
+    border,
+    borderRadius,
+    boxShadow,
+    backdropFilter,
+    WebkitBackdropFilter: backdropFilter,
+    fontSize,
+    fontWeight,
   };
 
   // Roh miniatury sa riadi tvarom buttonu, nech nevyzera nalepena
   const innerRadius =
-    theme.btnRadius === "999px"
+    borderRadius === "999px"
       ? "999px"
-      : theme.btnRadius === "2px"
+      : borderRadius === "2px"
         ? "2px"
         : "10px";
 
   // Pill zaoblenie na velkom obrazkovom bloku by orezalo fotku do ovalu,
   // takze card/cover maju strop.
-  const mediaRadius = theme.btnRadius === "999px" ? "18px" : theme.btnRadius;
+  const mediaRadius = borderRadius === "999px" ? "18px" : borderRadius;
 
-  // Motion is a global Design studio choice. Legacy per-link values are
-  // intentionally ignored so the visible global "Off" state really stops all
-  // buttons and no hidden block setting can keep one pulsing.
-  const anim = ANIM_CLASS[theme.btnAnimation ?? "none"] ?? "";
-  const base = `block w-full font-medium transition duration-200 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.985] ${anim}`;
+  const animation = cfg.anim ?? theme.btnAnimation ?? "none";
+  const anim = ANIM_CLASS[animation] ?? "";
+  const base = `block min-w-0 max-w-full w-full overflow-hidden font-medium transition duration-200 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.985] ${anim}`;
 
   const iconKey = cfg.icon as IconKey | undefined;
   const showIcon = !image && iconKey && ICON_KEYS.includes(iconKey);
@@ -114,7 +186,7 @@ function LinkBlock({
         {/* Scrim — text musi byt citatelny na akejkolvek fotke */}
         <span className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-black/10" />
         <span
-          className="absolute inset-0 flex items-center justify-center px-5 text-center text-white"
+          className="absolute inset-0 flex min-w-0 items-center justify-center overflow-hidden px-4 text-center leading-snug break-words text-white [overflow-wrap:anywhere]"
           style={{ textShadow: "0 1px 12px rgba(0,0,0,0.5)" }}
         >
           {titleNode}
@@ -138,7 +210,7 @@ function LinkBlock({
           className="aspect-[16/9] w-full object-cover"
         />
         <span
-          className="block text-center"
+          className="block min-w-0 overflow-hidden text-center leading-snug break-words [overflow-wrap:anywhere]"
           style={{ padding: `${size.padY} ${size.padX}` }}
         >
           {titleNode}
@@ -166,9 +238,9 @@ function LinkBlock({
             borderRadius: innerRadius,
           }}
         />
-        <span className="flex-1 text-center">{titleNode}</span>
+        <span className="min-w-0 flex-1 overflow-hidden text-center leading-snug break-words [overflow-wrap:anywhere]">{titleNode}</span>
         {/* Vyvazuje sirku miniatury, aby text ostal opticky v strede */}
-        <span aria-hidden className="shrink-0" style={{ width: size.thumb }} />
+        {!isHalf && <span aria-hidden className="shrink-0" style={{ width: size.thumb }} />}
       </a>
     );
   }
@@ -179,18 +251,18 @@ function LinkBlock({
       href={href}
       rel="noopener"
       className={`${base} ${showIcon ? "flex items-center gap-3" : "text-center"}`}
-      style={{ ...shell, padding: `${size.padY} ${size.padX}` }}
+      style={{ ...shell, padding: `${size.padY} ${isHalf ? "0.7rem" : size.padX}` }}
     >
       {showIcon && (
         <span className="shrink-0">
           <Icon name={iconKey} className="h-5 w-5" />
         </span>
       )}
-      <span className={showIcon ? "flex-1 text-center" : undefined}>
+      <span className={`${showIcon ? "min-w-0 flex-1 text-center" : "block text-center"} overflow-hidden leading-snug break-words [overflow-wrap:anywhere]`}>
         {titleNode}
       </span>
       {/* Vyvazuje sirku ikony, aby text ostal opticky v strede */}
-      {showIcon && <span aria-hidden className="w-5 shrink-0" />}
+      {showIcon && !isHalf && <span aria-hidden className="w-5 shrink-0" />}
     </a>
   );
 }
@@ -534,7 +606,10 @@ export function BlockList({
     const node = renderOne(block);
     if (!onSelect) return node;
     return (
-      <div key={block.id} className="group relative rounded-xl">
+      <div
+        key={block.id}
+        className="group relative min-w-0 max-w-full overflow-hidden rounded-xl"
+      >
         {node}
         <button
           type="button"
