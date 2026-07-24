@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { publishProfile, unpublishProfile } from "@/app/dashboard/actions";
 import { Editor } from "@/components/editor/editor";
+import { PublishControls } from "@/components/editor/publish-controls";
 import { ProfileSwitcher } from "@/components/editor/profile-switcher";
 import { ShareCard } from "@/components/editor/share-card";
 import { UpgradedWelcome } from "@/components/dashboard/upgraded-welcome";
@@ -92,36 +92,13 @@ export default async function DashboardPage({
           limit={plan.profiles}
         />
 
-        <div className="flex w-full items-center gap-2 sm:ml-auto sm:w-auto">
-          {current.is_published && (
-            <form
-              action={unpublishProfile.bind(null, current.id)}
-              className="mr-auto sm:mr-0"
-            >
-              <button type="submit" className="btn-quiet">
-                Unpublish
-              </button>
-            </form>
-          )}
-          <form
-            action={publishProfile.bind(null, current.id)}
-            className="ml-auto sm:ml-0"
-          >
-            <button
-              type="submit"
-              className={
-                hasUnpublished
-                  ? "btn-ink px-5 py-2.5 text-sm"
-                  : "btn-line px-5 py-2.5 text-sm"
-              }
-            >
-              {!current.is_published
-                ? "Publish"
-                : hasUnpublished
-                  ? "Publish changes"
-                  : "Published"}
-            </button>
-          </form>
+        <div className="w-full sm:ml-auto sm:w-auto">
+          <PublishControls
+            key={current.id}
+            profileId={current.id}
+            initialPublished={current.is_published}
+            initialHasUnpublished={hasUnpublished}
+          />
         </div>
       </div>
 

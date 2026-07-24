@@ -191,6 +191,15 @@ export async function saveBlocks(
   const { error: delError } = await del;
   if (delError) return { error: "Couldn't save your changes." };
 
+  // Bloky ziju v samostatnej tabulke, no publish toolbar porovnava cas profilu
+  // s published_at. Dotykom profilu zabezpecime, ze zmena linku, poradia alebo
+  // aktivneho stavu sa po refreshi stale ukaze ako nepublikovana.
+  const { error: touchError } = await supabase
+    .from("profiles")
+    .update({ updated_at: new Date().toISOString() })
+    .eq("id", profileId);
+  if (touchError) return { error: "Couldn't save your changes." };
+
   revalidatePath("/dashboard");
   return undefined;
 }
@@ -367,18 +376,36 @@ export async function setHideBranding(
  * sama zo zivych riadkov — z klienta sa teda neda podvrhnut obsah, ktory
  * nepresiel cez limity planu.
  */
-export async function publishProfile(profileId: string) {
+export async function publishProfile(
+  profileId: string,
+): Promise<ActionState> {
   const { supabase } = await requireProfile(profileId);
-  await supabase.rpc("publish_profile", { p_profile_id: profileId });
+  const { error } = await supabase.rpc("publish_profile", {
+    p_profile_id: profileId,
+  });
+  if (error) {
+    console.error("publishProfile failed:", error);
+    return { error: "Couldn't publish your page. Please try again." };
+  }
   revalidatePath("/dashboard");
   revalidatePath("/[username]", "page");
+  return undefined;
 }
 
-export async function unpublishProfile(profileId: string) {
+export async function unpublishProfile(
+  profileId: string,
+): Promise<ActionState> {
   const { supabase } = await requireProfile(profileId);
-  await supabase.rpc("unpublish_profile", { p_profile_id: profileId });
+  const { error } = await supabase.rpc("unpublish_profile", {
+    p_profile_id: profileId,
+  });
+  if (error) {
+    console.error("unpublishProfile failed:", error);
+    return { error: "Couldn't unpublish your page. Please try again." };
+  }
   revalidatePath("/dashboard");
   revalidatePath("/[username]", "page");
+  return undefined;
 }
 
 export async function saveSeo(

@@ -102,3 +102,52 @@ export function designForPlan(
 
   return d;
 }
+
+/**
+ * Human-readable Pro features currently present in the local design draft.
+ * The editor may preview these on Free, but publishing stays blocked until the
+ * user removes them or upgrades.
+ */
+export function lockedDesignFeatures(
+  design: Design | null | undefined,
+  plan: PlanFeatures,
+): string[] {
+  if (!design) return [];
+  const caps = designCaps(plan);
+  if (caps.full) return [];
+
+  const locked: string[] = [];
+  if (!caps.bgImage && (design.bg === "image" || design.bgImage)) {
+    locked.push("Image background");
+  }
+  if (
+    !caps.btnFancy &&
+    (design.btnStyle === "glass" || design.btnStyle === "gradient")
+  ) {
+    locked.push(
+      design.btnStyle === "glass"
+        ? "Glass button style"
+        : "Gradient button style",
+    );
+  }
+  if (!caps.btnAnimation && design.btnAnimation) {
+    locked.push("Button animation");
+  }
+  if (
+    !caps.avatarFrames &&
+    (design.avatarFrame || design.avatarRing || design.avatarRingColor)
+  ) {
+    locked.push("Avatar frame or glow");
+  }
+  if (
+    !caps.deskBackdrop &&
+    (design.deskBg ||
+      design.deskBgColor ||
+      design.deskBgColor2 ||
+      design.deskBgImage)
+  ) {
+    locked.push("Custom desktop background");
+  }
+
+  return [...new Set(locked)];
+}

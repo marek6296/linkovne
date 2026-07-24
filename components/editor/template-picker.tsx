@@ -60,7 +60,10 @@ function TemplateCard({
   return (
     <button
       type="button"
-      onClick={() => (locked ? onLocked() : onPick(t))}
+      onClick={() => {
+        onPick(t);
+        if (locked) onLocked();
+      }}
       aria-pressed={selected}
       aria-label={locked ? `${t.label} · Pro template` : undefined}
       className={`group relative overflow-hidden rounded-2xl border bg-surface text-left transition duration-200 hover:-translate-y-1 hover:shadow-[0_14px_34px_rgba(25,24,19,0.13)] ${

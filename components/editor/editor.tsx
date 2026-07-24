@@ -28,7 +28,15 @@ import {
 import { THEMES, THEME_KEYS } from "@/lib/themes";
 import { resolveTheme, type Design } from "@/lib/design";
 import { allowsBlock, allowsTheme, type PlanFeatures } from "@/lib/plans";
-import { designCaps, designForPlan } from "@/lib/design-tiers";
+import {
+  designCaps,
+  designForPlan,
+  lockedDesignFeatures,
+} from "@/lib/design-tiers";
+import {
+  EDITOR_DRAFT_STATE_EVENT,
+  type EditorDraftState,
+} from "@/lib/editor-draft-state";
 import {
   deleteBlock,
   saveBlocks,
@@ -69,8 +77,8 @@ type SaveStatus = "idle" | "saving" | "saved" | "error";
 function StatusPill({ status }: { status: SaveStatus }) {
   const map: Record<SaveStatus, string> = {
     idle: "",
-    saving: "Saving…",
-    saved: "All changes saved",
+    saving: "Saving draft…",
+    saved: "Draft saved · publish to update the live page",
     error: "Couldn't save",
   };
   if (!map[status]) return null;
@@ -213,6 +221,7 @@ export function Editor({
   const [profileOpen, setProfileOpen] = useState(true);
   const [blocksOpen, setBlocksOpen] = useState(true);
   const [openBlockId, setOpenBlockId] = useState<string | null>(null);
+  const [hasLocalChanges, setHasLocalChanges] = useState(false);
   // Ktora template bola naposledy aplikovana — cisto pre vizualne oznacenie v
   // pickeri (hlavne na mobile, kde nevidno live preview). Manualna uprava
   // temy/dizajnu oznacenie zrusi (uz to nie je „ta template").
@@ -222,6 +231,28 @@ export function Editor({
   // server tym istym, co z neho prislo.
   const blocksDirty = useRef(false);
   const profileDirty = useRef(false);
+
+  const publishBlockers = lockedDesignFeatures(profile.design, plan);
+  const hasPendingSave =
+    profileDirty.current || blocksDirty.current || status === "saving";
+
+  useEffect(() => {
+    const detail: EditorDraftState = {
+      hasChanges: hasLocalChanges,
+      saving: hasPendingSave,
+      saveError: status === "error",
+      blockers: publishBlockers,
+    };
+    window.dispatchEvent(
+      new CustomEvent<EditorDraftState>(EDITOR_DRAFT_STATE_EVENT, { detail }),
+    );
+  }, [
+    hasLocalChanges,
+    hasPendingSave,
+    profile.design,
+    publishBlockers.join("|"),
+    status,
+  ]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -250,20 +281,26 @@ export function Editor({
         display_name: profile.display_name,
         bio: profile.bio,
         avatar_url: profile.avatar_url,
-        theme: profile.theme,
-        // Design posielame vzdy — server ho ocisti podla planu (free = zakladna
-        // customizacia). Premium polia sa pre free odstrania na serveri.
-        design: profile.design,
+        // Zamknuty Pro template je na Free cisto lokalny preview. Ak user pocas
+        // neho zmeni meno alebo bio, tieto bezne polia sa ulozia, no preview
+        // tema/dizajn nepretecu do draftu ako osekana verzia.
+        ...(lockedDesignFeatures(profile.design, plan).length > 0
+          ? {}
+          : {
+              theme: profile.theme,
+              design: profile.design,
+            }),
       });
       profileDirty.current = false;
       setStatus(res?.error ? "error" : "saved");
       if (res?.error) setNotice(res.error);
     }, 700);
     return () => clearTimeout(t);
-  }, [profile]);
+  }, [plan, profile]);
 
   function patchProfile(patch: Partial<ProfileState>) {
     profileDirty.current = true;
+    setHasLocalChanges(true);
     // Manualna zmena temy/dizajnu = uz to nie je cisty template → zrus oznacenie.
     if ("theme" in patch || "design" in patch) setAppliedTemplate(null);
     setProfile((p) => ({ ...p, ...patch }));
@@ -277,6 +314,7 @@ export function Editor({
    */
   function pickTheme(key: string) {
     profileDirty.current = true;
+    setHasLocalChanges(true);
     setAppliedTemplate(null);
     setProfile((p) => ({
       ...p,
@@ -306,6 +344,7 @@ export function Editor({
 
   function patchBlocks(fn: (prev: Block[]) => Block[]) {
     blocksDirty.current = true;
+    setHasLocalChanges(true);
     setBlocks(fn);
   }
 
@@ -386,6 +425,7 @@ export function Editor({
 
   async function removeBlock(id: string) {
     const previous = blocks;
+    setHasLocalChanges(true);
     setBlocks((prev) => prev.filter((b) => b.id !== id));
     setStatus("saving");
     const result = await deleteBlock(profile.id, id);
@@ -507,17 +547,28 @@ export function Editor({
   // Template aplikuje IBA dizajn (tema + farby/buttony) — bloky uzivatela
   // ostavaju nedotknute. Ziadny medzi-dialog, klik = okamzita zmena vzhladu.
   function applyTemplate(template: Template) {
-    profileDirty.current = true;
-    setProfile((p) => ({ ...p, theme: template.theme, design: template.design }));
+    const previewOnly = template.premium === true && !plan.customDesign;
+    if (!previewOnly) profileDirty.current = true;
+    setHasLocalChanges(true);
+    setProfile((p) => ({
+      ...p,
+      theme: template.theme,
+      design: previewOnly
+        ? template.design
+        : designForPlan(template.design, plan),
+    }));
     setAppliedTemplate(template.key);
-    setNotice(`“${template.label}” applied — your links were kept.`);
+    setNotice(
+      previewOnly
+        ? `Previewing “${template.label}”. Upgrade to publish its premium design features.`
+        : `“${template.label}” applied — your links were kept.`,
+    );
   }
 
   const caps = designCaps(plan);
-  const theme = resolveTheme(
-    profile.theme,
-    designForPlan(profile.design, plan),
-  );
+  // Preview ukazuje presne lokalny draft, aj ked obsahuje Pro funkcie. Server
+  // ich na Free nikdy neulozi a publish toolbar presne vypise, co blokuje live.
+  const theme = resolveTheme(profile.theme, profile.design);
   return (
     <div>
       {/* Mobile tabs */}
@@ -693,7 +744,7 @@ export function Editor({
                       canUsePremium={plan.customDesign}
                       onLocked={(t) =>
                         setNotice(
-                          `${t.label} uses an original image background and is available on Pro.`,
+                          `You’re previewing ${t.label}. The locked Pro features are listed beside Publish.`,
                         )
                       }
                     />
