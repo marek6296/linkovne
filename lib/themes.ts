@@ -75,6 +75,13 @@ export type Theme = {
   btnAnimation?: LinkAnim;
   /** Text size independent from the button's vertical padding preset. */
   btnFontSize?: string;
+  /** Vertical rhythm between blocks. */
+  blockGap?: string;
+  /** Overall profile composition selected in Design Studio. */
+  profileLayout?: "centered" | "compact" | "hero";
+  /** Maximum width of the profile content and its desktop card. */
+  contentWidthPx?: number;
+  cardWidthPx?: number;
   avatarBg: string;
   avatarText: string;
   /** Tvar/velkost/prstenec profilovky — doplna resolveTheme z `design`.
@@ -273,7 +280,14 @@ export const THEMES: Record<ThemeKey, Theme> = {
 
 export function getTheme(key: string | null | undefined): Theme {
   const preset = THEMES[(key ?? "classic") as ThemeKey] ?? THEMES.classic;
-  return { ...preset, size: BTN_SIZES.md };
+  return {
+    ...preset,
+    size: BTN_SIZES.md,
+    blockGap: "0.75rem",
+    profileLayout: "centered",
+    contentWidthPx: 424,
+    cardWidthPx: 480,
+  };
 }
 
 export const THEME_KEYS = Object.keys(THEMES) as ThemeKey[];

@@ -90,13 +90,16 @@ export function ProfileWidgets({
   return (
     <>
       {/* Top bar — zarovnany k vrchu karty profilu (na desktope k okrajom karty). */}
-      <div className="absolute inset-x-0 top-4 z-40 mx-auto flex w-full max-w-[26rem] items-center justify-between px-6">
+      <div
+        className="absolute inset-x-0 top-[18px] z-40 mx-auto flex w-full items-center justify-between px-5 sm:px-0"
+        style={{ maxWidth: theme.contentWidthPx ?? 424 }}
+      >
         {showPromo ? (
           <button
             type="button"
             onClick={() => openModal("promo")}
             aria-label="About linkovne"
-            className="flex h-10 w-10 items-center justify-center rounded-full transition hover:opacity-90"
+            className="flex h-11 w-11 items-center justify-center rounded-full transition duration-200 hover:-translate-y-0.5 hover:opacity-95 active:translate-y-0 active:scale-95"
             style={btnStyle}
           >
             <LogoMark className="h-[22px] w-[22px]" />
@@ -108,7 +111,7 @@ export function ProfileWidgets({
           type="button"
           onClick={() => openModal("share")}
           aria-label="Share this page"
-          className="flex h-10 w-10 items-center justify-center rounded-full transition hover:opacity-90"
+          className="flex h-11 w-11 items-center justify-center rounded-full transition duration-200 hover:-translate-y-0.5 hover:opacity-95 active:translate-y-0 active:scale-95"
           style={btnStyle}
         >
           <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>

@@ -46,9 +46,9 @@ export function Preview({
   };
 
   return (
-    <div className="mx-auto w-[358px]">
+    <div className="profile-preview mx-auto w-full max-w-[382px]">
       {/* Desktop backdrop za kartou — verne ako na PC verejnej stranke. */}
-      <div className="relative overflow-hidden rounded-[2.9rem] p-5">
+      <div className="relative overflow-hidden rounded-[3.1rem] p-4">
         <div
           aria-hidden
           className="absolute inset-0"
@@ -59,9 +59,9 @@ export function Preview({
               : null),
           }}
         />
-        <div className="relative rounded-[2.4rem] border-[10px] border-ink bg-ink shadow-[0_24px_70px_rgba(25,24,19,0.22)]">
+        <div className="relative rounded-[2.55rem] border-[7px] border-neutral-950 bg-neutral-950 shadow-[0_26px_70px_rgba(25,24,19,0.24)]">
         <div
-          className="relative flex h-[620px] flex-col overflow-y-auto rounded-[1.7rem] px-6 py-5"
+          className="relative flex h-[650px] flex-col overflow-y-auto rounded-[2.05rem] px-[18px] py-[18px]"
           style={{
             background: theme.page,
             color: theme.text,
@@ -78,10 +78,10 @@ export function Preview({
           )}
 
           {/* Plavajuce tlacidla hore: promo (vlavo, len ak branding) + share */}
-          <div className="relative z-10 flex items-center justify-between">
+          <div className="relative z-20 flex items-center justify-between">
             {showBranding ? (
               <span
-                className="flex h-9 w-9 items-center justify-center rounded-full"
+                className="flex h-10 w-10 items-center justify-center rounded-full"
                 style={chip}
               >
                 <LogoMark className="h-[18px] w-[18px]" />
@@ -90,7 +90,7 @@ export function Preview({
               <span />
             )}
             <span
-              className="flex h-9 w-9 items-center justify-center rounded-full"
+              className="flex h-10 w-10 items-center justify-center rounded-full"
               style={chip}
             >
               <svg
@@ -111,7 +111,11 @@ export function Preview({
           </div>
 
           {/* Obsah */}
-          <div className="relative z-10 mt-6">
+          <div
+            className={`relative z-10 ${
+              theme.profileLayout === "hero" ? "mt-5" : "mt-8"
+            }`}
+          >
             <ProfileHeader
               displayName={displayName}
               username={username}
@@ -120,7 +124,7 @@ export function Preview({
               theme={theme}
               onSelect={onSelect ? () => onSelect({ kind: "profile" }) : undefined}
             />
-            <div className="mt-8">
+            <div className={theme.profileLayout === "hero" ? "mt-5" : "mt-7"}>
               <BlockList
                 blocks={blocks}
                 theme={theme}
@@ -144,7 +148,7 @@ export function Preview({
           {showBranding && (
             <footer className="relative z-10 mt-auto pt-8 pb-1 text-center">
               <span
-                className="inline-flex items-center gap-1.5 text-[11px] tracking-wide opacity-70"
+                className="profile-branding"
                 style={{ color: theme.muted }}
               >
                 <LogoMark className="h-3.5 w-3.5" />

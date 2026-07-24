@@ -10,10 +10,13 @@ import {
   BTN_BORDERS,
   BTN_SHAPES,
   BTN_SHADOWS,
+  BTN_SPACING,
   BTN_STYLES,
   BTN_WEIGHTS,
+  CONTENT_WIDTHS,
   FONT_KEYS,
   FONTS,
+  PROFILE_LAYOUTS,
   type AvatarAspect,
   type AvatarFit,
   type AvatarFrame,
@@ -25,10 +28,13 @@ import {
   type BtnShape,
   type BtnBorder,
   type BtnShadow,
+  type BtnSpacing,
   type BtnStyle,
   type BtnWeight,
+  type ContentWidth,
   type Design,
   type DeskBgMode,
+  type ProfileLayout,
 } from "@/lib/design";
 import { BTN_SIZE_LABELS, type BtnSize } from "@/lib/themes";
 import { uploadImage } from "@/lib/upload";
@@ -79,9 +85,16 @@ const GRADIENT_PRESETS: { from: string; to: string; text: string }[] = [
   { from: "#141e30", to: "#243b55", text: "#eaf0ff" }, // navy night
 ];
 
-export type DesignTab = "theme" | "bg" | "avatar" | "buttons" | "font";
+export type DesignTab =
+  | "layout"
+  | "theme"
+  | "bg"
+  | "avatar"
+  | "buttons"
+  | "font";
 
 const TABS: { key: DesignTab; label: string }[] = [
+  { key: "layout", label: "Layout" },
   { key: "theme", label: "Theme" },
   { key: "bg", label: "Background" },
   { key: "avatar", label: "Photo" },
@@ -104,6 +117,14 @@ function TabIcon({ tab }: { tab: DesignTab }) {
   const cn = "h-4 w-4";
   const p = { fill: "none", stroke: "currentColor", strokeWidth: 1.7 } as const;
   switch (tab) {
+    case "layout":
+      return (
+        <svg viewBox="0 0 24 24" className={cn} {...p} aria-hidden>
+          <rect x="4" y="3.5" width="16" height="17" rx="3" />
+          <circle cx="9" cy="9" r="2" />
+          <path d="M7 14h10M7 17h10" />
+        </svg>
+      );
     case "theme":
       return (
         <svg viewBox="0 0 24 24" className={cn} {...p} aria-hidden>
@@ -458,6 +479,115 @@ export function DesignPanel({
       </div>
 
       <div className="min-h-[230px] p-5">
+        {/* ---------- Layout ---------- */}
+        {tab === "layout" && (
+          <div className="space-y-5">
+            <div>
+              <GroupLabel>Profile composition</GroupLabel>
+              <p className="mt-1 text-xs leading-relaxed text-soft">
+                Change the whole first impression without touching your content.
+              </p>
+              <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                {(Object.keys(PROFILE_LAYOUTS) as ProfileLayout[]).map((key) => {
+                  const active = (design.profileLayout ?? "centered") === key;
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      aria-pressed={active}
+                      onClick={() => onChange({ profileLayout: key })}
+                      className={`rounded-2xl border p-2.5 text-left transition ${
+                        active
+                          ? "border-ink bg-ink/[0.035] ring-1 ring-ink"
+                          : "border-line hover:border-soft"
+                      }`}
+                    >
+                      <span className="block h-24 overflow-hidden rounded-xl border border-line bg-paper p-2">
+                        {key === "hero" ? (
+                          <>
+                            <span className="relative block h-14 rounded-lg bg-gradient-to-br from-neutral-300 to-neutral-500">
+                              <span className="absolute bottom-1.5 left-2 h-1.5 w-10 rounded-full bg-white" />
+                              <span className="absolute bottom-1.5 right-2 h-1.5 w-4 rounded-full bg-white/60" />
+                            </span>
+                            <span className="mt-2 block h-2.5 rounded-full bg-ink/80" />
+                          </>
+                        ) : key === "compact" ? (
+                          <>
+                            <span className="flex items-center gap-2 py-1">
+                              <span className="h-8 w-8 rounded-lg bg-ink/20" />
+                              <span className="flex-1 space-y-1">
+                                <span className="block h-2 rounded-full bg-ink/80" />
+                                <span className="block h-1.5 w-3/4 rounded-full bg-ink/20" />
+                              </span>
+                            </span>
+                            <span className="mt-2 block h-2.5 rounded-full bg-ink/80" />
+                            <span className="mt-1.5 block h-2.5 rounded-full bg-ink/20" />
+                          </>
+                        ) : (
+                          <>
+                            <span className="mx-auto block h-8 w-8 rounded-full bg-ink/20" />
+                            <span className="mx-auto mt-1.5 block h-2 w-12 rounded-full bg-ink/80" />
+                            <span className="mt-2 block h-2.5 rounded-full bg-ink/80" />
+                            <span className="mt-1.5 block h-2.5 rounded-full bg-ink/20" />
+                          </>
+                        )}
+                      </span>
+                      <span className="mt-2 block text-xs font-semibold">
+                        {PROFILE_LAYOUTS[key].label}
+                      </span>
+                      <span className="mt-0.5 block text-[11px] leading-snug text-soft">
+                        {PROFILE_LAYOUTS[key].hint}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="grid gap-5 border-t border-line pt-4 sm:grid-cols-2">
+              <div>
+                <GroupLabel>Page width</GroupLabel>
+                <div className="mt-2 flex rounded-xl bg-black/[0.035] p-1">
+                  {(Object.keys(CONTENT_WIDTHS) as ContentWidth[]).map((key) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => onChange({ contentWidth: key })}
+                      className={`flex-1 rounded-lg px-2 py-2 text-xs transition ${
+                        (design.contentWidth ?? "balanced") === key
+                          ? "bg-paper font-medium shadow-sm"
+                          : "text-soft"
+                      }`}
+                    >
+                      {CONTENT_WIDTHS[key].label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <GroupLabel>Vertical rhythm</GroupLabel>
+                <div className="mt-2 flex rounded-xl bg-black/[0.035] p-1">
+                  {(Object.keys(BTN_SPACING) as BtnSpacing[]).map((key) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => onChange({ btnSpacing: key })}
+                      className={`flex-1 rounded-lg px-2 py-2 text-xs transition ${
+                        (design.btnSpacing ?? "normal") === key
+                          ? "bg-paper font-medium shadow-sm"
+                          : "text-soft"
+                      }`}
+                    >
+                      {BTN_SPACING[key].label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ---------- Theme ---------- */}
         {tab === "theme" && (
           <div className="space-y-4">

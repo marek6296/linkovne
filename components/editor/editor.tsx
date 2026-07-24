@@ -279,6 +279,8 @@ export function Editor({
       ...p,
       theme: key,
       design: {
+        profileLayout: p.design.profileLayout,
+        contentWidth: p.design.contentWidth,
         font: p.design.font,
         fontHeading: p.design.fontHeading,
         btnShape: p.design.btnShape,
@@ -689,7 +691,7 @@ export function Editor({
                   <span>
                     <span className="font-medium">Customise</span>
                     <span className="ml-2 text-soft">
-                      themes, photo, frames, buttons, fonts
+                      layout, themes, photo, buttons, fonts
                     </span>
                   </span>
                   <Chevron open={designOpen} />

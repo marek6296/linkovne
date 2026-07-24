@@ -164,7 +164,7 @@ function LinkBlock({
 
   const animation = cfg.anim ?? theme.btnAnimation ?? "none";
   const anim = ANIM_CLASS[animation] ?? "";
-  const base = `block min-w-0 max-w-full w-full overflow-hidden font-medium transition duration-200 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.985] ${anim}`;
+  const base = `profile-link block min-w-0 max-w-full w-full overflow-hidden font-medium transition duration-200 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.985] ${anim}`;
 
   const iconKey = cfg.icon as IconKey | undefined;
   const showIcon = !image && iconKey && ICON_KEYS.includes(iconKey);
@@ -622,12 +622,16 @@ export function BlockList({
   };
 
   const renderRows = (items: Block[], forceGrid = false) => (
-    <div className={forceGrid ? "grid grid-cols-2 gap-3" : "flex flex-col gap-3"}>
+    <div
+      className={forceGrid ? "grid grid-cols-2" : "flex flex-col"}
+      style={{ gap: theme.blockGap ?? "0.75rem" }}
+    >
       {makeRows(items).map((row) =>
         row.length === 2 || isHalf(row[0]) ? (
           <div
             key={row[0].id}
-            className={forceGrid ? "contents" : "grid grid-cols-2 gap-3"}
+            className={forceGrid ? "contents" : "grid grid-cols-2"}
+            style={forceGrid ? undefined : { gap: theme.blockGap ?? "0.75rem" }}
           >
             {row.map(selectable)}
           </div>
@@ -639,7 +643,10 @@ export function BlockList({
   );
 
   return (
-    <div className="flex flex-col gap-3">
+    <div
+      className="flex flex-col"
+      style={{ gap: theme.blockGap ?? "0.75rem" }}
+    >
       {groups.map((group, index) => {
         if (!group.section) return <div key={`root-${index}`}>{renderRows(group.items)}</div>;
         const cfg = group.section.config;
@@ -689,57 +696,121 @@ export function ProfileHeader({
     background: theme.avatarBg,
     boxShadow: avatarShadow,
   };
-  const content = (
-    <>
-      {avatarUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={avatarUrl}
-          alt=""
-          className="mx-auto"
-          style={{
-            ...avatarStyle,
-            objectFit: theme.avatarFit ?? "cover",
-            objectPosition: theme.avatarPosition ?? "center",
-          }}
-        />
-      ) : (
-        <div
-          className="mx-auto flex items-center justify-center text-4xl"
-          style={{
-            ...avatarStyle,
-            background: theme.avatarBg,
-            color: theme.avatarText,
-            fontFamily: theme.fontHeading ?? theme.font,
-          }}
-        >
-          {initial}
-        </div>
-      )}
+  const layout = theme.profileLayout ?? "centered";
+  const avatar = (className: string, style = avatarStyle) =>
+    avatarUrl ? (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={avatarUrl}
+        alt=""
+        className={className}
+        style={{
+          ...style,
+          objectFit: theme.avatarFit ?? "cover",
+          objectPosition: theme.avatarPosition ?? "center",
+        }}
+      />
+    ) : (
+      <div
+        className={`${className} flex items-center justify-center text-4xl`}
+        style={{
+          ...style,
+          background: theme.avatarBg,
+          color: theme.avatarText,
+          fontFamily: theme.fontHeading ?? theme.font,
+        }}
+      >
+        {initial}
+      </div>
+    );
 
+  const identity = (
+    <>
       {hasName && (
-        <h1
-          className="mt-5 text-2xl font-semibold tracking-tight"
-          style={{ fontFamily: theme.fontHeading ?? theme.font }}
-        >
-          {displayName}
-        </h1>
+        <>
+          <h1
+            className="profile-name"
+            style={{ fontFamily: theme.fontHeading ?? theme.font }}
+          >
+            {displayName}
+          </h1>
+          <p className="profile-handle" style={{ color: theme.muted }}>
+            @{username}
+          </p>
+        </>
       )}
       {bio && (
-        <p
-          className={`text-[15px] leading-relaxed text-pretty ${hasName ? "mt-2" : "mt-5"}`}
-          style={{ color: theme.muted }}
-        >
+        <p className="profile-bio" style={{ color: theme.muted }}>
           {bio}
         </p>
       )}
     </>
   );
+
+  let content: React.ReactNode;
+  if (layout === "hero") {
+    content = (
+      <div
+        className="profile-header-hero"
+        style={{
+          border: theme.avatarBorder,
+          boxShadow: avatarShadow,
+        }}
+      >
+        {avatar("profile-hero-image", {
+          width: "100%",
+          height: "100%",
+          borderRadius: 0,
+          border: 0,
+          boxShadow: "none",
+          background: theme.avatarBg,
+        })}
+        <span aria-hidden className="profile-hero-scrim" />
+        <div className="profile-hero-identity">
+          {hasName && (
+            <>
+              <h1
+                className="profile-name"
+                style={{ fontFamily: theme.fontHeading ?? theme.font }}
+              >
+                {displayName}
+              </h1>
+              <p className="profile-handle">@{username}</p>
+            </>
+          )}
+          {bio && <p className="profile-bio">{bio}</p>}
+        </div>
+      </div>
+    );
+  } else if (layout === "compact") {
+    const compactWidth = Math.min(avatarWidth, 96);
+    const compactHeight = Math.min(avatarHeight, 112);
+    content = (
+      <div className="profile-header-compact">
+        {avatar("profile-compact-avatar", {
+          ...avatarStyle,
+          width: compactWidth,
+          height: compactHeight,
+        })}
+        <div className="min-w-0 flex-1 text-left">{identity}</div>
+      </div>
+    );
+  } else {
+    content = (
+      <div className="profile-header-centered">
+        {avatar("mx-auto", avatarStyle)}
+        {identity}
+      </div>
+    );
+  }
+
+  const className =
+    "profile-header-selectable w-full rounded-[1.75rem] outline-none ring-offset-2 transition";
   return onSelect ? (
-    <button type="button" onClick={onSelect} className="w-full rounded-2xl text-center outline-none ring-offset-2 transition hover:ring-2 hover:ring-current/30 focus-visible:ring-2">
+    <button type="button" onClick={onSelect} className={className}>
       {content}
     </button>
   ) : (
-    <div className="text-center">{content}</div>
+    <div className={className}>{content}</div>
   );
 }

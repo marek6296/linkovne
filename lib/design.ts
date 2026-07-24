@@ -17,6 +17,8 @@ export type BtnBorder = "none" | "thin" | "bold";
 export type BtnSpacing = "compact" | "normal" | "relaxed";
 export type BtnWeight = "regular" | "medium" | "bold";
 export type BtnAnimation = LinkAnim;
+export type ProfileLayout = "centered" | "compact" | "hero";
+export type ContentWidth = "focused" | "balanced" | "wide";
 export type AvatarShape = "circle" | "rounded" | "square" | "organic";
 export type AvatarSize = "xs" | "sm" | "md" | "lg" | "xl";
 export type AvatarAspect = "square" | "portrait" | "landscape" | "wide";
@@ -38,6 +40,9 @@ export type FontKey =
   | "syne";
 
 export type Design = {
+  /** Overall page composition, independent from colors and typography. */
+  profileLayout?: ProfileLayout;
+  contentWidth?: ContentWidth;
   bg?: BgMode;
   bgColor?: string;
   bgColor2?: string;
@@ -138,6 +143,33 @@ export const BTN_SPACING: Record<BtnSpacing, { label: string; gap: string }> = {
   compact: { label: "Compact", gap: "0.5rem" },
   normal: { label: "Balanced", gap: "0.75rem" },
   relaxed: { label: "Airy", gap: "1.125rem" },
+};
+
+export const PROFILE_LAYOUTS: Record<
+  ProfileLayout,
+  { label: string; hint: string }
+> = {
+  centered: {
+    label: "Portrait",
+    hint: "A polished, centered profile that keeps every link in focus.",
+  },
+  compact: {
+    label: "Compact",
+    hint: "Photo and introduction sit side by side for a tighter first view.",
+  },
+  hero: {
+    label: "Spotlight",
+    hint: "Turns the profile photo into a cinematic cover with text on top.",
+  },
+};
+
+export const CONTENT_WIDTHS: Record<
+  ContentWidth,
+  { label: string; content: number; card: number }
+> = {
+  focused: { label: "Focused", content: 368, card: 424 },
+  balanced: { label: "Balanced", content: 424, card: 480 },
+  wide: { label: "Wide", content: 480, card: 536 },
 };
 
 export const BTN_WEIGHTS: Record<BtnWeight, { label: string; value: number }> = {
@@ -336,6 +368,17 @@ export function resolveTheme(
   }
   if (design.btnAnimation && design.btnAnimation in BTN_ANIMATIONS) {
     t.btnAnimation = design.btnAnimation;
+  }
+  if (design.btnSpacing && design.btnSpacing in BTN_SPACING) {
+    t.blockGap = BTN_SPACING[design.btnSpacing].gap;
+  }
+
+  if (design.profileLayout && design.profileLayout in PROFILE_LAYOUTS) {
+    t.profileLayout = design.profileLayout;
+  }
+  if (design.contentWidth && design.contentWidth in CONTENT_WIDTHS) {
+    t.contentWidthPx = CONTENT_WIDTHS[design.contentWidth].content;
+    t.cardWidthPx = CONTENT_WIDTHS[design.contentWidth].card;
   }
 
   if (design.font && design.font in FONTS) t.font = FONTS[design.font].css;

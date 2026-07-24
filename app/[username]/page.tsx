@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { CSSProperties } from "react";
 import { notFound } from "next/navigation";
 import { createPublicClient } from "@/lib/supabase/public";
 import { BlockList, ProfileHeader } from "@/components/blocks/render";
@@ -142,15 +143,24 @@ export default async function PublicProfilePage({
   // branding nevypol (plan.hideBranding = smie skryt, hide_branding = vypnute).
   const brandingVisible = !(plan.hideBranding && profile.hide_branding);
   const displayName = snap.display_name || profile.username;
+  const profileLayout = theme.profileLayout ?? "centered";
+  const profileStyle = {
+    background: theme.page,
+    color: theme.text,
+    fontFamily: theme.font,
+    "--profile-card-width": `${theme.cardWidthPx ?? 480}px`,
+    "--profile-content-width": `${theme.contentWidthPx ?? 424}px`,
+    "--profile-block-gap": theme.blockGap ?? "0.75rem",
+  } as CSSProperties;
 
   return (
-    <div className="relative min-h-dvh sm:flex sm:items-center sm:justify-center sm:p-8">
+    <div className="profile-stage">
       {/* Pozadie za kartou na PC (desktop backdrop). Default „auto" = rozmazany
           glow z pozadia karty; da sa prebit farbou/gradientom/fotkou (Pro).
           Na mobile skryte — karta je cela obrazovka. */}
       <div
         aria-hidden
-        className="fixed inset-0 z-0 hidden sm:block"
+        className="profile-desktop-backdrop"
         style={{
           background: theme.deskBg ?? theme.page,
           ...(theme.deskBlur !== false
@@ -158,16 +168,13 @@ export default async function PublicProfilePage({
             : null),
         }}
       />
+      <div aria-hidden className="profile-desktop-shade" />
 
       {/* Karta profilu. Mobile: cela obrazovka. Desktop: vysoky telefonovy tvar
           — vycentrovany, zaobleny, s tienom. */}
       <main
-        className="relative z-10 flex min-h-dvh w-full flex-col items-center px-6 py-12 sm:min-h-[calc(100dvh-4rem)] sm:w-[27rem] sm:max-w-[27rem] sm:overflow-hidden sm:rounded-[2.5rem] sm:shadow-[0_30px_90px_-25px_rgba(0,0,0,0.55)] sm:ring-1 sm:ring-black/10"
-        style={{
-          background: theme.page,
-          color: theme.text,
-          fontFamily: theme.font,
-        }}
+        className="profile-card"
+        style={profileStyle}
       >
         {/* In-app escape gate — MUSI byt prvy v <main>, aby jeho inline skript
             bezal pred vykreslenim obsahu (ziadny flash). */}
@@ -208,7 +215,9 @@ export default async function PublicProfilePage({
 
       {/* Obsah je v hornej casti (profil „ide od hora"), linky sa pridavaju pod
           neho. „Powered by" ostava dole cez mt-auto na footeri. */}
-      <div className="relative z-10 flex w-full max-w-[26rem] flex-col pt-[8vh] sm:pt-[7vh]">
+      <div
+        className={`profile-content profile-content--${profileLayout}`}
+      >
         <div className="reveal">
           <ProfileHeader
             displayName={snap.display_name}
@@ -218,7 +227,7 @@ export default async function PublicProfilePage({
             theme={theme}
           />
 
-          <div className="mt-9">
+          <div className="profile-links">
             <BlockList
               blocks={blockList}
               theme={theme}
@@ -239,12 +248,12 @@ export default async function PublicProfilePage({
       </div>
 
       {brandingVisible && (
-        <footer className="relative z-10 mt-auto pt-8 pb-1">
+        <footer className="profile-footer">
           <a
             href={SITE_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-[11px] tracking-wide opacity-70 transition hover:opacity-100"
+            className="profile-branding"
             style={{ color: theme.muted }}
           >
             <LogoMark className="h-3.5 w-3.5" />
