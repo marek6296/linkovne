@@ -63,7 +63,7 @@ async function requireProfile(profileId: string) {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, owner_id")
+    .select("id, owner_id, username")
     .eq("id", profileId)
     .maybeSingle();
 
@@ -75,7 +75,7 @@ async function requireProfile(profileId: string) {
     .eq("id", user.id)
     .maybeSingle();
 
-  return { supabase, user, plan: planOf(account?.plan) };
+  return { supabase, user, profile, plan: planOf(account?.plan) };
 }
 
 export type RedeemGrant = {
@@ -379,7 +379,7 @@ export async function setHideBranding(
 export async function publishProfile(
   profileId: string,
 ): Promise<ActionState> {
-  const { supabase } = await requireProfile(profileId);
+  const { supabase, profile } = await requireProfile(profileId);
   const { error } = await supabase.rpc("publish_profile", {
     p_profile_id: profileId,
   });
@@ -388,6 +388,7 @@ export async function publishProfile(
     return { error: "Couldn't publish your page. Please try again." };
   }
   revalidatePath("/dashboard");
+  revalidatePath(`/${profile.username}`);
   revalidatePath("/[username]", "page");
   return undefined;
 }
@@ -395,7 +396,7 @@ export async function publishProfile(
 export async function unpublishProfile(
   profileId: string,
 ): Promise<ActionState> {
-  const { supabase } = await requireProfile(profileId);
+  const { supabase, profile } = await requireProfile(profileId);
   const { error } = await supabase.rpc("unpublish_profile", {
     p_profile_id: profileId,
   });
@@ -404,6 +405,7 @@ export async function unpublishProfile(
     return { error: "Couldn't unpublish your page. Please try again." };
   }
   revalidatePath("/dashboard");
+  revalidatePath(`/${profile.username}`);
   revalidatePath("/[username]", "page");
   return undefined;
 }

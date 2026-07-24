@@ -77,7 +77,7 @@ function TemplateCard({
           <svg viewBox="0 0 20 20" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden>
             <path d="M4 10.5l4 4 8-9" />
           </svg>
-          Applied
+          In preview
         </span>
       ) : locked ? (
         <span className="absolute top-2.5 right-2.5 z-20 rounded-full bg-[#d7b46a] px-2 py-1 text-[9px] font-bold tracking-wider text-[#211a10] uppercase shadow">
@@ -270,7 +270,9 @@ export function TemplateGrid({
             </svg>
             <span className="text-ink">
               <span className="font-semibold">{activeTemplate.label}</span> is
-              applied. Pick another to switch.
+              {activeTemplate.premium && !canUsePremium
+                ? " preview-only on your current plan. Pro is required to publish it."
+                : " in your draft preview. Publish to make it live."}
             </span>
           </div>
         )}

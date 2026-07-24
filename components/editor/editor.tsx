@@ -24,6 +24,7 @@ import {
   defaultConfig,
   type Block,
   type BlockType,
+  isVisibleNow,
 } from "@/lib/blocks";
 import { THEMES, THEME_KEYS } from "@/lib/themes";
 import { resolveTheme, type Design } from "@/lib/design";
@@ -70,6 +71,7 @@ type ProfileState = {
   link_shield: boolean;
   escape_inapp: boolean;
   creator_mode: boolean;
+  hide_branding: boolean;
 };
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
@@ -569,6 +571,8 @@ export function Editor({
   // Preview ukazuje presne lokalny draft, aj ked obsahuje Pro funkcie. Server
   // ich na Free nikdy neulozi a publish toolbar presne vypise, co blokuje live.
   const theme = resolveTheme(profile.theme, profile.design);
+  const previewBlocks = blocks.filter(isVisibleNow);
+  const previewBranding = !(plan.hideBranding && profile.hide_branding);
   return (
     <div>
       {/* Mobile tabs */}
@@ -1050,8 +1054,9 @@ export function Editor({
             username={profile.username}
             bio={profile.bio}
             avatarUrl={profile.avatar_url}
-            blocks={blocks}
+            blocks={previewBlocks}
             theme={theme}
+            showBranding={previewBranding}
             onSelect={selectFromPreview}
           />
         </div>

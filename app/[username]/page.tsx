@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import type { CSSProperties } from "react";
 import { notFound } from "next/navigation";
 import { createPublicClient } from "@/lib/supabase/public";
 import { BlockList, ProfileHeader } from "@/components/blocks/render";
@@ -9,7 +8,8 @@ import { AgeGate } from "@/components/blocks/age-gate";
 import { InAppBanner } from "@/components/blocks/inapp-banner";
 import { InAppEscape } from "@/components/blocks/inapp-escape";
 import { ProfileWidgets } from "@/components/blocks/profile-widgets";
-import { LogoMark } from "@/components/logo-mark";
+import { ProfileDesktopBackdrop } from "@/components/profile/profile-desktop-backdrop";
+import { ProfileShell } from "@/components/profile/profile-shell";
 import { resolveTheme, type Design } from "@/lib/design";
 import { BRAND_TITLE, SITE_URL, SITE_DOMAIN, stripAltPrefix } from "@/lib/site";
 import { planOf } from "@/lib/plans";
@@ -160,51 +160,20 @@ export default async function PublicProfilePage({
   const brandingVisible = !(plan.hideBranding && profile.hide_branding);
   const displayName = snap.display_name || profile.username;
   const profileLayout = theme.profileLayout ?? "centered";
-  const profileStyle = {
-    background: theme.page,
-    color: theme.text,
-    fontFamily: theme.font,
-    "--profile-card-width": `${theme.cardWidthPx ?? 480}px`,
-    "--profile-content-width": `${theme.contentWidthPx ?? 424}px`,
-    "--profile-block-gap": theme.blockGap ?? "0.75rem",
-  } as CSSProperties;
 
   return (
     <div className="profile-stage">
-      {/* Pozadie za kartou na PC (desktop backdrop). Default „auto" = rozmazany
-          glow z pozadia karty; da sa prebit farbou/gradientom/fotkou (Pro).
-          Na mobile skryte — karta je cela obrazovka. */}
-      <div
-        aria-hidden
-        className="profile-desktop-backdrop"
-        style={{
-          background: theme.deskBg ?? theme.page,
-          ...(theme.deskBlur !== false
-            ? { filter: "blur(64px) brightness(0.72)", transform: "scale(1.35)" }
-            : null),
-        }}
-      />
-      <div aria-hidden className="profile-desktop-shade" />
+      <ProfileDesktopBackdrop theme={theme} />
 
       {/* Karta profilu. Mobile: cela obrazovka. Desktop: vysoky telefonovy tvar
-          — vycentrovany, zaobleny, s tienom. */}
-      <main
-        className="profile-card"
-        style={profileStyle}
+          — vycentrovany, zaobleny, s tienom. In-app escape gate ide cez
+          `leading`, aby bol vzdy uplne prvy v <main> a nevznikol flash. */}
+      <ProfileShell
+        theme={theme}
+        showBranding={brandingVisible}
+        brandingHref={SITE_URL}
+        leading={escapeEnabled ? <InAppEscape /> : undefined}
       >
-        {/* In-app escape gate — MUSI byt prvy v <main>, aby jeho inline skript
-            bezal pred vykreslenim obsahu (ziadny flash). */}
-        {escapeEnabled && <InAppEscape />}
-
-      {/* Jemne dekorativne pozadie — dava profilu hlbku namiesto plochej farby */}
-      {theme.glow && (
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0"
-          style={{ background: theme.glow }}
-        />
-      )}
-
       <ViewBeacon profileId={profile.id} />
       {profile.age_gate && (
         <AgeGate username={profile.username} theme={theme} />
@@ -275,26 +244,7 @@ export default async function PublicProfilePage({
         </div>
       </div>
 
-      {brandingVisible && (
-        <footer className="profile-footer">
-          <a
-            href={SITE_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="profile-branding"
-            style={{ color: theme.muted }}
-          >
-            <LogoMark className="h-3.5 w-3.5" />
-            <span>
-              Powered by{" "}
-              <span className="font-semibold" style={{ color: theme.text }}>
-                {BRAND_TITLE}
-              </span>
-            </span>
-          </a>
-        </footer>
-      )}
-      </main>
+      </ProfileShell>
     </div>
   );
 }
