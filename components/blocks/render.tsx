@@ -1,3 +1,5 @@
+"use client";
+
 import {
   ANIM_CLASS,
   socialHref,
@@ -11,7 +13,6 @@ import {
   type SocialPlatform,
 } from "@/lib/blocks";
 import { Icon, ICON_KEYS, type IconKey } from "@/components/blocks/icon";
-import { CloakText } from "@/components/blocks/cloak-text";
 import { BTN_SIZES, type Theme } from "@/lib/themes";
 import {
   BTN_BORDERS,
@@ -366,21 +367,21 @@ function TipBlock({
 export function BlockList({
   blocks,
   theme,
-  hrefFor,
   profileId,
   preview = false,
   onSelect,
 }: {
   blocks: Block[];
   theme: Theme;
-  /** Public page routes clicks through /r/{id}; preview links nowhere. */
-  hrefFor: (block: Block) => string;
   profileId: string;
   /** In the editor nothing is actually submitted. */
   preview?: boolean;
   onSelect?: (blockId: string) => void;
 }) {
   const active = blocks.filter((b) => b.is_active);
+
+  // Public page routes clicks through /r/{id}; v editor preview linky nikam.
+  const hrefFor = (block: Block) => (preview ? "#" : `/r/${block.id}`);
 
   const isHalf = (b: Block | undefined) =>
     !!b && b.type === "link" && b.config.width === "half";
@@ -665,7 +666,6 @@ export function ProfileHeader({
   avatarUrl,
   theme,
   onSelect,
-  cloakBio = false,
 }: {
   displayName: string | null;
   username: string;
@@ -673,11 +673,7 @@ export function ProfileHeader({
   avatarUrl: string | null;
   theme: Theme;
   onSelect?: () => void;
-  /** Stealth mode — bio sa vykreslí až client-side (crawler ho v HTML nevidí). */
-  cloakBio?: boolean;
 }) {
-  // Bio: v stealth mode ho vlozime az po mount (crawler-clean SSR HTML).
-  const bioInner = bio ? (cloakBio ? <CloakText text={bio} /> : bio) : null;
   // Prazdne display name = klient ho vypol (chce iba foto + tlacidla).
   // Fallback na username je len pre iniciálu v placeholder avatare, nikdy sa
   // nezobrazuje ako text mena.
@@ -747,7 +743,7 @@ export function ProfileHeader({
       )}
       {bio && (
         <p className="profile-bio" style={{ color: theme.muted }}>
-          {bioInner}
+          {bio}
         </p>
       )}
     </>
@@ -784,7 +780,7 @@ export function ProfileHeader({
               <p className="profile-handle">@{username}</p>
             </>
           )}
-          {bio && <p className="profile-bio">{bioInner}</p>}
+          {bio && <p className="profile-bio">{bio}</p>}
         </div>
       </div>
     );

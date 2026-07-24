@@ -3,6 +3,7 @@ import type { CSSProperties } from "react";
 import { notFound } from "next/navigation";
 import { createPublicClient } from "@/lib/supabase/public";
 import { BlockList, ProfileHeader } from "@/components/blocks/render";
+import { StealthContent } from "@/components/blocks/stealth-content";
 import { ViewBeacon } from "@/components/view-beacon";
 import { AgeGate } from "@/components/blocks/age-gate";
 import { InAppBanner } from "@/components/blocks/inapp-banner";
@@ -234,31 +235,42 @@ export default async function PublicProfilePage({
         className={`profile-content profile-content--${profileLayout}`}
       >
         <div className="reveal">
+          {/* Stealth: bio sa do SSR nedava (crawler ho nema kde najst) —
+              meno + fotka ostavaju, zvysok dotiahne StealthContent. */}
           <ProfileHeader
             displayName={snap.display_name}
             username={profile.username}
-            bio={snap.bio}
+            bio={stealth ? null : snap.bio}
             avatarUrl={snap.avatar_url}
             theme={theme}
-            cloakBio={stealth}
           />
 
-          <div className="profile-links">
-            <BlockList
-              blocks={blockList}
-              theme={theme}
-              hrefFor={(b) => `/r/${b.id}`}
+          {stealth ? (
+            // Bio + bloky sa doťahujú až client-side (nie su v zdrojaku profilu).
+            <StealthContent
+              username={profile.username}
               profileId={profile.id}
+              mutedColor={theme.muted}
             />
-          </div>
+          ) : (
+            <>
+              <div className="profile-links">
+                <BlockList
+                  blocks={blockList}
+                  theme={theme}
+                  profileId={profile.id}
+                />
+              </div>
 
-          {blockList.length === 0 && (
-            <p
-              className="mt-9 text-center text-sm"
-              style={{ color: theme.muted }}
-            >
-              No links here yet.
-            </p>
+              {blockList.length === 0 && (
+                <p
+                  className="mt-9 text-center text-sm"
+                  style={{ color: theme.muted }}
+                >
+                  No links here yet.
+                </p>
+              )}
+            </>
           )}
         </div>
       </div>

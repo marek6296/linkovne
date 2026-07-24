@@ -128,7 +128,6 @@ export function Preview({
               <BlockList
                 blocks={blocks}
                 theme={theme}
-                hrefFor={() => "#"}
                 profileId={profileId}
                 preview
                 onSelect={onSelect ? (id) => onSelect({ kind: "block", id }) : undefined}
