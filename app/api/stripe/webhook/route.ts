@@ -115,9 +115,12 @@ async function applySubscription(sub: Stripe.Subscription, userId?: string) {
 
 /**
  * Odmena za referral po prvej platbe privedeneho usera.
- *  • Free referrer → grant Pro cez plan_expires_at (uz spravi RPC).
- *  • Platiaci referrer → kredit priamo v Stripe (N × mesacna cena Pro), aby to
- *    neprepisalo jeho aktivne predplatne. Kredit sa odpocita z dalsej faktury.
+ *  • Free referrer → grant Pro cez plan_expires_at (atomicky spravi RPC, hned
+ *    'rewarded').
+ *  • Platiaci referrer → RPC referral len ZAMKNE do stavu 'claiming' a kredit
+ *    pripiseme v Stripe (N × mesacna cena Pro). AZ po uspesnom kredite ho
+ *    confirm posunie na 'rewarded'; pri zlyhani release vrati na 'pending',
+ *    takze sa odmena neztrati — zopakuje sa pri dalsej platbe.
  */
 async function rewardReferrer(referredUserId: string) {
   const supabase = admin();
@@ -131,22 +134,28 @@ async function rewardReferrer(referredUserId: string) {
     months: number;
   } | null;
 
-  if (!reward || !reward.paying || !reward.stripe_customer_id || !stripe) return;
+  // Nic na spracovanie, alebo neplatiaci referrer (uz odmeneny v RPC).
+  if (!reward || !reward.paying) return;
 
-  // Platiaci referrer — pripis kredit vo vyske N mesiacov Pro.
+  // Od tohto bodu je referral v stave 'claiming' — musime ho uzavriet.
   try {
+    if (!stripe || !reward.stripe_customer_id) throw new Error("stripe not ready");
     const priceId = process.env.STRIPE_PRICE_PRO;
-    if (!priceId) return;
+    if (!priceId) throw new Error("missing STRIPE_PRICE_PRO");
     const price = await stripe.prices.retrieve(priceId);
     const unit = price.unit_amount ?? 0;
-    if (unit <= 0) return;
+    if (unit <= 0) throw new Error("invalid Pro price");
     await stripe.customers.createBalanceTransaction(reward.stripe_customer_id, {
       amount: -(unit * reward.months), // zaporne = kredit v prospech zakaznika
       currency: price.currency,
       description: `Referral reward — ${reward.months} months Pro`,
     });
+    // Kredit presiel → definitivne oznac ako odmenene.
+    await supabase.rpc("confirm_referral_reward", { p_referred_id: referredUserId });
   } catch (e) {
-    console.error("referral stripe credit failed:", e);
+    // Kredit zlyhal → vrat na 'pending', nech sa odmena neztrati (retry).
+    console.error("referral stripe credit failed, releasing for retry:", e);
+    await supabase.rpc("release_referral_reward", { p_referred_id: referredUserId });
   }
 }
 
