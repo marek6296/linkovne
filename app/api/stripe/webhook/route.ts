@@ -177,9 +177,9 @@ export async function POST(request: NextRequest) {
           );
           await applySubscription(sub, userId ?? undefined);
         }
-        // Referral: prva platba privedeneho usera → odmena tomu, kto ho pozval.
-        // Idempotentne — RPC odmeni len ak referral este ceka (status pending).
-        if (userId) await rewardReferrer(userId);
+        // Referral odmenu riesime v `invoice.paid` (az ked realne prisli
+        // peniaze), nie tu — 100% zlavovy kod vytvori session s amount €0 a
+        // odmena nesmie padnut bez skutocnej platby.
         break;
       }
       case "customer.subscription.updated":
@@ -189,29 +189,33 @@ export async function POST(request: NextRequest) {
         break;
       }
       case "invoice.paid": {
-        // Uspesna OBNOVA (nie prva platba — tu uz je upgrade zalogovany) →
-        // signal "plati dalej". Prve invoice pri zalozeni preskocime.
         const inv = event.data.object as Stripe.Invoice;
         const reason = (inv as unknown as { billing_reason?: string }).billing_reason;
-        // Realne zaplatena suma (po zlave) = mesacne MRR uctu. Ukladame ju pri
-        // zalozeni aj obnove, nech admin metriky ukazu skutocny prijem (nie
-        // fixnu cenu planu). €0 pri 100% zlave je spravne 0.
-        if (
-          inv.customer &&
-          (reason === "subscription_create" || reason === "subscription_cycle")
-        ) {
+        const isSubInvoice =
+          reason === "subscription_create" || reason === "subscription_cycle";
+        if (inv.customer && isSubInvoice) {
+          // Realne zaplatena suma (po zlave) = mesacne MRR uctu. €0 pri 100%
+          // zlave je spravne 0.
           await admin()
             .from("accounts")
             .update({ mrr_cents: inv.amount_paid })
             .eq("stripe_customer_id", String(inv.customer));
-        }
-        if (inv.customer && reason === "subscription_cycle") {
+
           const acct = await accountByCustomer(String(inv.customer));
           if (acct) {
-            await logEvent(acct.id, "payment_succeeded", acct.plan, acct.plan, {
-              amount: inv.amount_paid,
-              currency: inv.currency,
-            });
+            // Referral odmena — az ked privedeny user REALNE zaplatil
+            // (amount_paid > 0). 100% zlava = €0 → referrer NEDOSTANE odmenu.
+            // Idempotentne: RPC odmeni len raz (pending → rewarded).
+            if ((inv.amount_paid ?? 0) > 0) await rewardReferrer(acct.id);
+
+            // Uspesna OBNOVA → signal „plati dalej". Prvu platbu (subscription_
+            // create) nelogujeme — upgrade uz zalogoval subscription.updated.
+            if (reason === "subscription_cycle") {
+              await logEvent(acct.id, "payment_succeeded", acct.plan, acct.plan, {
+                amount: inv.amount_paid,
+                currency: inv.currency,
+              });
+            }
           }
         }
         break;
