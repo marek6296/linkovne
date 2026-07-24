@@ -35,6 +35,7 @@ import {
   saveProfile,
   setLinkShield,
   setEscapeInApp,
+  setCreatorMode,
 } from "@/app/dashboard/actions";
 import { uploadImage } from "@/lib/upload";
 import { AiDraft } from "@/components/editor/ai-draft";
@@ -60,6 +61,7 @@ type ProfileState = {
   design: Design;
   link_shield: boolean;
   escape_inapp: boolean;
+  creator_mode: boolean;
 };
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
@@ -207,6 +209,7 @@ export function Editor({
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [shieldBusy, setShieldBusy] = useState(false);
   const [escapeBusy, setEscapeBusy] = useState(false);
+  const [creatorBusy, setCreatorBusy] = useState(false);
   const [profileOpen, setProfileOpen] = useState(true);
   const [blocksOpen, setBlocksOpen] = useState(true);
   const [openBlockId, setOpenBlockId] = useState<string | null>(null);
@@ -330,6 +333,17 @@ export function Editor({
       setNotice(res.error);
     }
     setEscapeBusy(false);
+  }
+
+  async function toggleCreator(next: boolean) {
+    setCreatorBusy(true);
+    setProfile((p) => ({ ...p, creator_mode: next }));
+    const res = await setCreatorMode(profile.id, next);
+    if (res?.error) {
+      setProfile((p) => ({ ...p, creator_mode: !next }));
+      setNotice(res.error);
+    }
+    setCreatorBusy(false);
   }
 
   function addBlock(type: BlockType) {
@@ -676,6 +690,12 @@ export function Editor({
                     <TemplateGrid
                       onPick={(t) => applyTemplate(t)}
                       selectedKey={appliedTemplate}
+                      canUsePremium={plan.customDesign}
+                      onLocked={(t) =>
+                        setNotice(
+                          `${t.label} uses an original image background and is available on Pro.`,
+                        )
+                      }
                     />
                   </div>
                 </Collapse>
@@ -760,6 +780,7 @@ export function Editor({
               badge={(() => {
                 if (!plan.linkShield && !plan.escapeInApp) return <Lock />;
                 const n =
+                  (plan.creatorMode && profile.creator_mode ? 1 : 0) +
                   (plan.linkShield && profile.link_shield ? 1 : 0) +
                   (plan.escapeInApp && profile.escape_inapp ? 1 : 0);
                 return n > 0 ? (
@@ -771,8 +792,50 @@ export function Editor({
             >
               {plan.linkShield || plan.escapeInApp ? (
                 <div className="divide-y divide-line">
+                  {/* Creator / Stealth mode — master ochranny prepinac */}
+                  {plan.creatorMode && (
+                    <div className="pb-5">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="min-w-0">
+                          <p className="flex items-center gap-2 text-sm font-medium">
+                            Creator mode
+                            <span className="rounded-full bg-ink px-2 py-0.5 text-[9px] font-bold tracking-widest text-paper uppercase">
+                              Stealth
+                            </span>
+                          </p>
+                          <p className="mt-1 max-w-md text-xs leading-relaxed text-soft">
+                            One switch for creators (OnlyFans / Fanvue): shields
+                            every link, hides your page from search, keeps your
+                            bio out of link previews and platform crawlers, and
+                            opens links in the real browser.{" "}
+                            <Link
+                              href="/safe"
+                              target="_blank"
+                              className="font-medium text-ink underline underline-offset-2"
+                            >
+                              Safe sharing guide →
+                            </Link>
+                          </p>
+                        </div>
+                        <Switch
+                          on={profile.creator_mode}
+                          busy={creatorBusy}
+                          onToggle={toggleCreator}
+                        />
+                      </div>
+                      {profile.creator_mode && (
+                        <p className="mt-3 rounded-lg bg-amber-500/10 px-3 py-2 text-xs leading-relaxed text-amber-700">
+                          ⚠️ This lowers the chance your link gets flagged — it
+                          is <strong>not</strong> a guarantee against a ban.
+                          Platforms adapt, and your own content &amp; behaviour
+                          on Instagram/TikTok still matter most.
+                        </p>
+                      )}
+                    </div>
+                  )}
+
                   {/* Link Shield */}
-                  <div className="flex items-start justify-between gap-4 pb-5">
+                  <div className="flex items-start justify-between gap-4 py-5">
                     <div className="min-w-0">
                       <p className="text-sm font-medium">Link Shield</p>
                       <p className="mt-1 max-w-md text-xs leading-relaxed text-soft">

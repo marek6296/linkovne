@@ -26,7 +26,7 @@ export default async function DashboardPage({
   const { data: profiles } = await supabase
     .from("profiles")
     .select(
-      "id, username, display_name, bio, avatar_url, theme, design, link_shield, escape_inapp, is_published, published_at, updated_at",
+      "id, username, display_name, bio, avatar_url, theme, design, link_shield, escape_inapp, creator_mode, is_published, published_at, updated_at",
     )
     .eq("owner_id", user.id)
     .order("created_at");
@@ -145,6 +145,7 @@ export default async function DashboardPage({
             design: (current.design ?? {}) as Design,
             link_shield: current.link_shield === true,
             escape_inapp: current.escape_inapp === true,
+            creator_mode: current.creator_mode === true,
           }}
           initialBlocks={(blocks ?? []) as Block[]}
           brokenLinks={brokenLinks}

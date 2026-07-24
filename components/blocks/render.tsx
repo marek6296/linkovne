@@ -11,6 +11,7 @@ import {
   type SocialPlatform,
 } from "@/lib/blocks";
 import { Icon, ICON_KEYS, type IconKey } from "@/components/blocks/icon";
+import { CloakText } from "@/components/blocks/cloak-text";
 import { BTN_SIZES, type Theme } from "@/lib/themes";
 import {
   BTN_BORDERS,
@@ -664,6 +665,7 @@ export function ProfileHeader({
   avatarUrl,
   theme,
   onSelect,
+  cloakBio = false,
 }: {
   displayName: string | null;
   username: string;
@@ -671,7 +673,11 @@ export function ProfileHeader({
   avatarUrl: string | null;
   theme: Theme;
   onSelect?: () => void;
+  /** Stealth mode — bio sa vykreslí až client-side (crawler ho v HTML nevidí). */
+  cloakBio?: boolean;
 }) {
+  // Bio: v stealth mode ho vlozime az po mount (crawler-clean SSR HTML).
+  const bioInner = bio ? (cloakBio ? <CloakText text={bio} /> : bio) : null;
   // Prazdne display name = klient ho vypol (chce iba foto + tlacidla).
   // Fallback na username je len pre iniciálu v placeholder avatare, nikdy sa
   // nezobrazuje ako text mena.
@@ -741,7 +747,7 @@ export function ProfileHeader({
       )}
       {bio && (
         <p className="profile-bio" style={{ color: theme.muted }}>
-          {bio}
+          {bioInner}
         </p>
       )}
     </>
@@ -778,7 +784,7 @@ export function ProfileHeader({
               <p className="profile-handle">@{username}</p>
             </>
           )}
-          {bio && <p className="profile-bio">{bio}</p>}
+          {bio && <p className="profile-bio">{bioInner}</p>}
         </div>
       </div>
     );

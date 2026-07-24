@@ -243,7 +243,9 @@ export const AVATAR_FRAMES: Record<AvatarFrame, string> = {
  */
 function safeUrl(raw: string | undefined): string | null {
   if (!raw) return null;
-  if (!/^https:\/\//i.test(raw)) return null;
+  const isTemplateAsset =
+    /^\/templates\/[a-z0-9][a-z0-9-]*\.(?:avif|webp|png|jpe?g)$/i.test(raw);
+  if (!isTemplateAsset && !/^https:\/\//i.test(raw)) return null;
   if (/["'()\\<>\s]/.test(raw)) return null;
   return raw;
 }

@@ -46,6 +46,12 @@ export type PlanFeatures = {
   vipLinks: boolean;
   /** Premium editor workspace. */
   sections: boolean;
+  /**
+   * Creator / Stealth mode — opt-in ochranná vrstva pre tvorcov (OnlyFans/
+   * Fanvue). Zapne Link Shield na všetkých linkoch, noindex, očistí metadata a
+   * bio schová pred crawlermi. Nie je garancia — je to ochranná vrstva.
+   */
+  creatorMode: boolean;
 };
 
 export const PLANS: Record<Plan, PlanFeatures> = {
@@ -68,6 +74,7 @@ export const PLANS: Record<Plan, PlanFeatures> = {
     escapeInApp: false,
     vipLinks: false,
     sections: false,
+    creatorMode: false,
   },
   pro: {
     label: "Pro",
@@ -88,6 +95,7 @@ export const PLANS: Record<Plan, PlanFeatures> = {
     escapeInApp: true,
     vipLinks: true,
     sections: true,
+    creatorMode: true,
   },
   business: {
     label: "Business",
@@ -108,6 +116,7 @@ export const PLANS: Record<Plan, PlanFeatures> = {
     escapeInApp: true,
     vipLinks: true,
     sections: true,
+    creatorMode: true,
   },
   admin: {
     label: "Admin",
@@ -128,6 +137,7 @@ export const PLANS: Record<Plan, PlanFeatures> = {
     escapeInApp: true,
     vipLinks: true,
     sections: true,
+    creatorMode: true,
   },
 };
 

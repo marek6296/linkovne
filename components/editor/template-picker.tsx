@@ -16,13 +16,18 @@ import { resolveTheme } from "@/lib/design";
 function TemplateCard({
   t,
   onPick,
+  onLocked,
   selected,
+  locked,
 }: {
   t: Template;
   onPick: (t: Template) => void;
+  onLocked: () => void;
   selected: boolean;
+  locked: boolean;
 }) {
   const theme = resolveTheme(t.theme, t.design);
+  const layout = theme.profileLayout ?? "centered";
   const sourceWidth = theme.avatarWidthPx ?? theme.avatarSizePx ?? 96;
   const sourceHeight = theme.avatarHeightPx ?? theme.avatarSizePx ?? 96;
   const avatarWidth = Math.max(30, Math.min(58, sourceWidth * 0.34));
@@ -55,11 +60,12 @@ function TemplateCard({
   return (
     <button
       type="button"
-      onClick={() => onPick(t)}
+      onClick={() => (locked ? onLocked() : onPick(t))}
       aria-pressed={selected}
+      aria-label={locked ? `${t.label} · Pro template` : undefined}
       className={`group relative overflow-hidden rounded-2xl border bg-surface text-left transition duration-200 hover:-translate-y-1 hover:shadow-[0_14px_34px_rgba(25,24,19,0.13)] ${
         selected
-          ? "border-ink ring-2 ring-ink shadow-[0_14px_34px_rgba(25,24,19,0.16)]"
+          ? "border-ink ring-2 ring-inset ring-ink shadow-[0_14px_34px_rgba(25,24,19,0.16)]"
           : "border-line hover:border-ink"
       }`}
     >
@@ -70,6 +76,10 @@ function TemplateCard({
           </svg>
           Applied
         </span>
+      ) : locked ? (
+        <span className="absolute top-2.5 right-2.5 z-20 rounded-full bg-[#d7b46a] px-2 py-1 text-[9px] font-bold tracking-wider text-[#211a10] uppercase shadow">
+          Pro
+        </span>
       ) : (
         t.featured && (
           <span className="absolute top-2.5 right-2.5 z-20 rounded-full bg-black/70 px-2 py-1 text-[9px] font-bold tracking-wider text-white uppercase backdrop-blur-sm">
@@ -78,7 +88,7 @@ function TemplateCard({
         )
       )}
       <div
-        className="relative flex h-48 flex-col items-center overflow-hidden px-5 pt-5"
+        className="relative flex h-48 flex-col items-center overflow-hidden px-3 pt-4 sm:px-5"
         style={{
           background: theme.page,
           color: theme.text,
@@ -92,29 +102,60 @@ function TemplateCard({
             style={{ background: theme.glow }}
           />
         )}
-        <div className="relative z-10 flex w-full flex-col items-center">
-          {/* Avatar faithfully mirrors aspect, crop shape and frame. */}
+        {layout === "hero" ? (
           <div
+            className="relative z-10 flex h-[88px] w-full shrink-0 items-end overflow-hidden rounded-xl p-3"
             style={{
-              width: avatarWidth,
-              height: avatarHeight,
               background: theme.avatarBg,
-              borderRadius: theme.avatarRadius ?? "999px",
               border: theme.avatarBorder,
-              boxShadow:
-                theme.avatarShadow ??
-                (theme.avatarRing
-                  ? theme.avatarRing.replaceAll("4px", "2px")
-                  : "0 7px 16px -8px rgba(0,0,0,0.45)"),
+              boxShadow: theme.avatarShadow,
             }}
-          />
-          <p
-            className="mt-2 max-w-full truncate text-[13px] font-semibold tracking-tight"
-            style={{ fontFamily: theme.fontHeading ?? theme.font }}
           >
-            Your name
-          </p>
-        </div>
+            <span
+              aria-hidden
+              className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/5 to-transparent"
+            />
+            <p
+              className="relative max-w-full truncate text-[14px] font-bold tracking-tight text-white"
+              style={{ fontFamily: theme.fontHeading ?? theme.font }}
+            >
+              Your name
+            </p>
+          </div>
+        ) : (
+          <div
+            className={`relative z-10 flex w-full ${
+              layout === "compact"
+                ? "items-center gap-2.5"
+                : "flex-col items-center"
+            }`}
+          >
+            {/* Avatar faithfully mirrors aspect, crop shape and frame. */}
+            <div
+              className="shrink-0"
+              style={{
+                width: avatarWidth,
+                height: avatarHeight,
+                background: theme.avatarBg,
+                borderRadius: theme.avatarRadius ?? "999px",
+                border: theme.avatarBorder,
+                boxShadow:
+                  theme.avatarShadow ??
+                  (theme.avatarRing
+                    ? theme.avatarRing.replaceAll("4px", "2px")
+                    : "0 7px 16px -8px rgba(0,0,0,0.45)"),
+              }}
+            />
+            <p
+              className={`min-w-0 max-w-full truncate text-[13px] font-semibold tracking-tight ${
+                layout === "compact" ? "" : "mt-2"
+              }`}
+              style={{ fontFamily: theme.fontHeading ?? theme.font }}
+            >
+              Your name
+            </p>
+          </div>
+        )}
         <div
           className="relative z-10 mt-2 flex w-full flex-col"
           style={{ gap: "6px" }}
@@ -122,12 +163,16 @@ function TemplateCard({
           {previewRows.map((row) => (
             <div
               key={row.map((item) => item.title).join("-")}
-              className={row.length === 2 || row[0].width === "half" ? "grid grid-cols-2 gap-1.5" : ""}
+              className={
+                row.length === 2 || row[0].width === "half"
+                  ? "grid grid-cols-2 gap-1.5"
+                  : ""
+              }
             >
               {row.map((item) => (
                 <div
                   key={item.title}
-                  className="flex h-7 items-center justify-center truncate px-2 text-[9px]"
+                  className="flex h-7 min-w-0 items-center justify-center overflow-hidden px-2 text-[9px]"
                   style={{
                     background: theme.btnBg,
                     color: theme.btnText,
@@ -139,7 +184,9 @@ function TemplateCard({
                     fontWeight: theme.btnWeight ?? 500,
                   }}
                 >
-                  {item.title ?? "Link"}
+                  <span className="min-w-0 truncate">
+                    {item.title ?? "Link"}
+                  </span>
                 </div>
               ))}
             </div>
@@ -163,10 +210,14 @@ function TemplateCard({
 
 export function TemplateGrid({
   onPick,
+  onLocked,
   selectedKey,
+  canUsePremium = true,
 }: {
   onPick: (t: Template) => void;
+  onLocked?: (t: Template) => void;
   selectedKey?: string | null;
+  canUsePremium?: boolean;
 }) {
   type Filter = "Featured" | "All" | Template["category"];
   const [filter, setFilter] = useState<Filter>("Featured");
@@ -195,7 +246,7 @@ export function TemplateGrid({
           <div>
             <p className="text-sm font-semibold">Premium template collection</p>
             <p className="mt-1 text-xs text-soft">
-              A complete, accessible look applied in one click.
+              A complete, art-directed look applied in one click.
             </p>
           </div>
           <span className="shrink-0 text-xs text-faint">
@@ -239,13 +290,15 @@ export function TemplateGrid({
               <p className="mb-2.5 text-xs font-semibold tracking-wide text-faint uppercase">
                 {label}
               </p>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <div className="grid grid-cols-2 gap-3 p-0.5 sm:grid-cols-3">
               {items.map((t) => (
                 <TemplateCard
                   key={t.key}
                   t={t}
                   onPick={onPick}
+                  onLocked={() => onLocked?.(t)}
                   selected={t.key === selectedKey}
+                  locked={t.premium === true && !canUsePremium}
                 />
               ))}
             </div>

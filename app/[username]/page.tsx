@@ -38,6 +38,7 @@ type PublicRow = {
   age_gate: boolean;
   escape_inapp: boolean;
   hide_branding: boolean;
+  creator_mode: boolean;
   plan: string;
 };
 
@@ -80,9 +81,18 @@ export async function generateMetadata({
 
   const snap = profile.snapshot;
   const name = snap?.display_name ?? profile.username;
-  const title = profile.seo_title || `${name} — ${BRAND_TITLE}`;
-  const description =
-    profile.seo_description || snap?.bio || `Links — ${profile.username}`;
+
+  // Stealth (Creator mode): metadata sa ocistia — ziadne bio ani seo texty do
+  // preview/title (mohli by obsahovat nazov platformy / adult keywords) a vzdy
+  // noindex. Crawler/link-preview tak nevidi nic, co by profil oznacilo.
+  const stealth = profile.creator_mode && planOf(profile.plan).creatorMode;
+
+  const title = stealth
+    ? name
+    : profile.seo_title || `${name} — ${BRAND_TITLE}`;
+  const description = stealth
+    ? "Links"
+    : profile.seo_description || snap?.bio || `Links — ${profile.username}`;
 
   // Alias adresy (@mia, -mia …) su len zdielacie varianty — kanonicka je vzdy
   // /mia, alias sa neindexuje (nech nevznikne duplicitny obsah), ale odkazy
@@ -98,9 +108,9 @@ export async function generateMetadata({
     // Jedna kanonicka adresa aj pre pristup cez custom domenu (ziadny
     // duplicitny obsah medzi linkovne.com/user a vlastnou domenou).
     alternates: { canonical: `/${profile.username}` },
-    // Niektori klienti nechcu byt dohladatelni cez Google; alias vzdy noindex.
+    // Stealth aj neindexovatelne aj alias → noindex. Inak default.
     robots:
-      !profile.is_indexable
+      stealth || !profile.is_indexable
         ? { index: false, follow: false, nocache: true }
         : isAlias
           ? { index: false, follow: true }
@@ -135,9 +145,14 @@ export default async function PublicProfilePage({
   // Naplanovane bloky sa filtruju az pri renderi (ISR 60 s = dost jemne)
   const blockList = (snap.blocks ?? []).filter(isVisibleNow);
 
+  // Creator / Stealth mode — ochranna vrstva pre tvorcov (Pro+). Vynuti escape,
+  // cloakne bio (renderuje sa az client-side) a metadata su uz neutralne.
+  const stealth = profile.creator_mode === true && plan.creatorMode;
+
   // Tvrdy escape z in-app prehliadaca (Pro+ funkcia). Ked je zapnuty, gate sa
   // renderuje uz na serveri a skryje obsah okamzite (bez bliknutia profilu).
-  const escapeEnabled = profile.escape_inapp === true && plan.escapeInApp;
+  const escapeEnabled =
+    (profile.escape_inapp === true || stealth) && plan.escapeInApp;
 
   // „Powered by Linkovne" + marketing button — free vzdy, Pro+ len ked si
   // branding nevypol (plan.hideBranding = smie skryt, hide_branding = vypnute).
@@ -225,6 +240,7 @@ export default async function PublicProfilePage({
             bio={snap.bio}
             avatarUrl={snap.avatar_url}
             theme={theme}
+            cloakBio={stealth}
           />
 
           <div className="profile-links">

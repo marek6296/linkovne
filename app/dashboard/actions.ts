@@ -287,6 +287,32 @@ export async function setLinkShield(
 }
 
 /**
+ * Creator / Stealth mode — opt-in ochranná vrstva pre tvorcov. Plati okamzite,
+ * len plateny plan. Zapina Link Shield na vsetkych linkoch, noindex, cloak
+ * metadata + bio. Nie je garancia proti banu — je to ochranna vrstva.
+ */
+export async function setCreatorMode(
+  profileId: string,
+  enabled: boolean,
+): Promise<ActionState> {
+  const { supabase, plan } = await requireProfile(profileId);
+
+  if (!plan.creatorMode) {
+    return { error: "Creator mode needs a paid plan." };
+  }
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ creator_mode: enabled, updated_at: new Date().toISOString() })
+    .eq("id", profileId);
+
+  if (error) return { error: "Couldn't update Creator mode." };
+
+  revalidatePath("/dashboard");
+  return undefined;
+}
+
+/**
  * Auto-escape z in-app prehliadaca — prepinac. Plati okamzite, len plateny plan.
  */
 export async function setEscapeInApp(
