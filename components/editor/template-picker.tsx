@@ -226,7 +226,14 @@ export function TemplateGrid({
 
   const groups =
     filter === "Featured"
-      ? [{ label: "New premium", items: TEMPLATES.filter((t) => t.featured) }]
+      ? [
+          {
+            label: "New premium",
+            items: TEMPLATES.filter((t) => t.featured).sort(
+              (a, b) => Number(b.premium) - Number(a.premium),
+            ),
+          },
+        ]
       : filter === "All"
         ? TEMPLATE_CATEGORIES.map((category) => ({
             label: category,
