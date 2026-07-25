@@ -335,10 +335,6 @@ body {
   box-shadow: none;
 }
 
-.profile-preview .profile-preview-toolbar {
-  padding-inline: 1.25rem;
-}
-
 .profile-preview .profile-content {
   padding-top: 5.25rem;
 }

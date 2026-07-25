@@ -3,7 +3,7 @@
 import type { Block } from "@/lib/blocks";
 import type { Theme } from "@/lib/themes";
 import { BlockList, ProfileHeader } from "@/components/blocks/render";
-import { LogoMark } from "@/components/logo-mark";
+import { ProfileTopControls } from "@/components/profile/profile-top-controls";
 import { ProfileShell } from "@/components/profile/profile-shell";
 import { profileLabel } from "@/lib/site";
 
@@ -35,17 +35,6 @@ export function Preview({
   showBranding?: boolean;
   onSelect?: (target: { kind: "profile" } | { kind: "block"; id: string }) => void;
 }) {
-  // Rovnaky styl plavajucich tlacidiel ako na verejnej stranke — drzi farby,
-  // obrys aj tien/odlesk temy, takze aj tie sedia 1:1.
-  const chip: React.CSSProperties = {
-    background: theme.btnBg,
-    color: theme.btnText,
-    border: theme.btnBorder,
-    boxShadow: theme.btnShadow,
-    backdropFilter: theme.btnBackdrop,
-    WebkitBackdropFilter: theme.btnBackdrop,
-  };
-
   return (
     <div className="profile-preview mx-auto w-full">
       <div className="mb-3">
@@ -59,40 +48,7 @@ export function Preview({
         <div className="profile-preview-viewport">
           <div className="profile-stage">
             <ProfileShell theme={theme} showBranding={showBranding}>
-              <div
-                className="profile-preview-toolbar absolute inset-x-0 top-[18px] z-40 mx-auto flex w-full items-center justify-between"
-                style={{ maxWidth: theme.contentWidthPx ?? 424 }}
-              >
-                {showBranding ? (
-                  <span
-                    className="flex h-11 w-11 items-center justify-center rounded-full"
-                    style={chip}
-                  >
-                    <LogoMark className="h-[22px] w-[22px]" />
-                  </span>
-                ) : (
-                  <span />
-                )}
-                <span
-                  className="flex h-11 w-11 items-center justify-center rounded-full"
-                  style={chip}
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    className="h-[18px] w-[18px]"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden
-                  >
-                    <path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7" />
-                    <path d="M16 6l-4-4-4 4" />
-                    <path d="M12 2v14" />
-                  </svg>
-                </span>
-              </div>
+              <ProfileTopControls theme={theme} showPromo={showBranding} />
 
               <div
                 className={`profile-content profile-content--${

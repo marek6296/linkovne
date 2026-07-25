@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import type { Theme } from "@/lib/themes";
 import { LogoMark } from "@/components/logo-mark";
+import { ProfileTopControls } from "@/components/profile/profile-top-controls";
 
 /**
  * Plavajuce prvky na verejnom profile — rastovy loop pre Linkovne:
@@ -56,15 +57,6 @@ export function ProfileWidgets({
     }, 220);
   }
 
-  const btnStyle: React.CSSProperties = {
-    background: theme.btnBg,
-    color: theme.btnText,
-    border: theme.btnBorder,
-    boxShadow: theme.btnShadow,
-    backdropFilter: theme.btnBackdrop,
-    WebkitBackdropFilter: theme.btnBackdrop,
-  };
-
   const enc = encodeURIComponent;
   const shareTargets = [
     { key: "x", label: "X", href: `https://twitter.com/intent/tweet?text=${enc(name)}&url=${enc(pageUrl)}` },
@@ -89,38 +81,12 @@ export function ProfileWidgets({
 
   return (
     <>
-      {/* Top bar — zarovnany k vrchu karty profilu (na desktope k okrajom karty). */}
-      <div
-        className="absolute inset-x-0 top-[18px] z-40 mx-auto flex w-full items-center justify-between px-5 sm:px-0"
-        style={{ maxWidth: theme.contentWidthPx ?? 424 }}
-      >
-        {showPromo ? (
-          <button
-            type="button"
-            onClick={() => openModal("promo")}
-            aria-label="About linkovne"
-            className="flex h-11 w-11 items-center justify-center rounded-full transition duration-200 hover:-translate-y-0.5 hover:opacity-95 active:translate-y-0 active:scale-95"
-            style={btnStyle}
-          >
-            <LogoMark className="h-[22px] w-[22px]" />
-          </button>
-        ) : (
-          <span />
-        )}
-        <button
-          type="button"
-          onClick={() => openModal("share")}
-          aria-label="Share this page"
-          className="flex h-11 w-11 items-center justify-center rounded-full transition duration-200 hover:-translate-y-0.5 hover:opacity-95 active:translate-y-0 active:scale-95"
-          style={btnStyle}
-        >
-          <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-            <path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7" />
-            <path d="M16 6l-4-4-4 4" />
-            <path d="M12 2v14" />
-          </svg>
-        </button>
-      </div>
+      <ProfileTopControls
+        theme={theme}
+        showPromo={showPromo}
+        onPromo={() => openModal("promo")}
+        onShare={() => openModal("share")}
+      />
 
       {/* Backdrop + modal — fade + slide/scale, rovnaky prechod pri otvoreni aj zatvoreni */}
       {render && (
