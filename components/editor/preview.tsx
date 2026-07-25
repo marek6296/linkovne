@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import type { Block } from "@/lib/blocks";
 import type { Theme } from "@/lib/themes";
 import { BlockList, ProfileHeader } from "@/components/blocks/render";
@@ -36,8 +35,6 @@ export function Preview({
   showBranding?: boolean;
   onSelect?: (target: { kind: "profile" } | { kind: "block"; id: string }) => void;
 }) {
-  const [device, setDevice] = useState<"mobile" | "desktop">("desktop");
-
   // Rovnaky styl plavajucich tlacidiel ako na verejnej stranke — drzi farby,
   // obrys aj tien/odlesk temy, takze aj tie sedia 1:1.
   const chip: React.CSSProperties = {
@@ -50,37 +47,9 @@ export function Preview({
   };
 
   return (
-    <div
-      className={`profile-preview profile-preview--${device} mx-auto w-full`}
-    >
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <div>
-          <p className="text-xs font-semibold text-ink">Responsive preview</p>
-          <p className="text-[11px] text-faint">
-            Check the exact mobile and desktop layout
-          </p>
-        </div>
-        <div
-          className="inline-flex rounded-full border border-line bg-surface p-1"
-          role="group"
-          aria-label="Preview device"
-        >
-          {(["mobile", "desktop"] as const).map((option) => (
-            <button
-              key={option}
-              type="button"
-              onClick={() => setDevice(option)}
-              aria-pressed={device === option}
-              className={`rounded-full px-3 py-1.5 text-xs font-semibold capitalize transition ${
-                device === option
-                  ? "bg-ink text-paper shadow-sm"
-                  : "text-soft hover:text-ink"
-              }`}
-            >
-              {option}
-            </button>
-          ))}
-        </div>
+    <div className="profile-preview mx-auto w-full">
+      <div className="mb-3">
+        <p className="text-xs font-semibold text-ink">Preview</p>
       </div>
 
       <div
@@ -172,9 +141,7 @@ export function Preview({
       </div>
 
       <p className="mt-3 text-center text-xs text-faint">
-        {device === "mobile" ? "Mobile · 390 px" : "Desktop · full card"} draft
-        preview ·{" "}
-        {profileLabel(username)}
+        Draft preview · {profileLabel(username)}
       </p>
     </div>
   );

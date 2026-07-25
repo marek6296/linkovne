@@ -62,9 +62,8 @@ body {
 
 /* Public profile surface
    ----------------------
-   The same profile becomes a clean full-screen canvas on phones and a refined
-   editorial card on larger screens. CSS variables come from the safe design
-   resolver, so layout choices stay in sync with the editor preview. */
+   The profile always keeps one 390 px mobile canvas. Larger screens only add
+   breathing room and a backdrop around it; the layout itself never changes. */
 .profile-stage {
   position: relative;
   display: flex;
@@ -286,14 +285,9 @@ body {
   outline-offset: 3px;
 }
 
-/*
- * The dashboard viewport is always desktop-sized, so media queries alone
- * cannot simulate a real phone inside it. Explicit modes below reproduce the
- * public 390 px mobile canvas and the full desktop card without changing
- * typography or squeezing either layout into the editor column.
- */
+/* The editor renders the same single 390 px canvas as every public profile. */
 .profile-preview {
-  max-width: 536px;
+  max-width: 390px;
 }
 
 .profile-preview-canvas {
@@ -316,27 +310,23 @@ body {
   padding: 0;
 }
 
-.profile-preview--mobile {
-  max-width: 390px;
-}
-
-.profile-preview--mobile .profile-preview-canvas {
+.profile-preview .profile-preview-canvas {
   border-radius: 3rem;
   box-shadow:
     inset 0 0 0 7px #0a0a0a,
     0 24px 65px rgba(25, 24, 19, 0.22);
 }
 
-.profile-preview--mobile .profile-preview-viewport {
+.profile-preview .profile-preview-viewport {
   border-radius: 3rem;
 }
 
-.profile-preview--mobile .profile-stage {
+.profile-preview .profile-stage {
   min-height: 720px;
   align-items: stretch;
 }
 
-.profile-preview--mobile .profile-card {
+.profile-preview .profile-card {
   min-height: 720px;
   width: 100%;
   margin: 0;
@@ -345,95 +335,39 @@ body {
   box-shadow: none;
 }
 
-.profile-preview--mobile .profile-preview-toolbar {
+.profile-preview .profile-preview-toolbar {
   padding-inline: 1.25rem;
 }
 
-.profile-preview--mobile .profile-content {
+.profile-preview .profile-content {
   padding-top: 5.25rem;
 }
 
-.profile-preview--mobile .profile-content--compact {
+.profile-preview .profile-content--compact {
   padding-top: 5rem;
 }
 
-.profile-preview--mobile .profile-content--hero {
+.profile-preview .profile-content--hero {
   padding-top: 4.75rem;
 }
 
-.profile-preview--mobile .profile-name {
+.profile-preview .profile-name {
   font-size: 1.85rem;
 }
 
-.profile-preview--mobile .profile-header-compact .profile-name {
+.profile-preview .profile-header-compact .profile-name {
   font-size: 1.65rem;
 }
 
-.profile-preview--mobile .profile-hero-identity .profile-name {
+.profile-preview .profile-hero-identity .profile-name {
   font-size: 2.35rem;
 }
 
-.profile-preview--mobile .profile-bio {
+.profile-preview .profile-bio {
   font-size: 0.95rem;
 }
 
-.profile-preview--mobile .profile-header-compact .profile-bio {
-  font-size: 0.9rem;
-}
-
-.profile-preview--desktop .profile-preview-canvas {
-  border-radius: 2.25rem;
-  box-shadow:
-    0 34px 95px -34px rgba(0, 0, 0, 0.52),
-    0 12px 34px -18px rgba(0, 0, 0, 0.28);
-}
-
-.profile-preview--desktop .profile-stage {
-  min-height: 720px;
-  align-items: flex-start;
-}
-
-.profile-preview--desktop .profile-card {
-  min-height: 720px;
-  width: min(100%, var(--profile-card-width, 480px));
-  margin-block: 0;
-  padding: 1.375rem 1.75rem 1.75rem;
-  border-radius: 2.25rem;
-}
-
-.profile-preview--desktop .profile-preview-toolbar {
-  padding-inline: 0;
-}
-
-.profile-preview--desktop .profile-content {
-  padding-top: 5.25rem;
-}
-
-.profile-preview--desktop .profile-content--compact {
-  padding-top: 5rem;
-}
-
-.profile-preview--desktop .profile-content--hero {
-  padding-top: 4.75rem;
-}
-
-.profile-preview--desktop .profile-name {
-  font-size: 1.85rem;
-}
-
-.profile-preview--desktop .profile-header-compact .profile-name {
-  font-size: 1.65rem;
-}
-
-.profile-preview--desktop .profile-hero-identity .profile-name {
-  font-size: 2.35rem;
-}
-
-.profile-preview--desktop .profile-bio {
-  font-size: 0.95rem;
-}
-
-.profile-preview--desktop .profile-header-compact .profile-bio {
+.profile-preview .profile-header-compact .profile-bio {
   font-size: 0.9rem;
 }
 
@@ -464,9 +398,9 @@ body {
 
   .profile-card {
     min-height: min(50rem, calc(100dvh - 3rem));
-    width: min(100%, var(--profile-card-width, 480px));
+    width: min(100%, 390px);
     margin-block: auto;
-    padding: 1.375rem 1.75rem 1.75rem;
+    padding: 1.125rem 1.125rem 1.5rem;
     border-radius: 2.25rem;
     box-shadow:
       0 34px 95px -34px rgba(0, 0, 0, 0.62),

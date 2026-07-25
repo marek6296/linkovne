@@ -609,7 +609,7 @@ export function Editor({
         ))}
       </div>
 
-      <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(390px,536px)]">
+      <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_390px]">
         {/* ---------- Editor column ---------- */}
         <div className={tab === "edit" ? "" : "hidden lg:block"}>
           <div className="flex items-center justify-between">
