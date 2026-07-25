@@ -47,9 +47,10 @@ export type PlanFeatures = {
   /** Premium editor workspace. */
   sections: boolean;
   /**
-   * Creator / Stealth mode — opt-in ochranná vrstva pre tvorcov (OnlyFans/
-   * Fanvue). Zapne Link Shield na všetkých linkoch, noindex, očistí metadata a
-   * bio schová pred crawlermi. Nie je garancia — je to ochranná vrstva.
+   * Creator / Stealth mode — opt-in ochranná vrstva pre tvorcov. Zapne Link
+   * Shield na všetkých linkoch, noindex, očistí metadata, detekuje platform
+   * crawlerov a servuje im čistú stránku (bio/foto/linky sa doťahujú až
+   * client-side). Nie je garancia — je to ochranná vrstva.
    */
   creatorMode: boolean;
 };

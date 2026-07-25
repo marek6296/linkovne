@@ -69,9 +69,9 @@ export default function SafeSharingGuide() {
           </p>
         </Step>
 
-        <Step n={3} title="Never put the raw platform link in your bio">
+        <Step n={3} title="Never put the raw destination link in your bio">
           <p>
-            A direct OnlyFans / Fanvue link in your Instagram bio is the single
+            A direct link to your paid content in your social bio is the single
             biggest trigger. Always point your bio at your {BRAND_TITLE} page —
             the platform&apos;s scanner follows redirects but can&apos;t click a
             confirmation button, so a shielded link stays clean.
@@ -80,10 +80,10 @@ export default function SafeSharingGuide() {
 
         <Step n={4} title="Keep your on-platform content within the rules">
           <p>
-            This is ~80% of it. Don&apos;t write &ldquo;OnlyFans&rdquo; in
-            captions, avoid flagged hashtags, and keep posts within each
-            platform&apos;s guidelines — even if what you link to is explicit.
-            No link tool can fix risky on-platform behaviour.
+            This is ~80% of it. Don&apos;t name your paid platform in captions,
+            avoid flagged hashtags, and keep posts within each platform&apos;s
+            guidelines — even if what you link to is explicit. No link tool can
+            fix risky on-platform behaviour.
           </p>
         </Step>
 

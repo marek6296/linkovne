@@ -22,6 +22,10 @@ as $function$
   limit 1;
 $function$;
 
+-- Nový stĺpec pridaný cez ALTER nedostal UPDATE grant (granty na profiles sú
+-- column-specific) — bez toho by owner nevedel creator_mode prepnúť.
+grant update (creator_mode) on linkove.profiles to authenticated;
+
 -- resolve_link: shield sa vynúti aj keď je zapnutý creator_mode.
 create or replace function linkove.resolve_link(p_block_id uuid)
  returns table(url text, shielded boolean, lock_code text)

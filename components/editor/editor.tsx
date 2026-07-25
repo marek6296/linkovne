@@ -859,9 +859,9 @@ export function Editor({
                             </span>
                           </p>
                           <p className="mt-1 max-w-md text-xs leading-relaxed text-soft">
-                            One switch for creators (OnlyFans / Fanvue): shields
-                            every link, hides your page from search, keeps your
-                            bio out of link previews and platform crawlers, and
+                            One switch for creators: shields every link, hides
+                            your page from search, detects and serves platform
+                            crawlers a clean page (no bio, photo or links), and
                             opens links in the real browser.{" "}
                             <Link
                               href="/safe"

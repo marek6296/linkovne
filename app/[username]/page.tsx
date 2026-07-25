@@ -14,6 +14,8 @@ import { resolveTheme, type Design } from "@/lib/design";
 import { BRAND_TITLE, SITE_URL, SITE_DOMAIN, stripAltPrefix } from "@/lib/site";
 import { planOf } from "@/lib/plans";
 import { designForPlan } from "@/lib/design-tiers";
+import { isSocialCrawler } from "@/lib/crawlers";
+import { headers } from "next/headers";
 import { isVisibleNow, type Block } from "@/lib/blocks";
 
 export const revalidate = 60;
@@ -149,6 +151,32 @@ export default async function PublicProfilePage({
   // Creator / Stealth mode — ochranna vrstva pre tvorcov (Pro+). Vynuti escape,
   // cloakne bio (renderuje sa az client-side) a metadata su uz neutralne.
   const stealth = profile.creator_mode === true && plan.creatorMode;
+
+  // Real-time crawler detekcia: ak stealth profil navstivi znamy platform bot
+  // / link-preview crawler, servneme mu „compliant" cistu stranku — len meno,
+  // ziadna fotka, bio ani linky. Nema co oznacit; realny clovek vidi profil
+  // normalne (obsah sa doťahuje client-side).
+  if (stealth) {
+    const ua = (await headers()).get("user-agent");
+    if (isSocialCrawler(ua)) {
+      const cleanName = snap.display_name || profile.username;
+      return (
+        <div className="profile-stage">
+          <main
+            className="profile-card"
+            style={{ background: "#faf9f6", color: "#191813" }}
+          >
+            <div className="profile-content profile-content--centered">
+              <div className="reveal">
+                <h1 className="profile-name">{cleanName}</h1>
+                <p className="mt-2 text-sm opacity-70">Welcome to my page.</p>
+              </div>
+            </div>
+          </main>
+        </div>
+      );
+    }
+  }
 
   // Tvrdy escape z in-app prehliadaca (Pro+ funkcia). Ked je zapnuty, gate sa
   // renderuje uz na serveri a skryje obsah okamzite (bez bliknutia profilu).
