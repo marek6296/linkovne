@@ -409,6 +409,26 @@ export function resolveTheme(
   t.avatarSizePx = avatarBase;
   t.avatarWidthPx = Math.round(avatarBase * widthMultiplier);
   t.avatarHeightPx = Math.round(t.avatarWidthPx / ratio);
+  const heroBaseHeight: Record<AvatarSize, number> = {
+    xs: 300,
+    sm: 344,
+    md: 392,
+    lg: 448,
+    xl: 512,
+  };
+  const heroAspectFactor: Record<AvatarAspect, number> = {
+    square: 1,
+    portrait: 1.12,
+    landscape: 0.86,
+    wide: 0.72,
+  };
+  t.heroHeightPx = Math.round(
+    heroBaseHeight[
+      design.avatarSize && design.avatarSize in AVATAR_SIZES
+        ? design.avatarSize
+        : "md"
+    ] * heroAspectFactor[avatarAspect],
+  );
 
   if (design.avatarFit === "cover" || design.avatarFit === "contain") {
     t.avatarFit = design.avatarFit;

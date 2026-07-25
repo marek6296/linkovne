@@ -110,11 +110,11 @@ body {
   width: 100%;
   max-width: var(--profile-content-width, 424px);
   flex-direction: column;
-  padding-top: clamp(5.25rem, 10vh, 7.5rem);
+  padding-top: 5.25rem;
 }
 
 .profile-content--compact {
-  padding-top: clamp(5rem, 9vh, 6.5rem);
+  padding-top: 5rem;
 }
 
 .profile-content--hero {
@@ -179,7 +179,7 @@ body {
 
 .profile-name {
   margin-top: 1.15rem;
-  font-size: clamp(1.65rem, 7vw, 2rem);
+  font-size: 1.85rem;
   font-weight: 650;
   line-height: 1.06;
   letter-spacing: -0.035em;
@@ -188,7 +188,7 @@ body {
 
 .profile-header-compact .profile-name {
   margin-top: 0;
-  font-size: clamp(1.45rem, 5vw, 1.8rem);
+  font-size: 1.65rem;
 }
 
 .profile-handle {
@@ -246,7 +246,7 @@ body {
 
 .profile-hero-identity .profile-name {
   margin-top: 0;
-  font-size: clamp(2rem, 8vw, 2.65rem);
+  font-size: 2.35rem;
 }
 
 .profile-hero-identity .profile-handle {
@@ -286,45 +286,58 @@ body {
   outline-offset: 3px;
 }
 
-.profile-preview .profile-header-hero {
-  min-height: 24rem;
-}
-
-.profile-preview .profile-name {
-  font-size: 1.7rem;
-}
-
-.profile-preview .profile-hero-identity .profile-name {
-  font-size: 2.15rem;
-}
-
-.profile-preview .profile-bio {
-  font-size: 0.86rem;
-}
-
 /*
- * The editor is embedded in a desktop dashboard, but its phone frame must use
- * the same rules as a real narrow public viewport. These scoped overrides stop
- * the outer dashboard media query from accidentally turning the preview into a
- * desktop profile while preserving the exact live components and class tree.
+ * The dashboard viewport is always desktop-sized, so media queries alone
+ * cannot simulate a real phone inside it. Explicit modes below reproduce the
+ * public 390 px mobile canvas and the full desktop card without changing
+ * typography or squeezing either layout into the editor column.
  */
+.profile-preview {
+  max-width: 536px;
+}
+
+.profile-preview-canvas {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  isolation: isolate;
+}
+
 .profile-preview-viewport {
   height: 650px;
-  overflow: hidden;
-  border-radius: 2.05rem;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .profile-preview .profile-stage {
-  height: 650px;
-  min-height: 650px;
-  align-items: stretch;
-  overflow-x: hidden;
-  overflow-y: auto;
+  width: 100%;
+  min-height: 720px;
+  overflow: hidden;
   padding: 0;
 }
 
-.profile-preview .profile-card {
-  min-height: 650px;
+.profile-preview--mobile {
+  max-width: 390px;
+}
+
+.profile-preview--mobile .profile-preview-canvas {
+  border-radius: 3rem;
+  box-shadow:
+    inset 0 0 0 7px #0a0a0a,
+    0 24px 65px rgba(25, 24, 19, 0.22);
+}
+
+.profile-preview--mobile .profile-preview-viewport {
+  border-radius: 3rem;
+}
+
+.profile-preview--mobile .profile-stage {
+  min-height: 720px;
+  align-items: stretch;
+}
+
+.profile-preview--mobile .profile-card {
+  min-height: 720px;
   width: 100%;
   margin: 0;
   padding: 1.125rem 1.125rem 1.5rem;
@@ -332,16 +345,96 @@ body {
   box-shadow: none;
 }
 
-.profile-preview .profile-content {
+.profile-preview--mobile .profile-preview-toolbar {
+  padding-inline: 1.25rem;
+}
+
+.profile-preview--mobile .profile-content {
   padding-top: 5.25rem;
 }
 
-.profile-preview .profile-content--compact {
+.profile-preview--mobile .profile-content--compact {
   padding-top: 5rem;
 }
 
-.profile-preview .profile-content--hero {
+.profile-preview--mobile .profile-content--hero {
   padding-top: 4.75rem;
+}
+
+.profile-preview--mobile .profile-name {
+  font-size: 1.85rem;
+}
+
+.profile-preview--mobile .profile-header-compact .profile-name {
+  font-size: 1.65rem;
+}
+
+.profile-preview--mobile .profile-hero-identity .profile-name {
+  font-size: 2.35rem;
+}
+
+.profile-preview--mobile .profile-bio {
+  font-size: 0.95rem;
+}
+
+.profile-preview--mobile .profile-header-compact .profile-bio {
+  font-size: 0.9rem;
+}
+
+.profile-preview--desktop .profile-preview-canvas {
+  border-radius: 2.25rem;
+  box-shadow:
+    0 34px 95px -34px rgba(0, 0, 0, 0.52),
+    0 12px 34px -18px rgba(0, 0, 0, 0.28);
+}
+
+.profile-preview--desktop .profile-stage {
+  min-height: 720px;
+  align-items: flex-start;
+}
+
+.profile-preview--desktop .profile-card {
+  min-height: 720px;
+  width: min(100%, var(--profile-card-width, 480px));
+  margin-block: 0;
+  padding: 1.375rem 1.75rem 1.75rem;
+  border-radius: 2.25rem;
+}
+
+.profile-preview--desktop .profile-preview-toolbar {
+  padding-inline: 0;
+}
+
+.profile-preview--desktop .profile-content {
+  padding-top: 5.25rem;
+}
+
+.profile-preview--desktop .profile-content--compact {
+  padding-top: 5rem;
+}
+
+.profile-preview--desktop .profile-content--hero {
+  padding-top: 4.75rem;
+}
+
+.profile-preview--desktop .profile-name {
+  font-size: 1.85rem;
+}
+
+.profile-preview--desktop .profile-header-compact .profile-name {
+  font-size: 1.65rem;
+}
+
+.profile-preview--desktop .profile-hero-identity .profile-name {
+  font-size: 2.35rem;
+}
+
+.profile-preview--desktop .profile-bio {
+  font-size: 0.95rem;
+}
+
+.profile-preview--desktop .profile-header-compact .profile-bio {
+  font-size: 0.9rem;
 }
 
 @media (min-width: 640px) {
@@ -382,7 +475,11 @@ body {
   }
 
   .profile-content {
-    padding-top: clamp(5.5rem, 9vh, 7.25rem);
+    padding-top: 5.25rem;
+  }
+
+  .profile-content--compact {
+    padding-top: 5rem;
   }
 
   .profile-content--hero {
@@ -403,9 +500,6 @@ body {
     min-height: calc(100dvh - 2rem);
   }
 
-  .profile-content:not(.profile-content--hero) {
-    padding-top: 4.75rem;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {

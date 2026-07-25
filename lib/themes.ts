@@ -90,6 +90,8 @@ export type Theme = {
   avatarSizePx?: number;
   avatarWidthPx?: number;
   avatarHeightPx?: number;
+  /** Hero layout maps photo size + format to a visible cover height. */
+  heroHeightPx?: number;
   avatarRing?: string;
   avatarBorder?: string;
   avatarShadow?: string;

@@ -983,7 +983,7 @@ export function DesignPanel({
             </div>
 
             <StepSlider
-              label="Size"
+              label={design.profileLayout === "hero" ? "Cover height" : "Size"}
               keys={Object.keys(AVATAR_SIZES) as AvatarSize[]}
               value={design.avatarSize ?? "md"}
               labelOf={(k) => AVATAR_SIZES[k].label}

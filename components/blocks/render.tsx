@@ -755,6 +755,8 @@ export function ProfileHeader({
       <div
         className="profile-header-hero"
         style={{
+          minHeight: theme.heroHeightPx,
+          borderRadius: avatarRadius,
           border: theme.avatarBorder,
           boxShadow: avatarShadow,
         }}
@@ -785,14 +787,12 @@ export function ProfileHeader({
       </div>
     );
   } else if (layout === "compact") {
-    const compactWidth = Math.min(avatarWidth, 96);
-    const compactHeight = Math.min(avatarHeight, 112);
     content = (
       <div className="profile-header-compact">
         {avatar("profile-compact-avatar", {
           ...avatarStyle,
-          width: compactWidth,
-          height: compactHeight,
+          width: avatarWidth,
+          height: avatarHeight,
         })}
         <div className="min-w-0 flex-1 text-left">{identity}</div>
       </div>

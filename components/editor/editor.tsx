@@ -308,6 +308,25 @@ export function Editor({
     setProfile((p) => ({ ...p, ...patch }));
   }
 
+  /** Merge customizations over the latest design state. Rapid slider and chip
+   * changes must never restore an older template object from a stale render. */
+  function patchDesign(patch: Design) {
+    profileDirty.current = true;
+    setHasLocalChanges(true);
+    setAppliedTemplate(null);
+    setProfile((current) => ({
+      ...current,
+      design: { ...current.design, ...patch },
+    }));
+  }
+
+  function resetDesign() {
+    profileDirty.current = true;
+    setHasLocalChanges(true);
+    setAppliedTemplate(null);
+    setProfile((current) => ({ ...current, design: {} }));
+  }
+
   /**
    * Vyber temy zahodi FAREBNE prepisy z designu (pozadie, farby tlacidiel,
    * styl), aby zvolena tema naozaj bola vidno. Ponecha typografiu a tvar —
@@ -590,7 +609,7 @@ export function Editor({
         ))}
       </div>
 
-      <div className="grid gap-10 lg:grid-cols-[1fr_340px]">
+      <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(390px,536px)]">
         {/* ---------- Editor column ---------- */}
         <div className={tab === "edit" ? "" : "hidden lg:block"}>
           <div className="flex items-center justify-between">
@@ -793,12 +812,8 @@ export function Editor({
                           ? pickTheme(key as (typeof THEME_KEYS)[number])
                           : setNotice("That theme needs a paid plan.")
                       }
-                      onChange={(patch) =>
-                        patchProfile({
-                          design: { ...profile.design, ...patch },
-                        })
-                      }
-                      onReset={() => patchProfile({ design: {} })}
+                      onChange={patchDesign}
+                      onReset={resetDesign}
                       onUpsell={() =>
                         setNotice("That's a Pro design feature — upgrade to unlock it.")
                       }
