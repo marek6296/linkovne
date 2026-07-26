@@ -232,25 +232,26 @@ export default async function PublicProfilePage({
         className={`profile-content profile-content--${profileLayout}`}
       >
         <div className="reveal">
-          {/* Stealth: bio sa do SSR nedava (crawler ho nema kde najst) —
-              meno + fotka ostavaju, zvysok dotiahne StealthContent. */}
-          <ProfileHeader
-            displayName={snap.display_name}
-            username={profile.username}
-            bio={stealth ? null : snap.bio}
-            avatarUrl={snap.avatar_url}
-            theme={theme}
-          />
-
           {stealth ? (
-            // Bio + bloky sa doťahujú až client-side (nie su v zdrojaku profilu).
+            // Bio + bloky nie sú v SSR. Klient potom vykreslí celú hlavičku
+            // znovu tým istým komponentom ako editor, takže bio ostane v
+            // správnom template layoute namiesto pridania pod hotovú hlavičku.
             <StealthContent
               username={profile.username}
               profileId={profile.id}
-              mutedColor={theme.muted}
+              displayName={snap.display_name}
+              avatarUrl={snap.avatar_url}
+              initialTheme={theme}
             />
           ) : (
             <>
+              <ProfileHeader
+                displayName={snap.display_name}
+                username={profile.username}
+                bio={snap.bio}
+                avatarUrl={snap.avatar_url}
+                theme={theme}
+              />
               <div className="profile-links">
                 <BlockList
                   blocks={blockList}

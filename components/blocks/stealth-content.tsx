@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BlockList } from "@/components/blocks/render";
+import { BlockList, ProfileHeader } from "@/components/blocks/render";
 import type { Theme } from "@/lib/themes";
 import type { Block } from "@/lib/blocks";
 
@@ -15,11 +15,15 @@ type Payload = { bio: string | null; blocks: Block[]; theme: Theme };
 export function StealthContent({
   username,
   profileId,
-  mutedColor,
+  displayName,
+  avatarUrl,
+  initialTheme,
 }: {
   username: string;
   profileId: string;
-  mutedColor?: string;
+  displayName: string | null;
+  avatarUrl: string | null;
+  initialTheme: Theme;
 }) {
   const [data, setData] = useState<Payload | null>(null);
 
@@ -38,18 +42,22 @@ export function StealthContent({
     };
   }, [username]);
 
-  if (!data) return null;
+  const theme = data?.theme ?? initialTheme;
 
   return (
     <>
-      {data.bio && (
-        <p className="profile-bio" style={{ color: mutedColor }}>
-          {data.bio}
-        </p>
+      <ProfileHeader
+        displayName={displayName}
+        username={username}
+        bio={data?.bio ?? null}
+        avatarUrl={avatarUrl}
+        theme={theme}
+      />
+      {data && (
+        <div className="profile-links">
+          <BlockList blocks={data.blocks} theme={theme} profileId={profileId} />
+        </div>
       )}
-      <div className="profile-links">
-        <BlockList blocks={data.blocks} theme={data.theme} profileId={profileId} />
-      </div>
     </>
   );
 }
