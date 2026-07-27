@@ -1,3 +1,5 @@
+import { detectInApp, isAndroid, isIOS } from "@/lib/inapp";
+
 /**
  * Detekcia známych platform crawlerov / link-preview botov podľa User-Agentu.
  * V Creator/Stealth mode dostane takýto bot čistú „compliant" stránku (len
@@ -13,5 +15,12 @@ export function isSocialCrawler(userAgent: string | null | undefined): boolean {
   // Prázdny UA je pre bežný prehliadač netypický → v stealth mode ho radšej
   // považujeme za bota (servneme čistú stránku, bezpečnejšia voľba).
   if (!ua) return true;
+
+  // Instagram/TikTok/Facebook webview obsahuje rovnake platformove slova ako
+  // ich link-preview boty. Skutocny mobilny prehliadac aplikacie vsak nesmie
+  // dostat crawler-clean stranku: Creator mode ho ma poslat do tej istej
+  // „Open externally" brany ako samostatny prepinač.
+  if (detectInApp(ua) !== null && (isIOS(ua) || isAndroid(ua))) return false;
+
   return CRAWLER_RE.test(ua);
 }
