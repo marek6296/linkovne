@@ -28,6 +28,7 @@ export function AuthForm({
   passwordHint,
   emailOnly = false,
   accent,
+  next,
 }: {
   action: (state: AuthState, formData: FormData) => Promise<AuthState>;
   submitLabel: string;
@@ -36,6 +37,8 @@ export function AuthForm({
   emailOnly?: boolean;
   /** Hover-fill color for the submit button — matches the auth panel color. */
   accent?: "pink" | "blue";
+  /** Kam presmerovať po prihlásení (napr. /redeem/<code>). */
+  next?: string;
 }) {
   const [state, formAction] = useActionState<AuthState, FormData>(
     action,
@@ -52,6 +55,7 @@ export function AuthForm({
 
   return (
     <form action={formAction} className="space-y-4">
+      {next && <input type="hidden" name="next" value={next} />}
       <div className="space-y-1.5">
         <label htmlFor="email" className="text-sm font-medium">
           Email

@@ -1,8 +1,9 @@
 import { signInWithGoogle } from "@/app/auth/actions";
 
-export function GoogleButton({ label }: { label: string }) {
+export function GoogleButton({ label, next }: { label: string; next?: string }) {
   return (
     <form action={signInWithGoogle}>
+      {next && <input type="hidden" name="next" value={next} />}
       <button type="submit" className="btn-line w-full gap-3">
         <svg aria-hidden viewBox="0 0 24 24" className="h-5 w-5">
           <path

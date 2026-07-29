@@ -1,6 +1,10 @@
 import { stripe } from "@/lib/stripe";
-import { DiscountForm } from "@/components/admin/discount-form";
-import { DeactivateCodeButton } from "@/components/admin/discount-form";
+import {
+  DiscountForm,
+  DeactivateCodeButton,
+  CopyPromoLink,
+} from "@/components/admin/discount-form";
+import { SITE_URL } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
@@ -109,33 +113,42 @@ export default async function DiscountsPage() {
         ) : (
           <div className="divide-y divide-line">
             {codes.map((r) => (
-              <div
-                key={r.id}
-                className="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 py-3.5"
-              >
-                <code className="rounded-lg bg-ink/[0.06] px-2.5 py-1 text-sm font-bold tracking-wide">
-                  {r.code}
-                </code>
-                <span className="text-sm font-medium">{r.discount}</span>
-                <span className="text-xs text-soft">{r.duration}</span>
-                <span className="text-xs text-soft">Used {r.uses}</span>
-                {r.expires && (
-                  <span className="text-xs text-soft">
-                    Expires {r.expires}
+              <div key={r.id} className="px-5 py-3.5">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                  <code className="rounded-lg bg-ink/[0.06] px-2.5 py-1 text-sm font-bold tracking-wide">
+                    {r.code}
+                  </code>
+                  <span className="text-sm font-medium">{r.discount}</span>
+                  <span className="text-xs text-soft">{r.duration}</span>
+                  <span className="text-xs text-soft">Used {r.uses}</span>
+                  {r.expires && (
+                    <span className="text-xs text-soft">
+                      Expires {r.expires}
+                    </span>
+                  )}
+                  <span className="ml-auto flex items-center gap-3">
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                        r.active
+                          ? "bg-emerald-500/15 text-emerald-700"
+                          : "bg-black/[0.06] text-soft"
+                      }`}
+                    >
+                      {r.active ? "Active" : "Off"}
+                    </span>
+                    {r.active && (
+                      <DeactivateCodeButton id={r.id} code={r.code} />
+                    )}
                   </span>
+                </div>
+                {r.active && (
+                  <div className="mt-2 flex items-center gap-2">
+                    <span className="shrink-0 text-[11px] font-semibold tracking-wide text-faint uppercase">
+                      Promo link
+                    </span>
+                    <CopyPromoLink url={`${SITE_URL}/redeem/${r.code}`} />
+                  </div>
                 )}
-                <span className="ml-auto flex items-center gap-3">
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
-                      r.active
-                        ? "bg-emerald-500/15 text-emerald-700"
-                        : "bg-black/[0.06] text-soft"
-                    }`}
-                  >
-                    {r.active ? "Active" : "Off"}
-                  </span>
-                  {r.active && <DeactivateCodeButton id={r.id} code={r.code} />}
-                </span>
               </div>
             ))}
           </div>

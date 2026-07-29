@@ -1,9 +1,8 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect } from "react";
 import { useFormStatus } from "react-dom";
-import { redeemCode } from "@/app/dashboard/actions";
-import { PlanWelcomeModal } from "@/components/settings/plan-welcome-modal";
+import { redeemPromoCode } from "@/app/dashboard/actions";
 
 function Submit() {
   const { pending } = useFormStatus();
@@ -19,40 +18,30 @@ function Submit() {
 }
 
 export function RedeemForm() {
-  const [state, action] = useActionState(redeemCode, undefined);
-  const [showWelcome, setShowWelcome] = useState(false);
+  const [state, action] = useActionState(redeemPromoCode, undefined);
 
-  // Kazdy uspesny redeem (aj opakovany, iny kod) otvori uvitacie okno nanovo.
+  // Platný kód → Stripe Checkout (100% = zadarmo, inak zľavnená platba).
   useEffect(() => {
-    if (state?.granted) setShowWelcome(true);
+    if (state?.url) window.location.href = state.url;
   }, [state]);
 
   return (
-    <>
-      <form action={action} className="space-y-2">
-        <div className="flex gap-2">
-          <input
-            name="code"
-            placeholder="Promo code"
-            spellCheck={false}
-            className="field uppercase tracking-wide"
-          />
-          <Submit />
-        </div>
-        {state?.ok && !showWelcome && (
-          <p className="rounded-lg border border-ok/25 bg-ok/5 px-3 py-2 text-sm text-ok">
-            {state.ok}
-          </p>
-        )}
-        {state?.error && <p className="alert-error">{state.error}</p>}
-      </form>
-
-      {showWelcome && state?.granted && (
-        <PlanWelcomeModal
-          granted={state.granted}
-          onClose={() => setShowWelcome(false)}
+    <form action={action} className="space-y-2">
+      <div className="flex gap-2">
+        <input
+          name="code"
+          placeholder="Promo code"
+          spellCheck={false}
+          className="field uppercase tracking-wide"
         />
+        <Submit />
+      </div>
+      {state?.url && (
+        <p className="rounded-lg border border-ok/25 bg-ok/5 px-3 py-2 text-sm text-ok">
+          Code accepted — taking you to secure checkout…
+        </p>
       )}
-    </>
+      {state?.error && <p className="alert-error">{state.error}</p>}
+    </form>
   );
 }

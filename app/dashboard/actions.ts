@@ -7,6 +7,10 @@ import { planOf, allowsBlock, allowsTheme } from "@/lib/plans";
 import type { Block, BlockType } from "@/lib/blocks";
 import type { Design } from "@/lib/design";
 import { designForPlan } from "@/lib/design-tiers";
+import {
+  createSubscriptionCheckout,
+  findPromotionCode,
+} from "@/lib/checkout";
 
 export type ActionState = { error?: string } | undefined;
 
@@ -133,6 +137,61 @@ export async function redeemCode(
       expiresAt: r.expires_at ?? null,
     },
   };
+}
+
+export type PromoRedeemState = { error?: string; url?: string } | undefined;
+
+/**
+ * Uplatnenie promo kódu — VŠETKO cez Stripe. Overí, že kód je aktívny Stripe
+ * promotion code, a spustí Stripe Checkout na Pro s predvyplnenou zľavou:
+ *  • 100% kód → €0 → nepýta kartu → vznikne aktívne Pro predplatné,
+ *  • %/€ kód → zľavnená platba.
+ * Klient presmeruje na vrátené `url`. Plán sa aktivuje až po Stripe (webhook),
+ * takže nikdy nevznikne „Pro bez Stripe".
+ */
+export async function redeemPromoCode(
+  _prev: PromoRedeemState,
+  formData: FormData,
+): Promise<PromoRedeemState> {
+  const code = String(formData.get("code") ?? "").trim().toUpperCase();
+  if (!code) return { error: "Enter a code." };
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const promotionCodeId = await findPromotionCode(code);
+  if (!promotionCodeId) {
+    return { error: "That code isn't valid or has expired." };
+  }
+
+  const { data: account } = await supabase
+    .from("accounts")
+    .select("stripe_customer_id, plan")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  // Uz plateny plan → nevytvarame druhe predplatne (dvojite uctovanie).
+  if (account?.plan === "pro" || account?.plan === "business") {
+    return {
+      error:
+        "You're already on a paid plan. Manage it in Billing, or contact us to switch.",
+    };
+  }
+
+  const result = await createSubscriptionCheckout({
+    userId: user.id,
+    email: user.email,
+    stripeCustomerId: account?.stripe_customer_id,
+    plan: "pro",
+    promotionCodeId,
+    requirePromo: true,
+  });
+
+  if ("error" in result) return { error: result.error };
+  return { url: result.url };
 }
 
 export async function saveBlocks(

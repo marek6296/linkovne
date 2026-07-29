@@ -12,7 +12,13 @@ export const metadata: Metadata = {
   alternates: { canonical: "/register" },
 };
 
-export default function RegisterPage() {
+export default async function RegisterPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
+  const { next } = await searchParams;
+  const safeNext = next && /^\/[a-z0-9/_-]*$/i.test(next) ? next : undefined;
   return (
     <AuthShell
       bg="bg-indigo-500"
@@ -28,7 +34,7 @@ export default function RegisterPage() {
       </p>
 
       <div className="mt-8">
-        <GoogleButton label="Continue with Google" />
+        <GoogleButton label="Continue with Google" next={safeNext} />
       </div>
 
       <div className="my-6 flex items-center gap-3 font-mono text-xs text-faint uppercase">
@@ -42,6 +48,7 @@ export default function RegisterPage() {
         submitLabel="Create account"
         passwordHint="At least 10 characters."
         accent="blue"
+        next={safeNext}
       />
 
       <p className="mt-4 text-center text-xs text-faint">
@@ -59,7 +66,7 @@ export default function RegisterPage() {
       <p className="mt-6 text-center text-sm text-soft">
         Already have an account?{" "}
         <Link
-          href="/login"
+          href={safeNext ? `/login?next=${encodeURIComponent(safeNext)}` : "/login"}
           className="font-medium text-ink underline underline-offset-4"
         >
           Log in

@@ -165,3 +165,30 @@ export function DeactivateCodeButton({ id, code }: { id: string; code: string })
     </button>
   );
 }
+
+/** Zdieľateľný promo link + kopírovanie do schránky. */
+export function CopyPromoLink({ url }: { url: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      type="button"
+      onClick={async () => {
+        try {
+          await navigator.clipboard.writeText(url);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 1500);
+        } catch {
+          /* clipboard blocked — ignore */
+        }
+      }}
+      className="inline-flex max-w-full items-center gap-1.5 rounded-lg border border-line bg-paper/50 px-2.5 py-1 text-xs text-soft transition hover:border-ink hover:text-ink"
+      title="Copy promo link"
+    >
+      <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+        <rect x="9" y="9" width="11" height="11" rx="2" />
+        <path d="M5 15V5a2 2 0 0 1 2-2h10" />
+      </svg>
+      <span className="truncate">{copied ? "Copied!" : url}</span>
+    </button>
+  );
+}

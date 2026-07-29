@@ -8,12 +8,19 @@ const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 export type AuthState = { error?: string; ok?: string } | undefined;
 
+/** Povolí len internú cestu (napr. /redeem/<code>) — bráni open-redirectu. */
+function safeNext(raw: unknown): string {
+  const s = String(raw ?? "");
+  return /^\/[a-z0-9/_-]*$/i.test(s) ? s : "";
+}
+
 export async function signIn(
   _prev: AuthState,
   formData: FormData,
 ): Promise<AuthState> {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
+  const next = safeNext(formData.get("next"));
 
   if (!email || !password) return { error: "Fill in both email and password." };
 
@@ -25,7 +32,7 @@ export async function signIn(
   if (error) return { error: "Incorrect email or password." };
 
   revalidatePath("/", "layout");
-  redirect("/dashboard");
+  redirect(next || "/dashboard");
 }
 
 export async function signUp(
@@ -34,29 +41,41 @@ export async function signUp(
 ): Promise<AuthState> {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
+  const next = safeNext(formData.get("next"));
 
   if (!email || !password) return { error: "Fill in both email and password." };
   if (password.length < 10)
     return { error: "Password must be at least 10 characters." };
 
+  // Po potvrdeni emailu ide callback na `next` (ak je) — inak default.
+  const callback = next
+    ? `${SITE}/auth/callback?next=${encodeURIComponent(next)}`
+    : `${SITE}/auth/callback`;
+
   const supabase = await createClient();
   const { error } = await supabase.auth.signUp({
     email,
     password,
-    options: { emailRedirectTo: `${SITE}/auth/callback` },
+    options: { emailRedirectTo: callback },
   });
 
   if (error) return { error: error.message };
 
   revalidatePath("/", "layout");
-  redirect("/onboarding");
+  // S promo linkom (next) preskocime rovno tam (redeem), onboarding pockat moze.
+  redirect(next || "/onboarding");
 }
 
-export async function signInWithGoogle() {
+export async function signInWithGoogle(formData: FormData) {
+  const safe = safeNext(formData.get("next"));
+  const redirectTo = safe
+    ? `${SITE}/auth/callback?next=${encodeURIComponent(safe)}`
+    : `${SITE}/auth/callback`;
+
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
-    options: { redirectTo: `${SITE}/auth/callback` },
+    options: { redirectTo },
   });
 
   if (error || !data.url) redirect("/login?error=google");

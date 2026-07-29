@@ -10,9 +10,10 @@ export const metadata: Metadata = { title: "Log in" };
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; next?: string }>;
 }) {
-  const { error } = await searchParams;
+  const { error, next } = await searchParams;
+  const safeNext = next && /^\/[a-z0-9/_-]*$/i.test(next) ? next : undefined;
 
   return (
     <AuthShell
@@ -33,7 +34,7 @@ export default async function LoginPage({
       )}
 
       <div className="mt-8">
-        <GoogleButton label="Continue with Google" />
+        <GoogleButton label="Continue with Google" next={safeNext} />
       </div>
 
       <div className="my-6 flex items-center gap-3 font-mono text-xs text-faint uppercase">
@@ -42,7 +43,7 @@ export default async function LoginPage({
         <span className="h-px flex-1 bg-line" />
       </div>
 
-      <AuthForm action={signIn} submitLabel="Log in" accent="pink" />
+      <AuthForm action={signIn} submitLabel="Log in" accent="pink" next={safeNext} />
 
       <p className="mt-4 text-center text-sm">
         <Link
@@ -56,7 +57,7 @@ export default async function LoginPage({
       <p className="mt-6 text-center text-sm text-soft">
         No account yet?{" "}
         <Link
-          href="/register"
+          href={safeNext ? `/register?next=${encodeURIComponent(safeNext)}` : "/register"}
           className="font-medium text-ink underline underline-offset-4"
         >
           Create your page
