@@ -23,6 +23,7 @@ export function Preview({
   theme,
   showBranding = true,
   onSelect,
+  onReorder,
 }: {
   profileId: string;
   displayName: string;
@@ -34,6 +35,8 @@ export function Preview({
   /** Ci sa ukaze „Powered by" (free vzdy, Pro ked branding nevypol). */
   showBranding?: boolean;
   onSelect?: (target: { kind: "profile" } | { kind: "block"; id: string }) => void;
+  /** Drag-to-reorder priamo na preview — presunie blok `activeId` na `overId`. */
+  onReorder?: (activeId: string, overId: string) => void;
 }) {
   return (
     <div className="profile-preview mx-auto w-full">
@@ -79,6 +82,7 @@ export function Preview({
                           ? (id) => onSelect({ kind: "block", id })
                           : undefined
                       }
+                      onReorder={onReorder}
                     />
                   </div>
                   {blocks.length === 0 && (

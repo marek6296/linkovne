@@ -554,6 +554,17 @@ export function Editor({
     requestAnimationFrame(() => document.getElementById(`block-editor-${target.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" }));
   }
 
+  // Drag-to-reorder priamo na preview — presunie blok na pozíciu druhého v
+  // plnom poli blokov (podľa id, takže to sedí aj s neaktívnymi/sekciami).
+  function reorderFromPreview(activeId: string, overId: string) {
+    patchBlocks((prev) => {
+      const from = prev.findIndex((b) => b.id === activeId);
+      const to = prev.findIndex((b) => b.id === overId);
+      if (from < 0 || to < 0 || from === to) return prev;
+      return arrayMove(prev, from, to);
+    });
+  }
+
   function customizeButton(id: string) {
     setDesignOpen(true);
     setDesignTab("buttons");
@@ -1073,6 +1084,7 @@ export function Editor({
             theme={theme}
             showBranding={previewBranding}
             onSelect={selectFromPreview}
+            onReorder={reorderFromPreview}
           />
         </div>
       </div>

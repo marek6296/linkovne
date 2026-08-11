@@ -12,6 +12,21 @@ import {
   type LinkLayout,
   type SocialPlatform,
 } from "@/lib/blocks";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { Icon, ICON_KEYS, type IconKey } from "@/components/blocks/icon";
 import { BTN_SIZES, type Theme } from "@/lib/themes";
 import {
@@ -364,12 +379,44 @@ function TipBlock({
   );
 }
 
+/** Sortable obal jedného bloku v preview — ťahaním sa mení poradie. Tap (bez
+ *  pohybu) prejde na onSelect overlay vnútri (aktivačná vzdialenosť to oddelí). */
+function SortableBlock({
+  id,
+  children,
+}: {
+  id: string;
+  children: React.ReactNode;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id });
+  return (
+    <div
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.6 : 1,
+        touchAction: "none",
+        cursor: "grab",
+        zIndex: isDragging ? 30 : undefined,
+        position: "relative",
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
 export function BlockList({
   blocks,
   theme,
   profileId,
   preview = false,
   onSelect,
+  onReorder,
 }: {
   blocks: Block[];
   theme: Theme;
@@ -377,8 +424,17 @@ export function BlockList({
   /** In the editor nothing is actually submitted. */
   preview?: boolean;
   onSelect?: (blockId: string) => void;
+  /** Preview drag-to-reorder — presunie blok `activeId` na pozíciu `overId`. */
+  onReorder?: (activeId: string, overId: string) => void;
 }) {
   const active = blocks.filter((b) => b.is_active);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 180, tolerance: 8 },
+    }),
+  );
 
   // Public page routes clicks through /r/{id}; v editor preview linky nikam.
   const hrefFor = (block: Block) => (preview ? "#" : `/r/${block.id}`);
@@ -607,11 +663,8 @@ export function BlockList({
   const selectable = (block: Block) => {
     const node = renderOne(block);
     if (!onSelect) return node;
-    return (
-      <div
-        key={block.id}
-        className="group relative min-w-0 max-w-full overflow-hidden rounded-xl"
-      >
+    const inner = (
+      <div className="group relative min-w-0 max-w-full overflow-hidden rounded-xl">
         {node}
         <button
           type="button"
@@ -619,6 +672,18 @@ export function BlockList({
           onClick={() => onSelect(block.id)}
           className="absolute inset-0 z-10 cursor-pointer rounded-xl outline-none ring-offset-2 transition group-hover:ring-2 group-hover:ring-current/30 focus-visible:ring-2"
         />
+      </div>
+    );
+    if (onReorder) {
+      return (
+        <SortableBlock key={block.id} id={block.id}>
+          {inner}
+        </SortableBlock>
+      );
+    }
+    return (
+      <div key={block.id} className="contents">
+        {inner}
       </div>
     );
   };
@@ -644,7 +709,7 @@ export function BlockList({
     </div>
   );
 
-  return (
+  const body = (
     <div
       className="flex flex-col"
       style={{ gap: theme.blockGap ?? "0.75rem" }}
@@ -656,6 +721,26 @@ export function BlockList({
         return <section key={group.section.id} style={{ background: safeColor(cfg.sectionBg) ?? "rgba(255,255,255,.12)", color: safeColor(cfg.sectionText) ?? theme.text, border: `1px solid ${safeColor(cfg.sectionBorder) ?? "rgba(127,127,127,.25)"}`, borderRadius: radius }} className="p-4"><h2 className="mb-3 text-sm font-semibold tracking-wide uppercase">{cfg.text || "Section"}</h2>{renderRows(group.items, cfg.sectionLayout === "grid")}</section>;
       })}
     </div>
+  );
+
+  if (!onReorder) return body;
+
+  // Preview drag-to-reorder — sortable su len buttony/bloky (nie section
+  // hlavicky). Presun rieši editor (onReorder) v plnom poli blokov.
+  const sortableIds = groups.flatMap((g) => g.items.map((b) => b.id));
+  return (
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragEnd={(e: DragEndEvent) => {
+        const { active: a, over } = e;
+        if (over && a.id !== over.id) onReorder(String(a.id), String(over.id));
+      }}
+    >
+      <SortableContext items={sortableIds} strategy={verticalListSortingStrategy}>
+        {body}
+      </SortableContext>
+    </DndContext>
   );
 }
 
