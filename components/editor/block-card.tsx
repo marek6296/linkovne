@@ -32,6 +32,7 @@ import {
   type SocialPlatform,
 } from "@/lib/blocks";
 import { Collapse, Chevron } from "@/components/editor/collapse";
+import { ButtonStyle } from "@/components/editor/button-style";
 import { uploadImage, uploadVideo } from "@/lib/upload";
 
 /** ISO → hodnota pre <input type="datetime-local"> v lokálnom čase. */
@@ -764,22 +765,18 @@ export function BlockCard({
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-surface p-3">
-                <div>
-                  <p className="text-sm font-medium">Button appearance</p>
-                  <p className="mt-0.5 text-xs text-soft">
-                    Type, media, colours, text size and motion are together in
-                    Customise → Buttons.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={onCustomizeButton}
-                  className="rounded-full bg-ink px-3.5 py-2 text-xs font-medium text-paper transition hover:opacity-85"
-                >
-                  Customize this button
-                </button>
-              </div>
+              <p className="mt-2 rounded-lg bg-ink/[0.04] px-3 py-2 text-[11px] font-semibold tracking-wide text-soft uppercase">
+                Look
+              </p>
+              <ButtonStyle
+                config={block.config}
+                onPatch={patchConfig}
+                userId={userId}
+              />
+              <p className="text-center text-[11px] text-faint">
+                Overall theme, background &amp; fonts live in{" "}
+                <span className="font-medium">Design</span>.
+              </p>
 
               <p className="mt-2 rounded-lg bg-ink/[0.04] px-3 py-2 text-[11px] font-semibold tracking-wide text-soft uppercase">Access</p>
               {/* VIP zamok — Pro+ */}

@@ -1078,55 +1078,12 @@ export function DesignPanel({
         {tab === "buttons" && (
           <div className="space-y-4">
             <div className="rounded-xl border border-line bg-paper px-4 py-3">
-              <label className="text-sm font-medium" htmlFor="button-style-target">
-                Customize
-              </label>
-              <select
-                id="button-style-target"
-                value={activeButtonTarget}
-                onChange={(event) => onButtonTargetChange(event.target.value)}
-                className="field mt-2 py-2.5 text-sm"
-              >
-                <option value="all">All buttons · page default</option>
-                {linkBlocks.map((block) => (
-                  <option key={block.id} value={block.id}>
-                    {block.config.title?.trim() || "Untitled link"}
-                    {block.config.width === "half" ? " · ½ grid" : ""}
-                  </option>
-                ))}
-              </select>
-              <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-                <p className="text-xs leading-relaxed text-soft">
-                  {selectedButton
-                    ? "This button inherits the page style until you change an option below."
-                    : "These defaults apply to every button without its own override."}
-                </p>
-                {selectedButton && (
-                  <button
-                    type="button"
-                    onClick={() =>
-                      patchSelected({
-                        color: undefined,
-                        textColor: undefined,
-                        buttonStyle: undefined,
-                        buttonShape: undefined,
-                        buttonSize: undefined,
-                        buttonTextSize: undefined,
-                        buttonShadow: undefined,
-                        buttonBorder: undefined,
-                        buttonWeight: undefined,
-                        buttonGradientColor: undefined,
-                        buttonGradientColor2: undefined,
-                        anim: undefined,
-                        featured: undefined,
-                      })
-                    }
-                    className="text-xs text-soft underline underline-offset-4 hover:text-ink"
-                  >
-                    Clear this button&apos;s overrides
-                  </button>
-                )}
-              </div>
+              <p className="text-sm font-medium">Default button style</p>
+              <p className="mt-1 text-xs leading-relaxed text-soft">
+                Applies to every button on the page. To restyle one button,
+                open it in <span className="font-medium">Blocks</span> below and
+                use its “Button look”.
+              </p>
             </div>
 
             {selectedButton && selectedConfig && (
