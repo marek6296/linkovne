@@ -219,6 +219,17 @@ export async function saveBlocks(
         const { lockCode: _drop, ...rest } = config;
         config = rest;
       }
+      // Doplnime https:// ak user zadal adresu linku bez schemy („t.me/…") —
+      // inak by redirect /r nevedel kam ist a padol by na homepage.
+      if (
+        (b.type === "link" || b.type === "tip") &&
+        typeof config.url === "string"
+      ) {
+        const u = config.url.trim();
+        if (u && !/^https?:\/\//i.test(u) && !/^(mailto|tel):/i.test(u)) {
+          config = { ...config, url: `https://${u.replace(/^\/+/, "")}` };
+        }
+      }
       return {
         id: b.id,
         profile_id: profileId,

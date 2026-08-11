@@ -149,9 +149,22 @@ async function resolve(
     shielded?: unknown;
     lock_code?: unknown;
   } | null;
-  const url = r?.url;
+  let url = typeof r?.url === "string" ? r.url.trim() : "";
+  if (!url) return null;
 
-  if (typeof url !== "string" || !/^https?:\/\//i.test(url)) return null;
+  // User casto zada adresu bez schemy („t.me/…", „instagram.com/…") — bez
+  // https by redirect padol na homepage. Doplnime https:// a overime, ze je to
+  // platna http(s) URL. Funguje aj pre uz zverejnene linky (netreba re-publish).
+  if (!/^https?:\/\//i.test(url)) {
+    url = `https://${url.replace(/^\/+/, "")}`;
+  }
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return null;
+  } catch {
+    return null;
+  }
+
   return {
     url,
     shielded: r?.shielded === true,
