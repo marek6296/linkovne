@@ -53,9 +53,11 @@ export function nativeDeepLink(raw: string): string | null {
   }
   const host = u.hostname.replace(/^www\./, "").toLowerCase();
   const seg = u.pathname.split("/").filter(Boolean);
+  const first = seg[0]?.replace(/^@/, "");
+  const e = encodeURIComponent;
 
-  if (host === "instagram.com" && seg[0]) {
-    return `instagram://user?username=${encodeURIComponent(seg[0].replace(/^@/, ""))}`;
+  if (host === "instagram.com" && first) {
+    return `instagram://user?username=${e(first)}`;
   }
   if (host === "youtube.com" && u.searchParams.get("v")) {
     return `vnd.youtube://${u.searchParams.get("v")}`;
@@ -66,12 +68,35 @@ export function nativeDeepLink(raw: string): string | null {
   if (host === "open.spotify.com" && seg.length >= 2) {
     return `spotify:${seg[0]}:${seg[1]}`;
   }
-  if ((host === "twitter.com" || host === "x.com") && seg[0]) {
-    return `twitter://user?screen_name=${encodeURIComponent(seg[0])}`;
+  if ((host === "twitter.com" || host === "x.com") && first) {
+    return `twitter://user?screen_name=${e(first)}`;
   }
   if (host === "t.me" && seg[0]) {
-    return `tg://resolve?domain=${encodeURIComponent(seg[0])}`;
+    return `tg://resolve?domain=${e(seg[0])}`;
   }
+  if (host === "snapchat.com" && first) {
+    // snapchat.com/add/<user> aj snapchat.com/<user>
+    return `snapchat://add/${e(first === "add" ? (seg[1] ?? "") : first)}`;
+  }
+  if (host === "pinterest.com" && first) {
+    return `pinterest://user/${e(first)}`;
+  }
+  if (host === "twitch.tv" && first) {
+    return `twitch://stream/${e(first)}`;
+  }
+  if (host === "reddit.com" && seg[0]) {
+    if (seg[0] === "r" && seg[1]) return `reddit://r/${e(seg[1])}`;
+    if ((seg[0] === "u" || seg[0] === "user") && seg[1])
+      return `reddit://user/${e(seg[1])}`;
+  }
+  if (host === "threads.net" && first) {
+    return `barcelona://user?username=${e(first)}`;
+  }
+  if (host === "wa.me" && seg[0]) {
+    return `whatsapp://send?phone=${e(seg[0])}`;
+  }
+  // OnlyFans / Fanvue / Fansly nemaju natívnu appku → deep-link do appky nie je
+  // mozny, jediny „utek" je do systemoveho prehliadaca (viz escapeToBrowser*).
   return null;
 }
 
@@ -90,8 +115,15 @@ export function escapeToBrowser(
     return null;
   }
 
+  // Instagram ma VLASTNU schemu, ktorou appka otvori adresu v EXTERNOM
+  // prehliadaci — funguje aj na najnovsom iOS (na rozdiel od x-safari, ktory
+  // Instagram zablokoval). Preto ju uprednostnime pred vsetkym ostatnym.
+  if (/instagram/i.test(userAgent)) {
+    return `instagram://extbrowser/?url=${encodeURIComponent(u.toString())}`;
+  }
+
   if (isIOS(userAgent)) {
-    // Podporovane vacsinou in-app prehliadacov na iOS
+    // Ostatne in-app prehliadace na iOS (TikTok, Snapchat…) — best-effort.
     return `x-safari-${u.toString()}`;
   }
 

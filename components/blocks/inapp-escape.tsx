@@ -16,11 +16,30 @@ const SCRIPT = `(function(){try{
 var ua=navigator.userAgent;
 if(!/instagram|fban|fbav|fb_iab|musical_ly|bytedance|tiktok|snapchat|linkedinapp/i.test(ua))return;
 document.documentElement.classList.add('lk-escaping');
-var here=location.href,url=null;
-if(/iphone|ipad|ipod/i.test(ua)){url='x-safari-'+here;}
-else if(/android/i.test(ua)){var u=new URL(here);url='intent://'+u.host+u.pathname+u.search+'#Intent;scheme='+u.protocol.replace(':','')+';action=android.intent.action.VIEW;S.browser_fallback_url='+encodeURIComponent(here)+';end';}
-var a=document.getElementById('lk-gate-link');if(a&&url){a.setAttribute('href',url);}
-if(url){location.href=url;}
+var here=location.href;
+var isIOS=/iphone|ipad|ipod/i.test(ua);
+var esc=null,manual=null;
+if(/instagram/i.test(ua)){
+  // Instagramova VLASTNA schema — appka otvori URL v EXTERNOM prehliadaci.
+  // Funguje aj na najnovsom iOS (nie je to blokovany x-safari hack).
+  esc='instagram://extbrowser/?url='+encodeURIComponent(here);
+  manual=esc;
+}else if(/android/i.test(ua)){
+  var u=new URL(here);
+  esc='intent://'+u.host+u.pathname+u.search+'#Intent;scheme='+u.protocol.replace(':','')+';action=android.intent.action.VIEW;S.browser_fallback_url='+encodeURIComponent(here)+';end';
+  manual=esc;
+}else if(isIOS){
+  // TikTok/Snapchat iOS — best-effort; manualne tlacidlo skusi Chrome.
+  esc='x-safari-'+here;
+  manual='googlechromes://'+location.host+location.pathname+location.search;
+}else{
+  manual=here;
+}
+var a=document.getElementById('lk-gate-link');if(a&&manual){a.setAttribute('href',manual);}
+// Auto-escape len RAZ za session, nech to necyklime (v Safari uz UA nie je
+// in-app, takze sa skript aj tak nespusti).
+var did=false;try{did=sessionStorage.getItem('lk_escaped')==='1';}catch(e){}
+if(esc&&!did){try{sessionStorage.setItem('lk_escaped','1');}catch(e){}location.replace(esc);}
 }catch(e){}})();`;
 
 export function InAppEscape() {
