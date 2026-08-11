@@ -874,10 +874,10 @@ export function Editor({
                             </span>
                           </p>
                           <p className="mt-1 max-w-md text-xs leading-relaxed text-soft">
-                            One switch for creators: shields every link, hides
-                            your page from search, detects and serves platform
-                            crawlers a clean page (no bio, photo or links), and
-                            opens links in the real browser.{" "}
+                            Hides your page from search and serves platform
+                            crawlers a clean page — no bio, photo or links to
+                            scrape. Combine it with Link Shield and Open
+                            externally below; each works on its own.{" "}
                             <Link
                               href="/safe"
                               target="_blank"

@@ -148,8 +148,9 @@ export default async function PublicProfilePage({
   // Naplanovane bloky sa filtruju az pri renderi (ISR 60 s = dost jemne)
   const blockList = (snap.blocks ?? []).filter(isVisibleNow);
 
-  // Creator / Stealth mode — ochranna vrstva pre tvorcov (Pro+). Vynuti escape,
-  // cloakne bio (renderuje sa az client-side) a metadata su uz neutralne.
+  // Creator / Stealth mode — ochranna vrstva pre tvorcov (Pro+): cistá stránka
+  // pre crawlery, cloak bia/blokov (client-side) a neutrálne metadata. Escape
+  // a Link Shield si riadia vlastné prepínače, Creator mode ich NEvynucuje.
   const stealth = profile.creator_mode === true && plan.creatorMode;
 
   // Real-time crawler detekcia: ak stealth profil navstivi znamy platform bot
@@ -178,10 +179,11 @@ export default async function PublicProfilePage({
     }
   }
 
-  // Tvrdy escape z in-app prehliadaca (Pro+ funkcia). Ked je zapnuty, gate sa
-  // renderuje uz na serveri a skryje obsah okamzite (bez bliknutia profilu).
-  const escapeEnabled =
-    (profile.escape_inapp === true || stealth) && plan.escapeInApp;
+  // Externe otvorenie riadi VYLUCNE „Open externally" (escape_inapp) — nezavisle
+  // od Creator mode a Link Shield. Ked je vypnute, stranka sa ukaze aj v in-app
+  // prehliadaci (napr. Instagram); ked je zapnute, vyskoci do realneho
+  // prehliadaca. Creator mode teda escape NEvynucuje.
+  const escapeEnabled = profile.escape_inapp === true && plan.escapeInApp;
 
   // „Powered by Linkovne" + marketing button — free vzdy, Pro+ len ked si
   // branding nevypol (plan.hideBranding = smie skryt, hide_branding = vypnute).

@@ -49,13 +49,17 @@ export default function SafeSharingGuide() {
       </p>
 
       <div className="mt-10 space-y-8">
-        <Step n={1} title="Turn on Creator mode">
+        <Step n={1} title="Turn on the Protection toggles">
           <p>
-            In the editor, open <strong>Protection → Creator mode</strong>. One
-            switch shields every link behind a confirmation step (so the real
-            URL never sits in your page&apos;s code or link previews), hides your
-            page from search, keeps your bio out of crawlers, and opens links in
-            the real browser. It&apos;s on Pro &amp; Business.
+            In the editor, open <strong>Protection</strong>. Three independent
+            switches you can combine:{" "}
+            <strong>Creator mode</strong> hides your page from search and shows
+            platform crawlers a clean page (no bio, photo or links);{" "}
+            <strong>Link Shield</strong> puts a neutral confirmation step before
+            your links so the real URL never sits in your page&apos;s code;{" "}
+            <strong>Open externally</strong> jumps a visitor out of the
+            Instagram / TikTok in-app browser into real Safari or Chrome.
+            They&apos;re on Pro &amp; Business.
           </p>
         </Step>
 
