@@ -2,9 +2,11 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { planOf } from "@/lib/plans";
-import { buildTrafficRows, trafficInsight } from "@/lib/traffic";
+import { buildTrafficRows, trafficInsight, trafficLabel } from "@/lib/traffic";
 import { profileLabel } from "@/lib/site";
 import type { BlockConfig } from "@/lib/blocks";
+import { AnalyticsControls } from "@/components/dashboard/analytics-controls";
+import { LocalTime } from "@/components/dashboard/local-time";
 
 type OverviewRow = {
   profile_id: string;
@@ -34,6 +36,14 @@ function countryLabel(code: string): string {
     /* ostane kod */
   }
   return `${flag} ${name}`;
+}
+
+/** Len vlajka (kompaktne, do feedu). Prazdny string ked kod nepozname. */
+function countryFlag(code: string | null): string {
+  if (!code || !/^[A-Z]{2}$/.test(code)) return "";
+  return code.replace(/./g, (c) =>
+    String.fromCodePoint(127397 + c.charCodeAt(0)),
+  );
 }
 
 /** Zmena oproti predoslemu obdobiu. */
@@ -258,9 +268,9 @@ function Card({
 export default async function AnalyticsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ p?: string }>;
+  searchParams: Promise<{ p?: string; d?: string; cleared?: string }>;
 }) {
-  const { p } = await searchParams;
+  const { p, d, cleared } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -428,8 +438,17 @@ export default async function AnalyticsPage({
   }
 
   /* ---------- PER MODEL ---------- */
-  const days = plan.analyticsDays;
-  const chartDays = Math.min(days, 14);
+  // Rozsah: presny pocet dni z `?d=`, orezany na retenciu planu (free 7,
+  // platene 30). Default = plny rozsah planu.
+  const maxDays = plan.analyticsDays;
+  const dParsed = parseInt(d ?? "", 10);
+  const days =
+    Number.isFinite(dParsed) && dParsed > 0
+      ? Math.min(dParsed, maxDays)
+      : maxDays;
+  // Cely zvoleny rozsah v grafe (nie viac natvrdo 14). Nad 45 dni by uz boli
+  // stlpce prilis tenke — vtedy kreslime tyzdenne, inak denne.
+  const chartDays = days;
   const since = new Date(Date.now() - days * 864e5).toISOString();
 
   // Predoslé obdobie rovnakej dlzky — na porovnanie (▲/▼ %).
@@ -459,7 +478,7 @@ export default async function AnalyticsPage({
     ? await Promise.all([
         supabase
           .from("clicks")
-          .select("block_id, source, referrer, created_at")
+          .select("block_id, source, referrer, device, country, created_at")
           .in("block_id", blockIds)
           .gte("created_at", since),
         supabase
@@ -533,16 +552,98 @@ export default async function AnalyticsPage({
     .sort((a, b) => b.value - a.value)
     .slice(0, 8);
 
+  // „Z ktorej siete na ktory link" — kliky zoskupene podla platformy a v ramci
+  // nej podla bloku. Presna odpoved na „z ktorej socialnej siete na ktory
+  // link/block klikol".
+  const chanMap = new Map<string, Map<string, number>>();
+  for (const c of clickList) {
+    const chan = trafficLabel(
+      c.referrer as string | null,
+      c.source as string | null,
+    );
+    const title = titleFor.get(c.block_id as string) ?? "Deleted block";
+    const inner = chanMap.get(chan) ?? new Map<string, number>();
+    inner.set(title, (inner.get(title) ?? 0) + 1);
+    chanMap.set(chan, inner);
+  }
+  const channelLinkRows = [...chanMap.entries()]
+    .map(([channel, inner]) => ({
+      channel,
+      total: [...inner.values()].reduce((a, b) => a + b, 0),
+      links: [...inner.entries()]
+        .map(([label, value]) => ({ label, value }))
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 5),
+    }))
+    .sort((a, b) => b.total - a.total)
+    .slice(0, 8);
+
+  // Recent activity — navstevy + kliky zlucene, najnovsie hore. „Co kedy kto
+  // ako prisiel a na co klikol" na jednom mieste.
+  type Ev = {
+    at: string;
+    kind: "view" | "click";
+    platform: string;
+    country: string | null;
+    device: string | null;
+    title?: string;
+  };
+  const events: Ev[] = [];
+  for (const v of viewList) {
+    events.push({
+      at: v.created_at as string,
+      kind: "view",
+      platform: trafficLabel(
+        v.referrer as string | null,
+        v.source as string | null,
+      ),
+      country: (v.country as string | null) ?? null,
+      device: (v.device as string | null) ?? null,
+    });
+  }
+  for (const c of clickList) {
+    events.push({
+      at: c.created_at as string,
+      kind: "click",
+      platform: trafficLabel(
+        c.referrer as string | null,
+        c.source as string | null,
+      ),
+      country: (c.country as string | null) ?? null,
+      device: (c.device as string | null) ?? null,
+      title: titleFor.get(c.block_id as string) ?? "Deleted block",
+    });
+  }
+  events.sort((a, b) => (a.at < b.at ? 1 : a.at > b.at ? -1 : 0));
+  const recent = events.slice(0, 40);
+
   return (
     <div className="space-y-8">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <h1 className="font-grotesk font-bold text-3xl tracking-tight">Analytics</h1>
             <p className="mt-1 text-sm text-soft">
-              Last {days} days · {profileLabel(current.username)}
+              Last {days} {days === 1 ? "day" : "days"} ·{" "}
+              {profileLabel(current.username)}
             </p>
           </div>
           {selector}
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <AnalyticsControls
+            profileId={current.id}
+            days={days}
+            maxDays={maxDays}
+          />
+          {cleared === "1" && (
+            <span className="text-sm text-ok">✓ Analytics cleared.</span>
+          )}
+          {cleared === "err" && (
+            <span className="text-sm text-danger">
+              Couldn&apos;t clear — try again.
+            </span>
+          )}
         </div>
 
         <section className="grid gap-4 sm:grid-cols-3">
@@ -634,6 +735,87 @@ export default async function AnalyticsPage({
             <Donut rows={devRows} />
           </Card>
             </div>
+
+            <Card
+              title="Which links each channel drives"
+              aside={
+                <p className="text-xs text-faint">
+                  Which network → which link clicked
+                </p>
+              }
+            >
+              {channelLinkRows.length === 0 ? (
+                <p className="py-8 text-center text-sm text-soft">
+                  No clicks recorded yet.
+                </p>
+              ) : (
+                <div className="grid gap-x-8 gap-y-6 sm:grid-cols-2">
+                  {channelLinkRows.map((c) => (
+                    <div key={c.channel}>
+                      <div className="mb-3 flex items-baseline justify-between gap-2">
+                        <span className="text-sm font-semibold">
+                          {c.channel}
+                        </span>
+                        <span className="text-xs text-faint tabular-nums">
+                          {c.total} {c.total === 1 ? "click" : "clicks"}
+                        </span>
+                      </div>
+                      <HBars rows={c.links} emptyLabel="" />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
+
+            <Card
+              title="Recent activity"
+              aside={
+                <p className="text-xs text-faint">
+                  Newest first · your local time
+                </p>
+              }
+            >
+              {recent.length === 0 ? (
+                <p className="py-8 text-center text-sm text-soft">
+                  Nothing yet.
+                </p>
+              ) : (
+                <ul className="divide-y divide-line/70 text-sm">
+                  {recent.map((e, i) => (
+                    <li key={i} className="flex items-center gap-3 py-2.5">
+                      <span
+                        className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                          e.kind === "click"
+                            ? "bg-ink text-paper"
+                            : "bg-line text-soft"
+                        }`}
+                      >
+                        {e.kind === "click" ? "click" : "view"}
+                      </span>
+                      <span className="min-w-0 flex-1 truncate">
+                        <span className="font-medium">{e.platform}</span>
+                        {e.title && (
+                          <span className="text-soft"> → {e.title}</span>
+                        )}
+                      </span>
+                      {e.country && (
+                        <span className="shrink-0" aria-hidden>
+                          {countryFlag(e.country)}
+                        </span>
+                      )}
+                      {e.device && (
+                        <span className="hidden shrink-0 text-faint capitalize sm:inline">
+                          {e.device}
+                        </span>
+                      )}
+                      <span className="shrink-0 text-xs text-faint">
+                        <LocalTime iso={e.at} />
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Card>
           </>
         )}
 

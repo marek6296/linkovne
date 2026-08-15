@@ -1,4 +1,5 @@
 import { channelLabel } from "@/lib/channels";
+import { SITE_DOMAIN } from "@/lib/site";
 
 /**
  * Klasifikacia navstevy do platformy — funguje AJ bez trackovanych linkov.
@@ -7,7 +8,17 @@ import { channelLabel } from "@/lib/channels";
  * fungovalo automaticky pre kazdeho, nielen ked si niekto poctivo lepi ?s=.
  */
 
+// Vlastna domena ako referrer = klik prisiel z profilu samotneho (napr. klik na
+// button vedie /profil -> /r/[id], referer je profilova stranka). To nie je
+// „ina stranka" — beriem to ako Direct. Skutocny povod (ssiet) pri kliku
+// pozname len z trackovaneho ?s=, ktory ma aj tak prednost pred referrerom.
+const OWN_DOMAIN_RE = new RegExp(
+  `(^|\\.)${SITE_DOMAIN.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$|(^|\\.)localhost$`,
+  "i",
+);
+
 const HOST_RULES: [RegExp, string][] = [
+  [OWN_DOMAIN_RE, "direct"],
   [/(^|\.)instagram\.com$|(^|\.)l\.instagram\.com$|(^|\.)ig\.me$/i, "instagram"],
   [/(^|\.)tiktok\.com$|musical\.ly|musically|zhiliao/i, "tiktok"],
   [/(^|\.)(x|twitter)\.com$|(^|\.)t\.co$/i, "x"],
