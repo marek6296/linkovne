@@ -9,12 +9,20 @@
  *   2) skusi vyskocit do realneho prehliadaca (Android `intent://` spolahlivo;
  *      iOS `x-safari-` best-effort — inak ostane blokujuci gate + navod).
  *
+ * Pokryte in-app prehliadace: Instagram (vlastna extbrowser schema), Facebook /
+ * Messenger, TikTok, Snapchat, LinkedIn a X/Twitter (iOS „Twitter for iPhone",
+ * Android „TwitterAndroid"). Instagram ma vlastnu vetvu; X ide cez spolocnu
+ * iOS/Android vetvu (x-safari-https / intent) — tie su preň spolahlive.
+ *
  * Detekcia je v skripte, nie v CSS, takze normalny prehliadac gate nikdy
  * neuvidi (ostane `display:none`) a obsah sa zobrazi bezo zmeny.
  */
 const SCRIPT = `(function(){try{
 var ua=navigator.userAgent;
-if(!/instagram|fban|fbav|fb_iab|musical_ly|bytedance|tiktok|snapchat|linkedinapp/i.test(ua))return;
+// X (Twitter) in-app webview sa hlasi ako "Twitter for iPhone" (iOS) /
+// "TwitterAndroid" (Android) — zamerne NIE holy "twitter", nech nechytime
+// crawler "Twitterbot". iOS X escapuje cez x-safari-https, Android cez intent.
+if(!/instagram|fban|fbav|fb_iab|musical_ly|bytedance|tiktok|snapchat|linkedinapp|twitter for iphone|twitterandroid/i.test(ua))return;
 document.documentElement.classList.add('lk-escaping');
 var here=location.href;
 var isIOS=/iphone|ipad|ipod/i.test(ua);
@@ -29,7 +37,8 @@ if(/instagram/i.test(ua)){
   esc='intent://'+u.host+u.pathname+u.search+'#Intent;scheme='+u.protocol.replace(':','')+';action=android.intent.action.VIEW;S.browser_fallback_url='+encodeURIComponent(here)+';end';
   manual=esc;
 }else if(isIOS){
-  // TikTok/Snapchat iOS — best-effort; manualne tlacidlo skusi Chrome.
+  // TikTok / Snapchat / X (Twitter) iOS — x-safari-https (pre X spolahlive,
+  // appka nas pusti do Safari); manualne tlacidlo skusi Chrome.
   esc='x-safari-'+here;
   manual='googlechromes://'+location.host+location.pathname+location.search;
 }else{
