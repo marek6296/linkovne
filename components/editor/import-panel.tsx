@@ -2,12 +2,16 @@
 
 import { useState } from "react";
 import { defaultConfig, type Block } from "@/lib/blocks";
+import type { Design } from "@/lib/design";
 
 export type ImportResult = {
   display_name: string;
   bio: string;
   avatar_url: string;
   blocks: Block[];
+  /** Len pri klonovani z inej linkovne stranky — prenesie sa aj vzhlad. */
+  theme?: string | null;
+  design?: Partial<Design> | null;
 };
 
 export function ImportPanel({
@@ -38,27 +42,44 @@ export function ImportPanel({
         return;
       }
 
-      const blocks: Block[] = json.links.map(
-        (l: { title: string; url: string; thumb?: string }, i: number) => ({
+      let blocks: Block[];
+      if (Array.isArray(json.blocks)) {
+        // Interny klon inej linkovne stranky — plne bloky (vsetky typy aj
+        // konfiguracie) 1:1. Len nove id a cerstve poradie, nech nekoliduju.
+        blocks = (json.blocks as Block[]).map((b, i) => ({
+          ...b,
           id: crypto.randomUUID(),
-          type: "link" as const,
           position: i,
-          is_active: true,
-          config: {
-            ...defaultConfig("link"),
-            title: l.title,
-            url: l.url,
-            // Fotka na buttone, ak ju importujeme — rovno aj layout "thumb".
-            ...(l.thumb ? { thumb: l.thumb, layout: "thumb" as const } : {}),
-          },
-        }),
-      );
+          is_active: b.is_active !== false,
+          starts_at: b.starts_at ?? null,
+          ends_at: b.ends_at ?? null,
+        }));
+      } else {
+        // Externy zdroj (Linktree / Link.me …) — mame len title+url+thumb.
+        blocks = (json.links ?? []).map(
+          (l: { title: string; url: string; thumb?: string }, i: number) => ({
+            id: crypto.randomUUID(),
+            type: "link" as const,
+            position: i,
+            is_active: true,
+            config: {
+              ...defaultConfig("link"),
+              title: l.title,
+              url: l.url,
+              // Fotka na buttone, ak ju importujeme — rovno aj layout "thumb".
+              ...(l.thumb ? { thumb: l.thumb, layout: "thumb" as const } : {}),
+            },
+          }),
+        );
+      }
 
       onApply({
         display_name: json.profile?.display_name ?? "",
         bio: json.profile?.bio ?? "",
         avatar_url: json.profile?.avatar_url ?? "",
         blocks,
+        theme: json.theme ?? undefined,
+        design: json.design ?? undefined,
       });
       setOpen(false);
     } catch {
@@ -78,8 +99,10 @@ export function ImportPanel({
         }`}
       >
         <span>
-          <span className="font-medium">Import from Linktree or Link.me</span>
-          <span className="ml-2 text-soft">bring your links across</span>
+          <span className="font-medium">Import an existing page</span>
+          <span className="ml-2 text-soft">
+            another linkovne page, Linktree or Link.me
+          </span>
         </span>
         <span className="text-faint">→</span>
       </button>
@@ -89,10 +112,11 @@ export function ImportPanel({
   return (
     <div className={`space-y-3 ${bare ? "" : "card mt-3 p-5"}`}>
       <div>
-        <p className="text-sm font-semibold">Import your existing page</p>
+        <p className="text-sm font-semibold">Import an existing page</p>
         <p className="mt-1 text-sm text-soft">
-          Paste the address of your Linktree, Link.me, Beacons or bio.link page.
-          This replaces the blocks below.
+          Paste another <strong>linkovne.com</strong> page to clone everything —
+          links, layout and design — or a Linktree, Link.me, Beacons or bio.link
+          page to bring the links across. This replaces the blocks below.
         </p>
       </div>
 
@@ -101,7 +125,7 @@ export function ImportPanel({
           value={url}
           autoFocus
           spellCheck={false}
-          placeholder="linktr.ee/yourname"
+          placeholder="linkovne.com/name or linktr.ee/name"
           onChange={(e) => setUrl(e.target.value)}
           className="field"
         />

@@ -682,6 +682,16 @@ export function Editor({
                       display_name: result.display_name || p.display_name,
                       bio: result.bio || p.bio,
                       avatar_url: result.avatar_url || p.avatar_url,
+                      // Klon z inej linkovne stranky nesie aj vzhlad — prenesieme
+                      // ho v ramci planu (rovnako ako AI draft vyssie).
+                      theme:
+                        result.theme && allowsTheme(plan, result.theme)
+                          ? result.theme
+                          : p.theme,
+                      design:
+                        result.design && plan.customDesign
+                          ? { ...p.design, ...result.design }
+                          : p.design,
                     }));
                     setBlocks(
                       plan.maxBlocks === null

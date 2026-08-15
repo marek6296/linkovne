@@ -1,6 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import { isPublicHttpUrl } from "@/lib/net-guard";
+import { SITE_DOMAIN, stripAltPrefix } from "@/lib/site";
 
 export const maxDuration = 30;
 
@@ -298,6 +300,66 @@ export async function POST(request: NextRequest) {
     target = new URL(withProtocol);
   } catch {
     return NextResponse.json({ error: "That isn't a valid link." }, { status: 400 });
+  }
+
+  // ── Nasa vlastna stranka ── klon uz existujuceho linkovne profilu.
+  // Miesto scrapovania HTML citame priamo ZVEREJNENY snapshot z DB (plne bloky,
+  // tema aj dizajn), takze novy profil dostane vsetko 1:1 — nielen linky.
+  const host = target.hostname.toLowerCase();
+  const selfHost = (request.headers.get("host") ?? "").toLowerCase();
+  const isInternal =
+    host === SITE_DOMAIN ||
+    host === `www.${SITE_DOMAIN}` ||
+    (selfHost && host === selfHost);
+
+  if (isInternal) {
+    const seg = target.pathname.split("/").filter(Boolean)[0] ?? "";
+    let uname = seg;
+    try {
+      uname = decodeURIComponent(seg);
+    } catch {
+      /* ponechaj povodny segment */
+    }
+    uname = stripAltPrefix(uname).toLowerCase();
+
+    if (!/^[a-z0-9_.]{3,30}$/.test(uname)) {
+      return NextResponse.json(
+        { error: "Paste a link to a linkovne page, e.g. linkovne.com/name." },
+        { status: 400 },
+      );
+    }
+
+    const pub = createPublicClient();
+    const { data } = await pub.rpc("public_profile", { p_username: uname });
+    const row = Array.isArray(data) ? data[0] : null;
+    const snap = (row as { snapshot?: Record<string, unknown> } | null)
+      ?.snapshot;
+    if (!snap) {
+      return NextResponse.json(
+        { error: "That linkovne page isn't published yet." },
+        { status: 422 },
+      );
+    }
+
+    const blocks = Array.isArray(snap.blocks) ? snap.blocks : [];
+    if (blocks.length === 0) {
+      return NextResponse.json(
+        { error: "That page has no links to import." },
+        { status: 422 },
+      );
+    }
+
+    return NextResponse.json({
+      internal: true,
+      profile: {
+        display_name: String(snap.display_name ?? ""),
+        bio: String(snap.bio ?? ""),
+        avatar_url: String(snap.avatar_url ?? ""),
+      },
+      theme: (snap.theme as string | null) ?? null,
+      design: (snap.design as Record<string, unknown> | null) ?? null,
+      blocks,
+    });
   }
 
   if (!ALLOWED_HOSTS.has(target.hostname.toLowerCase())) {
