@@ -4,6 +4,7 @@ import { signOut } from "@/app/auth/actions";
 import { Logo } from "@/components/logo";
 import { DashboardNav } from "@/components/dashboard/nav";
 import { PlanBadge } from "@/components/dashboard/plan-badge";
+import { AdminBell } from "@/components/dashboard/admin-bell";
 
 /**
  * Perzistentny obal dashboardu. Zije v app/dashboard/layout.tsx, takze header
@@ -73,6 +74,7 @@ export function DashboardChrome({
                 {upgrade.label}
               </Link>
             )}
+            {isAdmin && <AdminBell />}
             {isAdmin && (
               <Link href="/admin" className="btn-quiet px-2.5 sm:px-4">
                 Admin

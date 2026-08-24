@@ -6,6 +6,7 @@ import { signOut } from "@/app/auth/actions";
 import { Logo } from "@/components/logo";
 import { PlanBadge } from "@/components/dashboard/plan-badge";
 import { AdminNav } from "@/components/admin/nav";
+import { AdminBell } from "@/components/dashboard/admin-bell";
 
 /**
  * Zdielany obal admin panelu — guard + chrome sa nacitaju RAZ, podstranky
@@ -45,6 +46,7 @@ export default async function AdminLayout({
             </div>
 
             <div className="flex shrink-0 items-center gap-1">
+              <AdminBell />
               <Link href="/dashboard" className="btn-quiet">
                 ← App
               </Link>
