@@ -79,6 +79,10 @@ export function eventLabel(e: AccountEvent): { title: string; tone: Tone } {
       return { title: "Plan expired → Free", tone: "warn" };
     case "admin_change":
       return { title: `Admin set plan → ${to}`, tone: "accent" };
+    case "admin_added":
+      return { title: "Made an admin", tone: "accent" };
+    case "admin_removed":
+      return { title: "Removed as admin → Free", tone: "warn" };
     default:
       return { title: e.type, tone: "muted" };
   }

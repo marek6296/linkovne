@@ -13,6 +13,7 @@ const ITEMS = [
   { key: "clients", label: "Clients", href: "/admin/clients" },
   { key: "growth", label: "Growth", href: "/admin/growth" },
   { key: "discounts", label: "Discounts", href: "/admin/discounts" },
+  { key: "log", label: "Activity", href: "/admin/log" },
   { key: "team", label: "Team", href: "/admin/team" },
   { key: "platform", label: "Platform", href: "/admin/platform" },
 ] as const;
@@ -26,11 +27,13 @@ export function AdminNav() {
       ? "growth"
       : pathname.startsWith("/admin/discounts")
         ? "discounts"
-        : pathname.startsWith("/admin/team")
-          ? "team"
-          : pathname.startsWith("/admin/platform")
-            ? "platform"
-            : "overview";
+        : pathname.startsWith("/admin/log")
+          ? "log"
+          : pathname.startsWith("/admin/team")
+            ? "team"
+            : pathname.startsWith("/admin/platform")
+              ? "platform"
+              : "overview";
 
   return (
     <nav className="flex items-center gap-1 overflow-x-auto md:justify-center [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
