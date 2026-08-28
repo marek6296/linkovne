@@ -9,23 +9,33 @@
  *   2) skusi vyskocit do realneho prehliadaca (Android `intent://` spolahlivo;
  *      iOS `x-safari-` best-effort — inak ostane blokujuci gate + navod).
  *
- * Pokryte in-app prehliadace: Instagram (vlastna extbrowser schema), Facebook /
- * Messenger, TikTok, Snapchat, LinkedIn a X/Twitter (iOS „Twitter for iPhone",
- * Android „TwitterAndroid"). Instagram ma vlastnu vetvu; X ide cez spolocnu
- * iOS/Android vetvu (x-safari-https / intent) — tie su preň spolahlive.
+ * Detekcia (podla open-source inapp-spy, ktory pouziva aj inapp-debugger):
+ * NEspoliehame sa len na tokeny konkretnych appiek (tie sa menia — napr. X po
+ * rebrande), ale hlavne na GENERICKE znaky in-app webview:
+ *   - iOS in-app  = UA s iPhone/iPad ALE BEZ „Safari/" (realne Safari, Chrome aj
+ *     SFSafariViewController „Safari/" maju → tie nechytime),
+ *   - Android in-app = „; wv)" alebo „WebView".
+ * Tak chytime X aj buduce appky, nielen tie, ktore poznameme po mene. Instagram
+ * ma vlastnu vetvu (jeho extbrowser schema funguje); ostatne iOS appky nemaju
+ * univerzalny auto-escape, preto x-safari-https (best-effort) + spolahlive
+ * manualne tlacidlo (tap = user gesture). Boty/crawlery nikdy neescapujeme.
  *
  * Detekcia je v skripte, nie v CSS, takze normalny prehliadac gate nikdy
  * neuvidi (ostane `display:none`) a obsah sa zobrazi bezo zmeny.
  */
 const SCRIPT = `(function(){try{
 var ua=navigator.userAgent;
-// X (Twitter) in-app webview sa hlasi ako "Twitter for iPhone" (iOS) /
-// "TwitterAndroid" (Android) — zamerne NIE holy "twitter", nech nechytime
-// crawler "Twitterbot". iOS X escapuje cez x-safari-https, Android cez intent.
-if(!/instagram|fban|fbav|fb_iab|musical_ly|bytedance|tiktok|snapchat|linkedinapp|twitter for iphone|twitterandroid/i.test(ua))return;
+// Link-preview crawlery / boty nikdy neescapujeme (aj tak nespustaju JS).
+if(/bot|crawl|spider|slurp|facebookexternalhit|embedly|preview/i.test(ua))return;
+var isIOS=/iphone|ipad|ipod/i.test(ua);
+// Znama appka podla UA tokenu (Instagram ma vlastnu vetvu nizsie).
+var known=/instagram|fban|fbav|fb_iab|musical_ly|bytedance|tiktok|snapchat|linkedinapp|twitter|\\bline\\/|micromessenger|barcelona|reddit\\/|\\bgsa\\b/i.test(ua);
+// Genericke in-app webview (chyti X aj buduce appky bez ohladu na token).
+var iosInApp=isIOS&&!/safari\\//i.test(ua);
+var androidWv=/;\\s*wv\\)/i.test(ua)||/\\bwebview\\b/i.test(ua);
+if(!(known||iosInApp||androidWv))return;
 document.documentElement.classList.add('lk-escaping');
 var here=location.href;
-var isIOS=/iphone|ipad|ipod/i.test(ua);
 var esc=null,manual=null;
 if(/instagram/i.test(ua)){
   // Instagramova VLASTNA schema — appka otvori URL v EXTERNOM prehliadaci.
@@ -37,10 +47,11 @@ if(/instagram/i.test(ua)){
   esc='intent://'+u.host+u.pathname+u.search+'#Intent;scheme='+u.protocol.replace(':','')+';action=android.intent.action.VIEW;S.browser_fallback_url='+encodeURIComponent(here)+';end';
   manual=esc;
 }else if(isIOS){
-  // TikTok / Snapchat / X (Twitter) iOS — x-safari-https (pre X spolahlive,
-  // appka nas pusti do Safari); manualne tlacidlo skusi Chrome.
+  // iOS nema univerzalny auto-escape (okrem IG vlastnej schemy). x-safari-https
+  // je najlepsi dostupny sposob (X, TikTok, Snapchat…) — skusime automaticky aj
+  // ako manualne tlacidlo (tap je user gesture = spolahlivejsi nez auto).
   esc='x-safari-'+here;
-  manual='googlechromes://'+location.host+location.pathname+location.search;
+  manual='x-safari-'+here;
 }else{
   manual=here;
 }
@@ -99,8 +110,8 @@ export function InAppEscape() {
               opacity: 0.65,
             }}
           >
-            If nothing happens, tap the menu (⋯ / ⋮) at the top-right and choose
-            “Open in browser”.
+            If nothing happens, tap the menu (⋯ / ⋮) at the top and choose
+            “Open in browser” (or “Open in Safari”).
           </p>
         </div>
       </a>
