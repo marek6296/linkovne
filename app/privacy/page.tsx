@@ -22,7 +22,7 @@ export default function PrivacyPage() {
         {BRAND_TITLE} is a link-in-bio service that lets creators host a single
         page with their links, on our domain or their own. For any privacy
         question, contact us at{" "}
-        <a href="mailto:privacy@linkovne.com">privacy@linkovne.com</a>.
+        <a href="mailto:support@linkovne.com">support@linkovne.com</a>.
       </p>
 
       <h2>What we collect</h2>
@@ -111,7 +111,7 @@ export default function PrivacyPage() {
         personal data, object to or restrict certain processing, and request
         portability. You can delete your account and pages at any time from your
         dashboard, or contact us at{" "}
-        <a href="mailto:privacy@linkovne.com">privacy@linkovne.com</a>. You also
+        <a href="mailto:support@linkovne.com">support@linkovne.com</a>. You also
         have the right to complain to your local data-protection authority.
       </p>
 

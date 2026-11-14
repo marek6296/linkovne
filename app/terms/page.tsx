@@ -74,7 +74,7 @@ export default function TermsPage() {
       <h2>5. Reporting</h2>
       <p>
         To report content that violates these Terms or the law, contact{" "}
-        <a href="mailto:report@linkovne.com">report@linkovne.com</a>. We review
+        <a href="mailto:support@linkovne.com">support@linkovne.com</a>. We review
         reports and may remove content or take action on accounts as appropriate.
       </p>
 

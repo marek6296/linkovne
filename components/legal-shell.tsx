@@ -44,7 +44,7 @@ export function LegalShell({
             Terms
           </Link>
           <a
-            href="mailto:report@linkovne.com"
+            href="mailto:support@linkovne.com"
             className="transition hover:text-ink"
           >
             Report content
