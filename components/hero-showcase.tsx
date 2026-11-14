@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import styles from "./hero-showcase.module.css";
 
@@ -10,15 +11,15 @@ export function HeroShowcase() {
     <div className={`${styles.scene} ${paused ? styles.paused : ""}`} data-theme={theme}>
       <div className={styles.orbit} aria-hidden="true" />
       <div className={styles.stage}>
-        <div className={styles.address}><span>↗</span> linkovne.com/alex <span className={styles.live}>● Published</span></div>
+        <div className={styles.address}><span>↗</span> linkovne.com/sofia <span className={styles.live}>● Published</span></div>
         <div className={styles.phone}>
-          <div className={styles.topline}><span>AM®</span><span>↗</span></div>
-          <div className={styles.avatar}>a<span>m.</span></div>
-          <h2>Alex Morgan</h2>
-          <p>Visual creator. Always exploring.</p>
+          <div className={styles.topline}><span>SL</span><span>↗</span></div>
+          <div className={styles.avatar}><Image src="/sofia-lane.png" alt="Sofia Lane, fictional lifestyle creator" width={86} height={86} priority className={styles.portrait} /></div>
+          <h2>Sofia Lane</h2>
+          <p>Style, little escapes & everyday magic.</p>
           <div className={styles.socials} aria-label="Example social links"><span>◎</span><span>𝕏</span><span>▷</span></div>
-          <div className={`${styles.link} ${styles.featured}`}><span>✳</span><div>Explore my portfolio<small>A little outside the ordinary.</small></div><span>↗</span></div>
-          <div className={styles.art}><div className={styles.sculpture} /><span>SELECTED WORK / 026</span><strong>New perspectives.</strong></div>
+          <div className={`${styles.link} ${styles.featured}`}><span>✳</span><div>Come explore with me<small>Travel diaries & favourite places.</small></div><span>↗</span></div>
+          <div className={styles.art}><div className={styles.sculpture} /><span>THE SOFIA EDIT</span><strong>A life well travelled.</strong></div>
           <div className={styles.link}><span>↗</span><div>Let’s work together</div><span>↗</span></div>
           <div className={styles.link}><span>♡</span><div>My favourite things</div><span>↗</span></div>
           <div className={styles.brand}>Made with <b>linkovne</b></div>
