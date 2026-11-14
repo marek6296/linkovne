@@ -25,7 +25,6 @@ export function HeroShowcase() {
   ];
   return (
     <section className={styles.showcase} aria-label="Explore Linkovne profile styles">
-      <div className={styles.toolbar}><span>ONE CREATOR. YOUR WAY.</span><span>0{selected + 1} / 03</span></div>
       <div className={styles.display}>
         <div className={styles.browser}>
           <div className={styles.viewport}>
