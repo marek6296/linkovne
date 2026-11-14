@@ -1,0 +1,30 @@
+{
+  "interface": {
+    "brandColor": "#6366F1",
+    "capabilities": [],
+    "category": "Business & Operations",
+    "composerIcon": "./assets/icon.svg",
+    "defaultPrompt": "Show my Linkovne channels and upcoming Buffer posts.",
+    "developerName": "Marek Donoval",
+    "displayName": "Buffer Linkovne",
+    "logo": "./assets/icon.svg",
+    "longDescription": "Manage Linkovne's connected social channels through the official Buffer MCP server. Read the queue, prepare drafts and ideas, schedule requested posts and check performance. Uses a dedicated OAuth connection so Linkovne remains separate from other Buffer accounts.",
+    "shortDescription": "Linkovne social media"
+  },
+  "name": "buffer-linkovne",
+  "version": "1.0.2",
+  "description": "A separate Buffer connection for Linkovne social media, drafts, publishing and analytics.",
+  "author": {
+    "name": "Marek Donoval",
+    "email": "cmelo.marek@gmail.com"
+  },
+  "keywords": [
+    "buffer",
+    "linkovne",
+    "social-media",
+    "marketing"
+  ],
+  "skills": "./skills",
+  "mcpServers": "./.mcp.json"
+}
+

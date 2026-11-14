@@ -1,0 +1,33 @@
+{
+  "mcpServers": {
+    "linkovne_social": {
+      "type": "streamable-http",
+      "url": "https://mcp.buffer.com/mcp",
+      "headers": {},
+      "extensions": {
+        "com.openai": {
+          "auth": {
+            "type": "oauth",
+            "client": {
+              "mode": "dcr"
+            },
+            "baseScopes": [
+              "account:read"
+            ],
+            "defaultScopes": [
+              "offline_access",
+              "posts:read",
+              "posts:write",
+              "ideas:read",
+              "ideas:write",
+              "insights:read",
+              "snippets:read",
+              "snippets:write"
+            ]
+          }
+        }
+      }
+    }
+  }
+}
+
