@@ -32,7 +32,6 @@ function ProfileDemo({ selected }: { selected: number }) {
 
 export function HeroShowcase() {
   const [selected, setSelected] = useState(0);
-  const [paused, setPaused] = useState(false);
   const [reduced, setReduced] = useState(true);
   const [visible, setVisible] = useState(false);
   const [pageVisible, setPageVisible] = useState(true);
@@ -56,10 +55,10 @@ export function HeroShowcase() {
   }, []);
 
   useEffect(() => {
-    if (paused || reduced || !visible || !pageVisible) return;
+    if (reduced || !visible || !pageVisible) return;
     const timer = window.setInterval(() => setSelected(current => (current + 1) % LOOKS.length), 5000);
     return () => window.clearInterval(timer);
-  }, [paused, reduced, visible, pageVisible, selected]);
+  }, [reduced, visible, pageVisible, selected]);
 
   return (
     <section ref={root} className={styles.showcase} aria-label="Linkovne profile designs">
@@ -70,11 +69,6 @@ export function HeroShowcase() {
             <ProfileDemo selected={index} />
           </div>;
         })}
-        <div className={styles.motionControls}>
-          <button type="button" onClick={() => { setPaused(true); setSelected(current => (current - 1 + LOOKS.length) % LOOKS.length); }} aria-label="Show previous profile design">←</button>
-          <button type="button" onClick={() => { setPaused(true); setSelected(current => (current + 1) % LOOKS.length); }} aria-label="Show next profile design">→</button>
-          {!reduced && <button type="button" onClick={() => setPaused(!paused)} aria-label={paused ? "Play profile animation" : "Pause profile animation"} aria-pressed={paused}>{paused ? "▷" : "Ⅱ"}</button>}
-        </div>
       </div>
     </section>
   );
