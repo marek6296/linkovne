@@ -8,6 +8,9 @@ description: Use for Linkovne social media in Buffer, including connected channe
 Use this plugin's Buffer MCP connection for Linkovne work. Do not substitute
 another Buffer, Buffer 2 or Buffer 3 connection just because the tool names match.
 The official server is https://mcp.buffer.com/mcp and uses user-managed OAuth.
+The connection name is `buffer_linkovne`. On Codex hosts where it is exposed as
+`mcp__buffer_linkovne__*`, use those tools. This is the same dedicated connection,
+not one of the other brands' Buffer accounts.
 
 ## Establish the account
 

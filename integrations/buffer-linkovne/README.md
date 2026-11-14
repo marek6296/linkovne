@@ -18,6 +18,18 @@ provider's OAuth screen. Verify the connection with `get_account` and
 `list_channels`; check the organization and channel identities before writes.
 Creating the package alone does not authenticate the account.
 
+The MCP connection is named `buffer_linkovne`, including in Codex host settings.
+If Codex has not registered it, use the provider's supported setup flow:
+
+```sh
+codex mcp add buffer_linkovne --url https://mcp.buffer.com/mcp --oauth-client-registration dcr
+```
+
+For an existing connection that needs login, use `codex mcp login buffer_linkovne`.
+Complete the OAuth screen with the Linkovne account. An `o_auth` status and
+successful tool discovery verify the transport; `get_account` and `list_channels`
+are still required to verify which account was authorized.
+
 The plugin provides a dedicated connection and account-selection instructions.
 Keep it separate from existing Buffer MCP connections for other brands.
 

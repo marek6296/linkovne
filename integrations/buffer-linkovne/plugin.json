@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "buffer-linkovne",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A separate Buffer connection for Linkovne social media, drafts, publishing and analytics.",
   "author": { "name": "Marek" },
   "keywords": ["buffer", "linkovne", "social-media", "marketing"],
