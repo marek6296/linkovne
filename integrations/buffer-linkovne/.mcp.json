@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "linkovne_social": {
+    "buffer_linkovne": {
       "type": "streamable-http",
       "url": "https://mcp.buffer.com/mcp",
       "headers": {},
@@ -30,4 +30,3 @@
     }
   }
 }
-

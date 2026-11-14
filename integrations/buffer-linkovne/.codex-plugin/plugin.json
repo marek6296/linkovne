@@ -12,7 +12,7 @@
     "shortDescription": "Linkovne social media"
   },
   "name": "buffer-linkovne",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A separate Buffer connection for Linkovne social media, drafts, publishing and analytics.",
   "author": {
     "name": "Marek Donoval",
@@ -27,4 +27,3 @@
   "skills": "./skills",
   "mcpServers": "./.mcp.json"
 }
-

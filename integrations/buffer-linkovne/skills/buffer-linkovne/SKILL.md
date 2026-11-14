@@ -8,8 +8,8 @@ description: Use for Linkovne social media in Buffer, including connected channe
 Use this plugin's Buffer MCP connection for Linkovne work. Do not substitute
 another Buffer, Buffer 2 or Buffer 3 connection just because the tool names match.
 The official server is https://mcp.buffer.com/mcp and uses user-managed OAuth.
-The connection name is `linkovne_social`. On Codex hosts where it is exposed as
-`mcp__linkovne_social__*`, use those tools. This is the same dedicated connection,
+The connection name is `buffer_linkovne`. On Codex hosts where it is exposed as
+`mcp__buffer_linkovne__*`, use those tools. This is the same dedicated connection,
 not one of the other brands' Buffer accounts.
 
 ## Establish the account
@@ -48,9 +48,8 @@ copy another account's credentials, or store credentials in this package.
 
 ## Account isolation
 
-Use only `mcp__linkovne_social__*` for Linkovne. The legacy `buffer_linkovne`
-connection was used by another brand and must never be used, logged out, or
-reauthorized by this plugin. Never alter `buffer_doprai` or any other Buffer
-connection. If Linkovne authentication is missing, log in only `linkovne_social`.
-A wrong account must block writes until the dedicated connection is verified.
-
+Use only `mcp__buffer_linkovne__*` for Linkovne. Doprai must use
+`mcp__buffer_doprai__*`. Never use, log out, or reauthorize another brand's
+connection. Verify account and channels before every publishing batch.
+If another chat is using this connector for Doprai, stop and report the routing
+error; do not switch accounts while that chat is working.
