@@ -64,11 +64,18 @@ export function HeroShowcase() {
 
   return (
     <section ref={root} className={styles.showcase} aria-label="Linkovne profile designs">
-      <div className={styles.deck}>
-        <div className={`${styles.card} ${moving ? styles.outgoing : ""}`} onAnimationEnd={(event) => { if (event.target !== event.currentTarget || event.animationName.includes("incoming")) return; setSelected(current => (current + 1) % LOOKS.length); setMoving(false); }}>
-          <ProfileDemo selected={selected} />
-        </div>
-        {moving && <div className={`${styles.card} ${styles.incoming}`} aria-hidden="true" inert><ProfileDemo selected={(selected + 1) % LOOKS.length} /></div>}
+      <div className={styles.deck} data-moving={moving}>
+        {LOOKS.map((look, index) => {
+          const position = (index - selected + LOOKS.length) % LOOKS.length;
+          return <div key={look.name} className={styles.card} data-position={position} aria-hidden={position !== 0} inert={position !== 0}
+            onAnimationEnd={(event) => {
+              if (event.target !== event.currentTarget || position !== 0 || !moving) return;
+              setSelected(current => (current + 1) % LOOKS.length);
+              setMoving(false);
+            }}>
+            <ProfileDemo selected={index} />
+          </div>;
+        })}
         <div className={styles.motionControls}>
           <button type="button" disabled={moving} onClick={() => { if (reduced) setSelected(current => (current + 1) % LOOKS.length); else setMoving(true); }} aria-label="Show next profile design">↗</button>
           {!reduced && <button type="button" onClick={() => setPaused(!paused)} aria-label={paused ? "Play profile animation" : "Pause profile animation"} aria-pressed={paused}>{paused ? "▷" : "Ⅱ"}</button>}
