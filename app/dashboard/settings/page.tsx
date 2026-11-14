@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { PROFILE_ORDER_KEY, orderProfiles } from "@/lib/profile-order";
 import { createClient } from "@/lib/supabase/server";
 import { ResetForm } from "@/components/reset-form";
 import { DomainsPanel } from "@/components/settings/domains-panel";
@@ -22,7 +23,7 @@ export default async function SettingsPage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: profiles } = await supabase
+  const { data: profileRows } = await supabase
     .from("profiles")
     .select(
       "id, username, seo_title, seo_description, is_indexable, age_gate, hide_branding",
@@ -30,7 +31,8 @@ export default async function SettingsPage({
     .eq("owner_id", user.id)
     .order("created_at");
 
-  if (!profiles || profiles.length === 0) redirect("/onboarding");
+  const profiles = orderProfiles(profileRows ?? [], user.user_metadata?.[PROFILE_ORDER_KEY]);
+  if (profiles.length === 0) redirect("/onboarding");
 
   const current = profiles.find((x) => x.id === p) ?? profiles[0];
 

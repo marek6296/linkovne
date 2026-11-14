@@ -41,6 +41,54 @@ const { normaliseSource, trackingSlug, cleanTrackedLinks } =
 const { buildTrafficRows } = load("lib/traffic.ts");
 const { createDraftSaveQueue } = load("lib/draft-save-queue.ts");
 const { resolveTheme } = load("lib/design.ts");
+const { orderProfiles, validProfileOrder } = load("lib/profile-order.ts");
+
+test("saved profile order controls the default without changing the original list", () => {
+  const profiles = Object.freeze([
+    { id: "first-created", username: "first" },
+    { id: "preferred", username: "preferred" },
+    { id: "third", username: "third" },
+  ]);
+  const ordered = orderProfiles(profiles, [
+    "preferred",
+    "third",
+    "first-created",
+  ]);
+  assert.equal(ordered[0].username, "preferred");
+  assert.deepEqual(
+    ordered.map(({ id }) => id),
+    ["preferred", "third", "first-created"],
+  );
+  assert.equal(profiles[0].id, "first-created");
+});
+
+test("stale profile preferences ignore removed, foreign and duplicate IDs and retain new profiles", () => {
+  const profiles = [{ id: "a" }, { id: "b" }, { id: "new" }];
+  assert.deepEqual(
+    orderProfiles(profiles, ["deleted", "b", "foreign", null, "b", 3]).map(
+      ({ id }) => id,
+    ),
+    ["b", "a", "new"],
+  );
+  for (const malformed of [undefined, null, "b,a", { first: "b" }]) {
+    assert.deepEqual(orderProfiles(profiles, malformed), profiles);
+  }
+});
+
+test("saving profile order only accepts distinct IDs owned by the signed-in user", () => {
+  const owned = ["a", "b", "new"];
+  assert.equal(validProfileOrder(["b", "a"], owned), true);
+  for (const invalid of [null, [], "a,b", ["a", "a"], ["foreign"], ["a", 2]]) {
+    assert.equal(validProfileOrder(invalid, owned), false);
+  }
+  assert.deepEqual(
+    orderProfiles(
+      owned.map((id) => ({ id })),
+      ["b", "a"],
+    ).map(({ id }) => id),
+    ["b", "a", "new"],
+  );
+});
 
 test("tracking sources are validated without silently truncating distinct campaigns", () => {
   assert.equal(normaliseSource(" Instagram "), "instagram");

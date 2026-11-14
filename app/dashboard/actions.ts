@@ -6,11 +6,49 @@ import { createClient } from "@/lib/supabase/server";
 import { planOf, allowsBlock, allowsTheme } from "@/lib/plans";
 import type { Block, BlockType } from "@/lib/blocks";
 import type { Design } from "@/lib/design";
+import {
+  PROFILE_ORDER_KEY,
+  orderProfiles,
+  validProfileOrder,
+} from "@/lib/profile-order";
 import { cleanTrackedLinks } from "@/lib/channels";
 import { designForPlan } from "@/lib/design-tiers";
 import { createSubscriptionCheckout, findPromotionCode } from "@/lib/checkout";
 
 export type ActionState = { error?: string } | undefined;
+
+/** A personal dashboard preference. Ownership still comes from profiles.owner_id. */
+export async function saveProfileOrder(
+  ids: string[],
+): Promise<{ error?: string; order?: string[] }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user)
+    return { error: "Your session expired. Sign in again to save the order." };
+  const { data: profiles, error: readError } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("owner_id", user.id)
+    .order("created_at");
+  if (readError || !profiles)
+    return { error: "Could not load your profiles. Try again." };
+  if (
+    !validProfileOrder(
+      ids,
+      profiles.map((profile) => profile.id),
+    )
+  )
+    return { error: "Your profile list changed. Refresh and try again." };
+  const order = orderProfiles(profiles, ids).map((profile) => profile.id);
+  const { error } = await supabase.auth.updateUser({
+    data: { [PROFILE_ORDER_KEY]: order },
+  });
+  if (error) return { error: "Could not save this order. Please try again." };
+  revalidatePath("/dashboard", "layout");
+  return { order };
+}
 
 const VALID_TYPES: BlockType[] = [
   "link",

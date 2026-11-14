@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { PROFILE_ORDER_KEY, orderProfiles } from "@/lib/profile-order";
 import { createClient } from "@/lib/supabase/server";
 import { Editor } from "@/components/editor/editor";
 import { PublishControls } from "@/components/editor/publish-controls";
@@ -22,7 +23,7 @@ export default async function DashboardPage({
   if (!user) redirect("/login");
 
   // Shared auth pool: Linkovne membership = owning at least one profile.
-  const { data: profiles } = await supabase
+  const { data: profileRows } = await supabase
     .from("profiles")
     .select(
       "id, username, display_name, bio, avatar_url, theme, design, link_shield, escape_inapp, creator_mode, hide_branding, is_published, published_at, updated_at",
@@ -30,7 +31,19 @@ export default async function DashboardPage({
     .eq("owner_id", user.id)
     .order("created_at");
 
-  if (!profiles || profiles.length === 0) redirect("/onboarding");
+  const profiles = orderProfiles(
+    profileRows ?? [],
+    user.user_metadata?.[PROFILE_ORDER_KEY],
+  );
+  if (profiles.length === 0) redirect("/onboarding");
+
+  const current = profiles.find((profile) => profile.id === p) ?? profiles[0];
+  // Pin the open editor in the URL so changing the default never switches drafts.
+  if (p !== current.id) {
+    redirect(
+      `/dashboard?p=${current.id}${upgraded === "1" ? "&upgraded=1" : ""}`,
+    );
+  }
 
   const { data: account } = await supabase
     .from("accounts")
@@ -47,7 +60,6 @@ export default async function DashboardPage({
     (account?.plan === "pro" ||
       account?.plan === "business" ||
       account?.plan === "admin");
-  const current = profiles.find((x) => x.id === p) ?? profiles[0];
 
   // Rozrobene zmeny = profil sa menil po poslednom zverejneni
   const hasUnpublished =
@@ -71,19 +83,16 @@ export default async function DashboardPage({
 
   return (
     <>
-      {/* Toolbar: prepinac stranok + publikovanie.
-          Mobil: dva ciste riadky (Models hore, publish dole cez celu sirku —
-          Unpublish vlavo, hlavne tlacidlo vpravo). Desktop: jeden riadok.
-          ⚠️ Tlacidla su vzdy dokovane vpravo cez `sm:ml-auto` na ich vlastnom
-          wrapperi — NIE cez `justify-between` na rodicovi. ProfileSwitcher
-          sa pri jedinom profile (bezny Free ucet) nevykresli vobec (vracia
-          null), takze pri justify-between by ostal jediny flex-child a
-          prehodil by sa na zaciatok riadku namiesto na koniec. */}
-      <div className="studio-topbar flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-start sm:gap-3">
+      <section
+        className="profile-workspace-header"
+        aria-label="Profile workspace"
+      >
         <ProfileSwitcher
           profiles={profiles.map((x) => ({
             id: x.id,
             username: x.username,
+            display_name: x.display_name,
+            avatar_url: x.avatar_url,
             is_published: x.is_published,
           }))}
           currentId={current.id}
@@ -91,17 +100,16 @@ export default async function DashboardPage({
           limit={plan.profiles}
         />
 
-        <div className="w-full sm:ml-auto sm:w-auto">
-          <PublishControls
-            key={current.id}
-            profileId={current.id}
-            initialPublished={current.is_published}
-            initialHasUnpublished={hasUnpublished}
-          />
-        </div>
-      </div>
+        <PublishControls
+          key={current.id}
+          profileId={current.id}
+          username={current.username}
+          initialPublished={current.is_published}
+          initialHasUnpublished={hasUnpublished}
+        />
+      </section>
 
-      <div className="mt-5 sm:mt-8">
+      <div className="mt-5 sm:mt-6">
         <Editor
           key={current.id}
           isPublished={current.is_published}

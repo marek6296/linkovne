@@ -3,10 +3,12 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
+import { SITE_DOMAIN, profileLabel } from "@/lib/site";
 import { publishProfile, unpublishProfile } from "@/app/dashboard/actions";
 import {
   EDITOR_DRAFT_STATE_EVENT,
   EDITOR_PUBLISHED_EVENT,
+  EDITOR_PUBLISHING_EVENT,
   type EditorDraftState,
 } from "@/lib/editor-draft-state";
 
@@ -53,15 +55,47 @@ function Spinner() {
 
 export function PublishControls({
   profileId,
+  username,
   initialPublished,
   initialHasUnpublished,
 }: {
   profileId: string;
+  username: string;
   initialPublished: boolean;
   initialHasUnpublished: boolean;
 }) {
   const router = useRouter();
+  const menu = useRef<HTMLDetailsElement>(null);
+  const [feedbackError, setFeedbackError] = useState(false);
+  useEffect(() => {
+    const outside = (event: MouseEvent) => {
+      if (menu.current && !menu.current.contains(event.target as Node))
+        menu.current.open = false;
+    };
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && menu.current?.open) {
+        menu.current.open = false;
+        menu.current.querySelector("summary")?.focus();
+      }
+    };
+    document.addEventListener("click", outside);
+    document.addEventListener("keydown", escape);
+    return () => {
+      document.removeEventListener("click", outside);
+      document.removeEventListener("keydown", escape);
+    };
+  }, []);
   const [isPending, startTransition] = useTransition();
+  useEffect(() => {
+    window.dispatchEvent(
+      new CustomEvent(EDITOR_PUBLISHING_EVENT, { detail: isPending }),
+    );
+    return () => {
+      window.dispatchEvent(
+        new CustomEvent(EDITOR_PUBLISHING_EVENT, { detail: false }),
+      );
+    };
+  }, [isPending]);
   const [published, setPublished] = useState(initialPublished);
   const [needsPublish, setNeedsPublish] = useState(
     !initialPublished || initialHasUnpublished,
@@ -102,12 +136,14 @@ export function PublishControls({
     setAction("publish");
     const revision = draftRevision.current;
     setFeedback(null);
+    setFeedbackError(false);
     startTransition(async () => {
       const result = await publishProfile(profileId).catch(() => ({
         error: "Connection interrupted. Your draft is safe — please try again.",
       }));
       if (result?.error) {
         setFeedback(result.error);
+        setFeedbackError(true);
         return;
       }
       setPublished(true);
@@ -125,14 +161,17 @@ export function PublishControls({
 
   function unpublish() {
     if (isPending) return;
+    if (menu.current) menu.current.open = false;
     setAction("unpublish");
     setFeedback(null);
+    setFeedbackError(false);
     startTransition(async () => {
       const result = await unpublishProfile(profileId).catch(() => ({
         error: "Connection interrupted. Your draft is safe — please try again.",
       }));
       if (result?.error) {
         setFeedback(result.error);
+        setFeedbackError(true);
         return;
       }
       setPublished(false);
@@ -152,78 +191,118 @@ export function PublishControls({
   else if (published) buttonLabel = "Publish changes";
 
   return (
-    <div className="w-full sm:w-auto">
-      <div className="flex w-full items-center gap-2 sm:justify-end">
-        {published && (
-          <button
-            type="button"
-            onClick={unpublish}
-            disabled={isPending}
-            className="btn-quiet mr-auto disabled:cursor-wait disabled:opacity-50 sm:mr-0"
-          >
-            Unpublish
-          </button>
-        )}
-        <button
-          type="button"
-          onClick={publish}
-          disabled={publishDisabled}
-          aria-describedby="publish-status"
-          className={`ml-auto inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white transition sm:ml-0 ${
-            upToDate
-              ? "cursor-default bg-indigo-600"
-              : "bg-indigo-600 hover:bg-indigo-700"
-          } disabled:hover:translate-y-0 ${
-            publishDisabled && !upToDate ? "cursor-not-allowed opacity-75" : ""
-          }`}
-        >
-          {isPending || saving ? <Spinner /> : upToDate ? <CheckIcon /> : null}
-          {buttonLabel}
-        </button>
-      </div>
-
-      <div
-        id="publish-status"
-        aria-live="polite"
-        className={`mt-2 sm:max-w-md sm:text-right ${upToDate && !feedback ? "hidden sm:block" : ""}`}
-      >
-        {blocked ? (
-          <div className="rounded-xl border border-pink-500/25 bg-pink-500/[0.06] px-3 py-2.5 text-left text-xs leading-relaxed">
-            <p className="font-semibold text-ink">
-              This preview uses {blockers.length} feature
-              {blockers.length === 1 ? "" : "s"} outside your plan:
-            </p>
-            <p className="mt-1 text-soft">{blockers.join(" · ")}</p>
-            <Link
-              href="/#pricing"
-              className="mt-1.5 inline-flex font-semibold text-pink-600 underline underline-offset-2"
+    <div className="profile-publish">
+      <div className="profile-publish-row">
+        <div className="profile-page-address">
+          <span className={`profile-live-label ${published ? "is-live" : ""}`}>
+            <i aria-hidden />
+            {published ? "Live" : "Draft"}
+          </span>
+          {published ? (
+            <a
+              href={`https://${SITE_DOMAIN}/${username}`}
+              target="_blank"
+              rel="noopener noreferrer"
             >
-              Unlock Pro to publish
-            </Link>
+              {profileLabel(username)}
+              <svg
+                viewBox="0 0 16 16"
+                width="13"
+                height="13"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                aria-hidden
+              >
+                <path d="M4 12 12 4M4 4h8v8" />
+              </svg>
+            </a>
+          ) : (
+            <span className="profile-draft-address">
+              {profileLabel(username)}
+            </span>
+          )}
+        </div>
+        <div className="profile-publish-actions">
+          <span
+            className={`profile-save-label ${saveError ? "is-error" : ""}`}
+            role="status"
+          >
+            {saving ? (
+              "Saving draft…"
+            ) : saveError ? (
+              "Not saved"
+            ) : blocked ? (
+              "Pro features in preview"
+            ) : needsPublish ? (
+              published ? (
+                "Unpublished changes"
+              ) : (
+                "Only you can see this"
+              )
+            ) : (
+              <>
+                <CheckIcon />
+                All changes published
+              </>
+            )}
+          </span>
+          {(!upToDate || isPending || saving || saveError || blocked) && (
+            <button
+              type="button"
+              onClick={publish}
+              disabled={publishDisabled}
+              aria-describedby="publish-status"
+              className="profile-primary-action"
+            >
+              {isPending || saving ? <Spinner /> : null}
+              {buttonLabel}
+            </button>
+          )}
+          {published && (
+            <details ref={menu} className="profile-actions-menu">
+              <summary aria-label="Page actions" title="Page actions">
+                <svg
+                  viewBox="0 0 20 20"
+                  width="20"
+                  height="20"
+                  fill="currentColor"
+                  aria-hidden
+                >
+                  <circle cx="4" cy="10" r="1.5" />
+                  <circle cx="10" cy="10" r="1.5" />
+                  <circle cx="16" cy="10" r="1.5" />
+                </svg>
+              </summary>
+              <div className="profile-actions-popover">
+                <button type="button" onClick={unpublish} disabled={isPending}>
+                  <span>Unpublish page</span>
+                  <small>Hide this page from visitors</small>
+                </button>
+              </div>
+            </details>
+          )}
+        </div>
+      </div>
+      <div id="publish-status" aria-live="polite">
+        {blocked ? (
+          <div className="profile-publish-message">
+            <span>This preview needs Pro: {blockers.join(" · ")}</span>
+            <Link href="/#pricing">View plans →</Link>
           </div>
         ) : saveError ? (
-          <p className="text-xs font-medium text-danger">
-            Your draft could not be saved. Fix the error before publishing.
+          <p className="profile-publish-message is-error">
+            Your draft could not be saved. Use Retry saving in the editor before
+            publishing.
           </p>
-        ) : saving ? (
-          <p className="text-xs text-soft">
-            Saving your draft before it can be published…
+        ) : null}
+        {feedback && !saving && (
+          <p
+            className={`profile-publish-message ${feedbackError ? "is-error" : ""}`}
+            role={feedbackError ? "alert" : "status"}
+          >
+            {feedback}
           </p>
-        ) : needsPublish ? (
-          <p className="inline-flex items-center gap-1.5 text-xs font-medium text-pink-600">
-            <span className="h-1.5 w-1.5 rounded-full bg-pink-500" />
-            {published
-              ? "New changes are ready — publish them to update your live page."
-              : "Your page is still private — publish it when you’re ready."}
-          </p>
-        ) : (
-          <p className="inline-flex items-center gap-1.5 text-xs font-medium text-indigo-600">
-            <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
-            {feedback ?? "Everything visitors see is fully up to date."}
-          </p>
-        )}
-        {feedback && needsPublish && !blocked && !saving && !saveError && (
-          <p className="mt-1 text-xs text-soft">{feedback}</p>
         )}
       </div>
     </div>
