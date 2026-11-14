@@ -1,3 +1,4 @@
+import { HeroShowcase } from "@/components/hero-showcase";
 import Link from "next/link";
 import { Wordmark } from "@/components/wordmark";
 import { Logo } from "@/components/logo";
@@ -153,19 +154,9 @@ export default async function Home() {
             </div>
           </div>
 
-        {/* Visual — video (poster = obrazok, kym sa nacita) */}
+        {/* Interactive profile showcase */}
         <div className="reveal order-1 lg:order-2" style={{ animationDelay: "160ms" }}>
-          <video
-            autoPlay
-            loop
-            muted
-            playsInline
-            preload="auto"
-            poster="/hero-mobile.png"
-            className="edge-fade mx-auto max-h-[calc(100svh-26rem)] w-auto max-w-[400px] object-contain sm:max-h-none sm:w-full sm:max-w-[400px] lg:max-w-[540px]"
-          >
-            <source src="/hero.mp4" type="video/mp4" />
-          </video>
+          <HeroShowcase />
         </div>
       </section>
       </div>
