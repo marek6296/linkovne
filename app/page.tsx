@@ -136,21 +136,7 @@ export default async function Home() {
                 className="gradient-button gradient-button--dark gradient-button--blue inline-flex items-center gap-2 px-7 py-3.5 text-base"
               >
                 Start here
-                <svg
-                  viewBox="0 0 24 24"
-                  className="h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden
-                >
-                  <path d="M7 17 17 7" />
-                  <path d="M8 7h9v9" />
-                </svg>
               </Link>
-              <p className="font-mono text-xs text-faint">Free · Ready in 2 min</p>
             </div>
           </div>
 
