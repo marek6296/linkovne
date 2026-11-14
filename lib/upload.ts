@@ -15,36 +15,51 @@ async function compress(file: File): Promise<Blob> {
   canvas.width = w;
   canvas.height = h;
   const ctx = canvas.getContext("2d");
-  if (!ctx) return file;
+  if (!ctx) {
+    bitmap.close();
+    throw new Error("Image processing unavailable.");
+  }
   ctx.drawImage(bitmap, 0, 0, w, h);
+  bitmap.close();
 
-  return new Promise((resolve) =>
+  return new Promise((resolve, reject) =>
     canvas.toBlob(
-      (blob) => resolve(blob ?? file),
-      "image/jpeg",
+      (blob) =>
+        blob ? resolve(blob) : reject(new Error("Image conversion failed.")),
+      /png|webp|svg/.test(file.type) ? "image/webp" : "image/jpeg",
       0.85,
     ),
   );
 }
 
-export async function uploadImage(
-  file: File,
-  userId: string,
-): Promise<string> {
+export async function uploadImage(file: File, userId: string): Promise<string> {
   if (!file.type.startsWith("image/")) {
     throw new Error("Only image files are allowed.");
   }
 
-  const blob = await compress(file);
+  if (file.size > 15 * 1024 * 1024)
+    throw new Error("Image is too big — keep it under 15 MB.");
+  let blob: Blob;
+  try {
+    blob = await compress(file);
+  } catch {
+    throw new Error("Couldn't read this image. Try a JPG, PNG or WebP file.");
+  }
+  const extension =
+    blob.type === "image/webp"
+      ? "webp"
+      : blob.type === "image/png"
+        ? "png"
+        : "jpg";
   // Storage RLS pusti zapis len do priecinka pomenovaneho vlastnym uuid
   const path = `${userId}/${Date.now()}-${Math.random()
     .toString(36)
-    .slice(2, 8)}.jpg`;
+    .slice(2, 8)}.${extension}`;
 
   const supabase = createClient();
   const { error } = await supabase.storage
     .from(BUCKET)
-    .upload(path, blob, { contentType: "image/jpeg" });
+    .upload(path, blob, { contentType: blob.type });
 
   if (error) throw new Error(error.message);
 
@@ -53,10 +68,7 @@ export async function uploadImage(
 
 /** Priama nahrata videa — bez prekodovania (prehliadac na to nema nastroj),
  *  len limit velkosti nech stranka klienta ostane rychla. */
-export async function uploadVideo(
-  file: File,
-  userId: string,
-): Promise<string> {
+export async function uploadVideo(file: File, userId: string): Promise<string> {
   if (!file.type.startsWith("video/")) {
     throw new Error("Only video files are allowed.");
   }

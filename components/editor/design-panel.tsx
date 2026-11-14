@@ -17,6 +17,9 @@ import {
   FONT_KEYS,
   FONTS,
   PROFILE_LAYOUTS,
+  resolveTheme,
+  readableText,
+  safeColor,
   type AvatarAspect,
   type AvatarFit,
   type AvatarFrame,
@@ -36,7 +39,7 @@ import {
   type DeskBgMode,
   type ProfileLayout,
 } from "@/lib/design";
-import { BTN_SIZE_LABELS, type BtnSize } from "@/lib/themes";
+import { BTN_SIZE_LABELS, getTheme, type BtnSize } from "@/lib/themes";
 import { uploadImage } from "@/lib/upload";
 import {
   LINK_LAYOUT_KEYS,
@@ -86,12 +89,7 @@ const GRADIENT_PRESETS: { from: string; to: string; text: string }[] = [
 ];
 
 export type DesignTab =
-  | "layout"
-  | "theme"
-  | "bg"
-  | "avatar"
-  | "buttons"
-  | "font";
+  "layout" | "theme" | "bg" | "avatar" | "buttons" | "font";
 
 const TABS: { key: DesignTab; label: string }[] = [
   { key: "layout", label: "Layout" },
@@ -213,7 +211,9 @@ function Locked({
   if (!locked) return <>{children}</>;
   return (
     <div className="relative">
-      <div className="pointer-events-none select-none opacity-45">{children}</div>
+      <div inert className="pointer-events-none select-none opacity-45">
+        {children}
+      </div>
       <button
         type="button"
         onClick={onUpsell}
@@ -370,6 +370,7 @@ function ColorRow({
         >
           <input
             type="color"
+            aria-label={label}
             value={current}
             onChange={(e) => onChange(e.target.value)}
             className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
@@ -419,6 +420,7 @@ export function DesignPanel({
   const [busy, setBusy] = useState(false);
   const [deskBusy, setDeskBusy] = useState(false);
   const [buttonBusy, setButtonBusy] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [buttonError, setButtonError] = useState<string | null>(null);
   const bg = design.bg ?? "theme";
   const deskBg = design.deskBg ?? "auto";
@@ -428,6 +430,38 @@ export function DesignPanel({
   const patchSelected = (patch: Partial<BlockConfig>) => {
     if (selectedButton) onLinkChange(selectedButton.id, patch);
   };
+
+  function chooseButtonStyle(style: BtnStyle) {
+    const theme = resolveTheme(activeTheme, design);
+    const colour =
+      safeColor(selectedConfig?.color ?? design.btnBg) ??
+      safeColor(getTheme(activeTheme).btnBg) ??
+      safeColor(theme.text) ??
+      "#252525";
+    const text = ["outline", "soft", "glass"].includes(style)
+      ? theme.text
+      : readableText(
+          style === "gradient"
+            ? (selectedConfig?.buttonGradientColor ??
+                design.btnGradientColor ??
+                colour)
+            : colour,
+        );
+    if (selectedButton)
+      patchSelected({
+        buttonStyle: style,
+        buttonBorder: undefined,
+        color: colour,
+        textColor: text,
+      });
+    else
+      onChange({
+        btnStyle: style,
+        btnBorder: undefined,
+        btnBg: colour,
+        btnText: text,
+      });
+  }
 
   return (
     <div className="overflow-hidden rounded-2xl border border-line bg-surface shadow-[0_12px_35px_rgba(25,24,19,0.05)]">
@@ -452,20 +486,21 @@ export function DesignPanel({
           </div>
           <p className="mt-1 text-xs text-soft">
             {caps.full
-              ? "Every change appears instantly in your live preview."
+              ? "Changes appear in your draft preview. Publish when you are ready."
               : "Style your page freely — a few extras unlock with Pro."}
           </p>
         </div>
       </div>
       {/* Taby — vzdy vidno len jednu skupinu nastaveni */}
       <div className="border-b border-line p-2.5">
-        <div className="flex gap-1 overflow-x-auto">
+        <div className="grid grid-cols-3 gap-1 sm:grid-cols-6">
           {TABS.map((t) => (
             <button
               key={t.key}
               type="button"
+              aria-pressed={tab === t.key}
               onClick={() => onTabChange(t.key)}
-              className={`flex min-w-[76px] flex-1 items-center justify-center gap-1.5 rounded-full px-3 py-2 text-sm font-medium transition ${
+              className={`flex min-w-[76px] flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-medium transition ${
                 tab === t.key
                   ? "bg-ink text-paper shadow-[0_4px_14px_rgba(25,24,19,0.18)]"
                   : "text-soft hover:bg-black/[0.04] hover:text-ink"
@@ -478,7 +513,12 @@ export function DesignPanel({
         </div>
       </div>
 
-      <div className="min-h-[230px] p-5">
+      {uploadError && (
+        <p role="alert" className="mx-5 mt-4 text-sm text-danger">
+          {uploadError}
+        </p>
+      )}
+      <div className="min-h-[230px] p-5" key={tab}>
         {/* ---------- Layout ---------- */}
         {tab === "layout" && (
           <div className="space-y-5">
@@ -487,60 +527,62 @@ export function DesignPanel({
               <p className="mt-1 text-xs leading-relaxed text-soft">
                 Change the whole first impression without touching your content.
               </p>
-              <div className="mt-3 grid gap-2 sm:grid-cols-3">
-                {(Object.keys(PROFILE_LAYOUTS) as ProfileLayout[]).map((key) => {
-                  const active = (design.profileLayout ?? "centered") === key;
-                  return (
-                    <button
-                      key={key}
-                      type="button"
-                      aria-pressed={active}
-                      onClick={() => onChange({ profileLayout: key })}
-                      className={`rounded-2xl border p-2.5 text-left transition ${
-                        active
-                          ? "border-ink bg-ink/[0.035] ring-1 ring-ink"
-                          : "border-line hover:border-soft"
-                      }`}
-                    >
-                      <span className="block h-24 overflow-hidden rounded-xl border border-line bg-paper p-2">
-                        {key === "hero" ? (
-                          <>
-                            <span className="relative block h-14 rounded-lg bg-gradient-to-br from-neutral-300 to-neutral-500">
-                              <span className="absolute bottom-1.5 left-2 h-1.5 w-10 rounded-full bg-white" />
-                              <span className="absolute bottom-1.5 right-2 h-1.5 w-4 rounded-full bg-white/60" />
-                            </span>
-                            <span className="mt-2 block h-2.5 rounded-full bg-ink/80" />
-                          </>
-                        ) : key === "compact" ? (
-                          <>
-                            <span className="flex items-center gap-2 py-1">
-                              <span className="h-8 w-8 rounded-lg bg-ink/20" />
-                              <span className="flex-1 space-y-1">
-                                <span className="block h-2 rounded-full bg-ink/80" />
-                                <span className="block h-1.5 w-3/4 rounded-full bg-ink/20" />
+              <div className="mt-3 grid grid-cols-3 gap-2">
+                {(Object.keys(PROFILE_LAYOUTS) as ProfileLayout[]).map(
+                  (key) => {
+                    const active = (design.profileLayout ?? "centered") === key;
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        aria-pressed={active}
+                        onClick={() => onChange({ profileLayout: key })}
+                        className={`rounded-2xl border p-2.5 text-left transition ${
+                          active
+                            ? "border-ink bg-ink/[0.035] ring-1 ring-ink"
+                            : "border-line hover:border-soft"
+                        }`}
+                      >
+                        <span className="block h-24 overflow-hidden rounded-xl border border-line bg-paper p-2">
+                          {key === "hero" ? (
+                            <>
+                              <span className="relative block h-14 rounded-lg bg-gradient-to-br from-neutral-300 to-neutral-500">
+                                <span className="absolute bottom-1.5 left-2 h-1.5 w-10 rounded-full bg-white" />
+                                <span className="absolute bottom-1.5 right-2 h-1.5 w-4 rounded-full bg-white/60" />
                               </span>
-                            </span>
-                            <span className="mt-2 block h-2.5 rounded-full bg-ink/80" />
-                            <span className="mt-1.5 block h-2.5 rounded-full bg-ink/20" />
-                          </>
-                        ) : (
-                          <>
-                            <span className="mx-auto block h-8 w-8 rounded-full bg-ink/20" />
-                            <span className="mx-auto mt-1.5 block h-2 w-12 rounded-full bg-ink/80" />
-                            <span className="mt-2 block h-2.5 rounded-full bg-ink/80" />
-                            <span className="mt-1.5 block h-2.5 rounded-full bg-ink/20" />
-                          </>
-                        )}
-                      </span>
-                      <span className="mt-2 block text-xs font-semibold">
-                        {PROFILE_LAYOUTS[key].label}
-                      </span>
-                      <span className="mt-0.5 block text-[11px] leading-snug text-soft">
-                        {PROFILE_LAYOUTS[key].hint}
-                      </span>
-                    </button>
-                  );
-                })}
+                              <span className="mt-2 block h-2.5 rounded-full bg-ink/80" />
+                            </>
+                          ) : key === "compact" ? (
+                            <>
+                              <span className="flex items-center gap-2 py-1">
+                                <span className="h-8 w-8 rounded-lg bg-ink/20" />
+                                <span className="flex-1 space-y-1">
+                                  <span className="block h-2 rounded-full bg-ink/80" />
+                                  <span className="block h-1.5 w-3/4 rounded-full bg-ink/20" />
+                                </span>
+                              </span>
+                              <span className="mt-2 block h-2.5 rounded-full bg-ink/80" />
+                              <span className="mt-1.5 block h-2.5 rounded-full bg-ink/20" />
+                            </>
+                          ) : (
+                            <>
+                              <span className="mx-auto block h-8 w-8 rounded-full bg-ink/20" />
+                              <span className="mx-auto mt-1.5 block h-2 w-12 rounded-full bg-ink/80" />
+                              <span className="mt-2 block h-2.5 rounded-full bg-ink/80" />
+                              <span className="mt-1.5 block h-2.5 rounded-full bg-ink/20" />
+                            </>
+                          )}
+                        </span>
+                        <span className="mt-2 block text-xs font-semibold">
+                          {PROFILE_LAYOUTS[key].label}
+                        </span>
+                        <span className="mt-0.5 hidden text-[11px] leading-snug text-soft sm:block">
+                          {PROFILE_LAYOUTS[key].hint}
+                        </span>
+                      </button>
+                    );
+                  },
+                )}
               </div>
             </div>
 
@@ -548,20 +590,22 @@ export function DesignPanel({
               <div>
                 <GroupLabel>Page width</GroupLabel>
                 <div className="mt-2 flex rounded-xl bg-black/[0.035] p-1">
-                  {(Object.keys(CONTENT_WIDTHS) as ContentWidth[]).map((key) => (
-                    <button
-                      key={key}
-                      type="button"
-                      onClick={() => onChange({ contentWidth: key })}
-                      className={`flex-1 rounded-lg px-2 py-2 text-xs transition ${
-                        (design.contentWidth ?? "balanced") === key
-                          ? "bg-paper font-medium shadow-sm"
-                          : "text-soft"
-                      }`}
-                    >
-                      {CONTENT_WIDTHS[key].label}
-                    </button>
-                  ))}
+                  {(Object.keys(CONTENT_WIDTHS) as ContentWidth[]).map(
+                    (key) => (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => onChange({ contentWidth: key })}
+                        className={`flex-1 rounded-lg px-2 py-2 text-xs transition ${
+                          (design.contentWidth ?? "balanced") === key
+                            ? "bg-paper font-medium shadow-sm"
+                            : "text-soft"
+                        }`}
+                      >
+                        {CONTENT_WIDTHS[key].label}
+                      </button>
+                    ),
+                  )}
                 </div>
               </div>
 
@@ -594,7 +638,8 @@ export function DesignPanel({
             <div>
               <GroupLabel>Theme collection</GroupLabel>
               <p className="mt-1 text-xs leading-relaxed text-soft">
-                Start with a curated look, then fine-tune every detail in the other tabs.
+                Start with a curated look, then fine-tune every detail in the
+                other tabs.
               </p>
             </div>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -646,7 +691,9 @@ export function DesignPanel({
                     <button
                       key={o.key}
                       type="button"
-                      onClick={() => (locked ? onUpsell() : onChange({ bg: o.key }))}
+                      onClick={() =>
+                        locked ? onUpsell() : onChange({ bg: o.key })
+                      }
                       className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm transition ${
                         bg === o.key
                           ? "border-ink bg-ink text-paper"
@@ -745,10 +792,18 @@ export function DesignPanel({
                     const file = e.target.files?.[0];
                     if (!file) return;
                     setBusy(true);
+                    setUploadError(null);
                     try {
                       onChange({ bgImage: await uploadImage(file, userId) });
+                    } catch (error) {
+                      setUploadError(
+                        error instanceof Error
+                          ? error.message
+                          : "Could not upload the image. Try again.",
+                      );
                     } finally {
                       setBusy(false);
+                      e.target.value = "";
                     }
                   }}
                 />
@@ -840,7 +895,10 @@ export function DesignPanel({
                           type="button"
                           aria-label="Gradient preset"
                           onClick={() =>
-                            onChange({ deskBgColor: g.from, deskBgColor2: g.to })
+                            onChange({
+                              deskBgColor: g.from,
+                              deskBgColor2: g.to,
+                            })
                           }
                           className={`h-9 w-9 rounded-full border-2 transition hover:scale-105 ${
                             active ? "border-ink" : "border-line"
@@ -890,10 +948,20 @@ export function DesignPanel({
                       const file = e.target.files?.[0];
                       if (!file) return;
                       setDeskBusy(true);
+                      setUploadError(null);
                       try {
-                        onChange({ deskBgImage: await uploadImage(file, userId) });
+                        onChange({
+                          deskBgImage: await uploadImage(file, userId),
+                        });
+                      } catch (error) {
+                        setUploadError(
+                          error instanceof Error
+                            ? error.message
+                            : "Could not upload the image. Try again.",
+                        );
                       } finally {
                         setDeskBusy(false);
+                        e.target.value = "";
                       }
                     }}
                   />
@@ -921,7 +989,8 @@ export function DesignPanel({
             <div>
               <GroupLabel>Format</GroupLabel>
               <p className="mt-1 text-xs text-soft">
-                Choose a square, portrait or landscape crop for your profile image.
+                Choose a square, portrait or landscape crop for your profile
+                image.
               </p>
               <div className="mt-2 grid grid-cols-4 gap-1.5">
                 {(Object.keys(AVATAR_ASPECTS) as AvatarAspect[]).map((k) => {
@@ -999,36 +1068,39 @@ export function DesignPanel({
                 {(Object.keys(AVATAR_FRAMES) as AvatarFrame[]).map((k) => {
                   const locked = k !== "none" && !caps.avatarFrames;
                   return (
-                  <button
-                    key={k}
-                    type="button"
-                    onClick={() =>
-                      locked
-                        ? onUpsell()
-                        : onChange({ avatarFrame: k, avatarRing: false })
-                    }
-                    className={`inline-flex items-center justify-center gap-1 rounded-xl border px-2 py-2 text-xs transition ${
-                      (design.avatarFrame ?? (design.avatarRing ? "line" : "shadow")) === k
-                        ? "border-ink bg-ink/[0.04] font-medium"
-                        : "border-line hover:border-soft"
-                    } ${locked ? "opacity-60" : ""}`}
-                  >
-                    {AVATAR_FRAMES[k]}
-                    {locked && <LockGlyph />}
-                  </button>
+                    <button
+                      key={k}
+                      type="button"
+                      onClick={() =>
+                        locked
+                          ? onUpsell()
+                          : onChange({ avatarFrame: k, avatarRing: false })
+                      }
+                      className={`inline-flex items-center justify-center gap-1 rounded-xl border px-2 py-2 text-xs transition ${
+                        (design.avatarFrame ??
+                          (design.avatarRing ? "line" : "shadow")) === k
+                          ? "border-ink bg-ink/[0.04] font-medium"
+                          : "border-line hover:border-soft"
+                      } ${locked ? "opacity-60" : ""}`}
+                    >
+                      {AVATAR_FRAMES[k]}
+                      {locked && <LockGlyph />}
+                    </button>
                   );
                 })}
               </div>
               {design.avatarFrame &&
                 design.avatarFrame !== "none" &&
                 design.avatarFrame !== "shadow" && (
-                <ColorRow
-                  label="Frame colour"
-                  value={design.avatarRingColor}
-                  fallback="#ffffff"
-                  onChange={(avatarRingColor) => onChange({ avatarRingColor })}
-                />
-              )}
+                  <ColorRow
+                    label="Frame colour"
+                    value={design.avatarRingColor}
+                    fallback="#ffffff"
+                    onChange={(avatarRingColor) =>
+                      onChange({ avatarRingColor })
+                    }
+                  />
+                )}
             </div>
 
             <div className="grid gap-4 border-t border-line pt-4 sm:grid-cols-2">
@@ -1054,20 +1126,22 @@ export function DesignPanel({
               <div>
                 <GroupLabel>Focal point</GroupLabel>
                 <div className="mt-2 flex rounded-xl bg-black/[0.035] p-1">
-                  {(["top", "center", "bottom"] as AvatarPosition[]).map((k) => (
-                    <button
-                      key={k}
-                      type="button"
-                      onClick={() => onChange({ avatarPosition: k })}
-                      className={`flex-1 rounded-lg px-2 py-1.5 text-xs capitalize transition ${
-                        (design.avatarPosition ?? "center") === k
-                          ? "bg-paper font-medium shadow-sm"
-                          : "text-soft"
-                      }`}
-                    >
-                      {k}
-                    </button>
-                  ))}
+                  {(["top", "center", "bottom"] as AvatarPosition[]).map(
+                    (k) => (
+                      <button
+                        key={k}
+                        type="button"
+                        onClick={() => onChange({ avatarPosition: k })}
+                        className={`flex-1 rounded-lg px-2 py-1.5 text-xs capitalize transition ${
+                          (design.avatarPosition ?? "center") === k
+                            ? "bg-paper font-medium shadow-sm"
+                            : "text-soft"
+                        }`}
+                      >
+                        {k}
+                      </button>
+                    ),
+                  )}
                 </div>
               </div>
             </div>
@@ -1077,17 +1151,61 @@ export function DesignPanel({
         {/* ---------- Buttons ---------- */}
         {tab === "buttons" && (
           <div className="space-y-4">
-            <div className="rounded-xl border border-line bg-paper px-4 py-3">
-              <p className="text-sm font-medium">Default button style</p>
-              <p className="mt-1 text-xs leading-relaxed text-soft">
-                Applies to every button on the page. To restyle one button,
-                open it in <span className="font-medium">Blocks</span> below and
-                use its “Button look”.
+            <div className="rounded-xl border border-line bg-paper p-4">
+              <label
+                className="block text-xs font-semibold"
+                htmlFor="button-style-target"
+              >
+                Editing
+              </label>
+              <select
+                id="button-style-target"
+                className="field mt-2 py-2.5"
+                value={activeButtonTarget}
+                onChange={(e) => onButtonTargetChange(e.target.value)}
+              >
+                <option value="all">Page default · all buttons</option>
+                {linkBlocks.map((block, index) => (
+                  <option key={block.id} value={block.id}>
+                    {index + 1}. {block.config.title || "Untitled link"}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-2 text-xs leading-relaxed text-soft">
+                {selectedButton
+                  ? "Only this button changes. Other buttons keep their style."
+                  : "Sets the default for your page. Buttons with their own style keep their custom settings."}
               </p>
+              {selectedButton && (
+                <button
+                  type="button"
+                  className="mt-3 text-xs font-medium underline underline-offset-2"
+                  onClick={() =>
+                    patchSelected({
+                      buttonStyle: undefined,
+                      buttonShape: undefined,
+                      buttonSize: undefined,
+                      buttonShadow: undefined,
+                      buttonBorder: undefined,
+                      buttonWeight: undefined,
+                      buttonTextSize: undefined,
+                      color: undefined,
+                      textColor: undefined,
+                      buttonGradientColor: undefined,
+                      buttonGradientColor2: undefined,
+                      anim: undefined,
+                      featured: undefined,
+                    })
+                  }
+                >
+                  Reset this button to page style
+                </button>
+              )}
             </div>
 
             {selectedButton && selectedConfig && (
-              <div className="space-y-4 rounded-xl border border-line bg-paper/60 p-4">
+              <details className="studio-advanced rounded-xl border border-line bg-paper/60 p-4">
+                <summary>Image, icon & layout</summary>
                 <div>
                   <GroupLabel>Button type</GroupLabel>
                   <div className="mt-2 flex flex-wrap gap-1.5">
@@ -1113,9 +1231,8 @@ export function DesignPanel({
                       );
                     })}
                   </div>
-                  {LINK_LAYOUTS[
-                    (selectedConfig.layout ?? "bar") as LinkLayout
-                  ].needsImage &&
+                  {LINK_LAYOUTS[(selectedConfig.layout ?? "bar") as LinkLayout]
+                    .needsImage &&
                     !selectedConfig.thumb && (
                       <p className="mt-2 text-xs text-soft">
                         This type needs an image. Upload one below.
@@ -1218,7 +1335,7 @@ export function DesignPanel({
                     </p>
                   )}
                 </div>
-              </div>
+              </details>
             )}
 
             <div>
@@ -1261,36 +1378,32 @@ export function DesignPanel({
                   const locked =
                     (k === "glass" || k === "gradient") && !caps.btnFancy;
                   return (
-                  <VisualChip
-                    key={k}
-                    locked={locked}
-                    active={
-                      (selectedConfig?.buttonStyle ?? design.btnStyle) === k
-                    }
-                    onClick={() =>
-                      locked
-                        ? onUpsell()
-                        : selectedButton
-                        ? patchSelected({ buttonStyle: k })
-                        : onChange({ btnStyle: k })
-                    }
-                    label={BTN_STYLES[k]}
-                    glyph={
-                      <span
-                        className={`h-3.5 w-8 shrink-0 rounded-full ${
-                          k === "fill"
-                            ? "bg-current opacity-80"
-                            : k === "outline"
-                              ? "border-[1.5px] border-current opacity-80"
-                              : k === "soft"
-                                ? "bg-current opacity-30"
-                                : k === "gradient"
-                                  ? "bg-gradient-to-r from-current to-transparent opacity-80"
-                                  : "border border-current bg-current opacity-20"
-                        }`}
-                      />
-                    }
-                  />
+                    <VisualChip
+                      key={k}
+                      locked={locked}
+                      active={
+                        (selectedConfig?.buttonStyle ?? design.btnStyle) === k
+                      }
+                      onClick={() =>
+                        locked ? onUpsell() : chooseButtonStyle(k)
+                      }
+                      label={BTN_STYLES[k]}
+                      glyph={
+                        <span
+                          className={`h-3.5 w-8 shrink-0 rounded-full ${
+                            k === "fill"
+                              ? "bg-current opacity-80"
+                              : k === "outline"
+                                ? "border-[1.5px] border-current opacity-80"
+                                : k === "soft"
+                                  ? "bg-current opacity-30"
+                                  : k === "gradient"
+                                    ? "bg-gradient-to-r from-current to-transparent opacity-80"
+                                    : "border border-current bg-current opacity-20"
+                          }`}
+                        />
+                      }
+                    />
                   );
                 })}
               </div>
@@ -1390,7 +1503,15 @@ export function DesignPanel({
               </div>
             </div>
 
-            <div className="border-t border-line pt-4">
+            <details className="studio-advanced">
+              <summary>
+                Motion ·{" "}
+                {
+                  BTN_ANIMATIONS[
+                    selectedConfig?.anim ?? design.btnAnimation ?? "none"
+                  ].label
+                }
+              </summary>
               <div className="flex items-center gap-2">
                 <GroupLabel>Animation</GroupLabel>
                 {!caps.btnAnimation && <ProPill />}
@@ -1401,120 +1522,125 @@ export function DesignPanel({
                   : "Set the default effect. Individual buttons can override it."}
               </p>
               <Locked locked={!caps.btnAnimation} onUpsell={onUpsell}>
-              <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
-                {(Object.keys(BTN_ANIMATIONS) as BtnAnimation[]).map((k) => {
-                  const active =
-                    (selectedConfig?.anim ?? design.btnAnimation ?? "none") ===
-                    k;
-                  return (
-                    <button
-                      key={k}
-                      type="button"
-                      aria-pressed={active}
-                      title={BTN_ANIMATIONS[k].hint}
-                      onClick={() =>
-                        selectedButton
-                          ? patchSelected({ anim: k })
-                          : onChange({ btnAnimation: k })
-                      }
-                      className={`rounded-xl border px-3 py-2.5 text-left transition ${
-                        active
-                          ? "border-ink bg-ink/[0.04] ring-1 ring-ink"
-                          : "border-line hover:border-soft"
-                      }`}
-                    >
-                      <span
-                        aria-hidden
-                        className={`mb-2 block h-3 w-full rounded-full border border-current bg-current/10 ${
-                          active ? BTN_ANIMATIONS[k].className : ""
+                <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {(Object.keys(BTN_ANIMATIONS) as BtnAnimation[]).map((k) => {
+                    const active =
+                      (selectedConfig?.anim ??
+                        design.btnAnimation ??
+                        "none") === k;
+                    return (
+                      <button
+                        key={k}
+                        type="button"
+                        aria-pressed={active}
+                        title={BTN_ANIMATIONS[k].hint}
+                        onClick={() =>
+                          selectedButton
+                            ? patchSelected({ anim: k })
+                            : onChange({ btnAnimation: k })
+                        }
+                        className={`rounded-xl border px-3 py-2.5 text-left transition ${
+                          active
+                            ? "border-ink bg-ink/[0.04] ring-1 ring-ink"
+                            : "border-line hover:border-soft"
                         }`}
-                      />
-                      <span className="block text-xs font-medium">
-                        {BTN_ANIMATIONS[k].label}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
+                      >
+                        <span
+                          aria-hidden
+                          className={`mb-2 block h-3 w-full rounded-full border border-current bg-current/10 ${
+                            active ? BTN_ANIMATIONS[k].className : ""
+                          }`}
+                        />
+                        <span className="block text-xs font-medium">
+                          {BTN_ANIMATIONS[k].label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
               </Locked>
-            </div>
+            </details>
 
-            <div className="grid gap-4 border-t border-line pt-4 sm:grid-cols-2">
-              <div>
-                <GroupLabel>Shadow</GroupLabel>
-                <div className="mt-2 grid grid-cols-2 gap-1.5">
-                  {(Object.keys(BTN_SHADOWS) as BtnShadow[]).map((k) => (
+            <details className="studio-advanced">
+              <summary>Borders, shadows & text weight</summary>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <GroupLabel>Shadow</GroupLabel>
+                  <div className="mt-2 grid grid-cols-2 gap-1.5">
+                    {(Object.keys(BTN_SHADOWS) as BtnShadow[]).map((k) => (
+                      <button
+                        key={k}
+                        type="button"
+                        onClick={() =>
+                          selectedButton
+                            ? patchSelected({ buttonShadow: k })
+                            : onChange({ btnShadow: k })
+                        }
+                        className={`rounded-xl border px-2 py-2 text-xs transition ${
+                          (selectedConfig?.buttonShadow ?? design.btnShadow) ===
+                          k
+                            ? "border-ink bg-ink/[0.04] font-medium"
+                            : "border-line hover:border-soft"
+                        }`}
+                      >
+                        {BTN_SHADOWS[k].label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <GroupLabel>Border</GroupLabel>
+                  <div className="mt-2 grid grid-cols-3 gap-1.5">
+                    {(Object.keys(BTN_BORDERS) as BtnBorder[]).map((k) => (
+                      <button
+                        key={k}
+                        type="button"
+                        onClick={() =>
+                          selectedButton
+                            ? patchSelected({ buttonBorder: k })
+                            : onChange({ btnBorder: k })
+                        }
+                        className={`rounded-xl border px-2 py-2 text-xs transition ${
+                          (selectedConfig?.buttonBorder ?? design.btnBorder) ===
+                          k
+                            ? "border-ink bg-ink/[0.04] font-medium"
+                            : "border-line hover:border-soft"
+                        }`}
+                      >
+                        {BTN_BORDERS[k].label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t border-line pt-4">
+                <GroupLabel>Text weight</GroupLabel>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {(Object.keys(BTN_WEIGHTS) as BtnWeight[]).map((k) => (
                     <button
                       key={k}
                       type="button"
                       onClick={() =>
                         selectedButton
-                          ? patchSelected({ buttonShadow: k })
-                          : onChange({ btnShadow: k })
+                          ? patchSelected({ buttonWeight: k })
+                          : onChange({ btnWeight: k })
                       }
-                      className={`rounded-xl border px-2 py-2 text-xs transition ${
-                        (selectedConfig?.buttonShadow ?? design.btnShadow) === k
-                          ? "border-ink bg-ink/[0.04] font-medium"
+                      style={{ fontWeight: BTN_WEIGHTS[k].value }}
+                      className={`rounded-full border px-3.5 py-1.5 text-sm transition ${
+                        (selectedConfig?.buttonWeight ??
+                          design.btnWeight ??
+                          "medium") === k
+                          ? "border-ink bg-ink text-paper"
                           : "border-line hover:border-soft"
                       }`}
                     >
-                      {BTN_SHADOWS[k].label}
+                      {BTN_WEIGHTS[k].label}
                     </button>
                   ))}
                 </div>
               </div>
-              <div>
-                <GroupLabel>Border</GroupLabel>
-                <div className="mt-2 grid grid-cols-3 gap-1.5">
-                  {(Object.keys(BTN_BORDERS) as BtnBorder[]).map((k) => (
-                    <button
-                      key={k}
-                      type="button"
-                      onClick={() =>
-                        selectedButton
-                          ? patchSelected({ buttonBorder: k })
-                          : onChange({ btnBorder: k })
-                      }
-                      className={`rounded-xl border px-2 py-2 text-xs transition ${
-                        (selectedConfig?.buttonBorder ?? design.btnBorder) === k
-                          ? "border-ink bg-ink/[0.04] font-medium"
-                          : "border-line hover:border-soft"
-                      }`}
-                    >
-                      {BTN_BORDERS[k].label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="border-t border-line pt-4">
-              <GroupLabel>Text weight</GroupLabel>
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {(Object.keys(BTN_WEIGHTS) as BtnWeight[]).map((k) => (
-                  <button
-                    key={k}
-                    type="button"
-                    onClick={() =>
-                      selectedButton
-                        ? patchSelected({ buttonWeight: k })
-                        : onChange({ btnWeight: k })
-                    }
-                    style={{ fontWeight: BTN_WEIGHTS[k].value }}
-                    className={`rounded-full border px-3.5 py-1.5 text-sm transition ${
-                      (selectedConfig?.buttonWeight ??
-                        design.btnWeight ??
-                        "medium") === k
-                        ? "border-ink bg-ink text-paper"
-                        : "border-line hover:border-soft"
-                    }`}
-                  >
-                    {BTN_WEIGHTS[k].label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
+            </details>
             {selectedButton && (
               <label className="flex items-center gap-2 border-t border-line pt-4 text-sm">
                 <input

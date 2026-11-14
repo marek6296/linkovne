@@ -1,3 +1,4 @@
+import "./studio.css";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { DashboardChrome } from "@/components/dashboard/chrome";

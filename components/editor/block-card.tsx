@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 import {
   DndContext,
   closestCenter,
@@ -32,7 +32,6 @@ import {
   type SocialPlatform,
 } from "@/lib/blocks";
 import { Collapse, Chevron } from "@/components/editor/collapse";
-import { ButtonStyle } from "@/components/editor/button-style";
 import { uploadImage, uploadVideo } from "@/lib/upload";
 
 /** ISO → hodnota pre <input type="datetime-local"> v lokálnom čase. */
@@ -76,7 +75,11 @@ function MediaPicker({
   value: string;
   mediaType: "image" | "video";
   userId: string;
-  onChange: (patch: { src: string; mediaType: "image" | "video"; mediaBytes?: number }) => void;
+  onChange: (patch: {
+    src: string;
+    mediaType: "image" | "video";
+    mediaBytes?: number;
+  }) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -91,7 +94,11 @@ function MediaPicker({
       const src = isVideo
         ? await uploadVideo(file, userId)
         : await uploadImage(file, userId);
-      onChange({ src, mediaType: isVideo ? "video" : "image", mediaBytes: file.size });
+      onChange({
+        src,
+        mediaType: isVideo ? "video" : "image",
+        mediaBytes: file.size,
+      });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Upload failed.");
     } finally {
@@ -185,8 +192,14 @@ function SortableSocialRow({
   id: string;
   children: React.ReactNode;
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id });
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
   return (
     <div
       ref={setNodeRef}
@@ -204,7 +217,12 @@ function SortableSocialRow({
         {...listeners}
         className="shrink-0 cursor-grab touch-none px-0.5 text-faint transition hover:text-ink active:cursor-grabbing"
       >
-        <svg viewBox="0 0 20 20" className="h-4 w-4" fill="currentColor" aria-hidden>
+        <svg
+          viewBox="0 0 20 20"
+          className="h-4 w-4"
+          fill="currentColor"
+          aria-hidden
+        >
           <circle cx="7" cy="5" r="1.4" />
           <circle cx="13" cy="5" r="1.4" />
           <circle cx="7" cy="10" r="1.4" />
@@ -304,6 +322,7 @@ function SocialsEditor({
 
   const setItems = (next: SocialItem[]) => onPatch({ items: next });
 
+  const socialDndId = useId();
   const socialSensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
   );
@@ -398,6 +417,7 @@ function SocialsEditor({
       {/* ---------- Ucty (kazdy zvlast + volitelna farba) ---------- */}
       <div className="space-y-2">
         <DndContext
+          id={socialDndId}
           sensors={socialSensors}
           collisionDetection={closestCenter}
           modifiers={[restrictToVerticalAxis]}
@@ -410,87 +430,90 @@ function SocialsEditor({
             <div className="space-y-2">
               {items.map((item, i) => (
                 <SortableSocialRow key={i} id={`s-${i}`}>
-            <select
-              value={item.platform}
-              onChange={(e) => {
-                const next = [...items];
-                next[i] = { ...item, platform: e.target.value as SocialPlatform };
-                setItems(next);
-              }}
-              className="rounded-lg border border-line bg-surface px-2 py-2 text-sm"
-            >
-              {SOCIAL_PLATFORMS.map((p) => (
-                <option key={p} value={p}>
-                  {SOCIAL_LABELS[p]}
-                </option>
-              ))}
-            </select>
-            <input
-              value={item.url}
-              placeholder={
-                item.platform === "email"
-                  ? "you@example.com"
-                  : item.platform === "phone"
-                    ? "+421…"
-                    : item.platform === "website"
-                      ? "yourwebsite.com"
-                      : "instagram.com/you"
-              }
-              onChange={(e) => {
-                const next = [...items];
-                next[i] = { ...item, url: e.target.value };
-                setItems(next);
-              }}
-              className="field min-w-0 flex-1 px-3 py-2 text-sm"
-            />
-            {/* Per-icon farba — override pre tuto jednu ikonu */}
-            <label
-              title="Custom colour for this icon"
-              className="relative flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full border border-line"
-              style={item.color ? { background: item.color } : undefined}
-            >
-              {!item.color && (
-                <span
-                  aria-hidden
-                  className="h-3.5 w-3.5 rounded-full border-[1.5px] border-dashed border-faint"
-                />
-              )}
-              <input
-                type="color"
-                value={item.color ?? "#000000"}
-                onChange={(e) => {
-                  const next = [...items];
-                  next[i] = { ...item, color: e.target.value };
-                  setItems(next);
-                }}
-                className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-              />
-            </label>
-            {item.color && (
-              <button
-                type="button"
-                aria-label="Reset colour"
-                title="Reset to default colour"
-                onClick={() => {
-                  const next = [...items];
-                  const { color: _drop, ...rest } = item;
-                  void _drop;
-                  next[i] = rest;
-                  setItems(next);
-                }}
-                className="shrink-0 text-xs text-faint transition hover:text-ink"
-              >
-                ↺
-              </button>
-            )}
-            <button
-              type="button"
-              aria-label="Remove"
-              onClick={() => setItems(items.filter((_, j) => j !== i))}
-              className="shrink-0 px-1 text-faint transition hover:text-danger"
-            >
-              ×
-            </button>
+                  <select
+                    value={item.platform}
+                    onChange={(e) => {
+                      const next = [...items];
+                      next[i] = {
+                        ...item,
+                        platform: e.target.value as SocialPlatform,
+                      };
+                      setItems(next);
+                    }}
+                    className="rounded-lg border border-line bg-surface px-2 py-2 text-sm"
+                  >
+                    {SOCIAL_PLATFORMS.map((p) => (
+                      <option key={p} value={p}>
+                        {SOCIAL_LABELS[p]}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    value={item.url}
+                    placeholder={
+                      item.platform === "email"
+                        ? "you@example.com"
+                        : item.platform === "phone"
+                          ? "+421…"
+                          : item.platform === "website"
+                            ? "yourwebsite.com"
+                            : "instagram.com/you"
+                    }
+                    onChange={(e) => {
+                      const next = [...items];
+                      next[i] = { ...item, url: e.target.value };
+                      setItems(next);
+                    }}
+                    className="field min-w-0 flex-1 px-3 py-2 text-sm"
+                  />
+                  {/* Per-icon farba — override pre tuto jednu ikonu */}
+                  <label
+                    title="Custom colour for this icon"
+                    className="relative flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full border border-line"
+                    style={item.color ? { background: item.color } : undefined}
+                  >
+                    {!item.color && (
+                      <span
+                        aria-hidden
+                        className="h-3.5 w-3.5 rounded-full border-[1.5px] border-dashed border-faint"
+                      />
+                    )}
+                    <input
+                      type="color"
+                      value={item.color ?? "#000000"}
+                      onChange={(e) => {
+                        const next = [...items];
+                        next[i] = { ...item, color: e.target.value };
+                        setItems(next);
+                      }}
+                      className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                    />
+                  </label>
+                  {item.color && (
+                    <button
+                      type="button"
+                      aria-label="Reset colour"
+                      title="Reset to default colour"
+                      onClick={() => {
+                        const next = [...items];
+                        const { color: _drop, ...rest } = item;
+                        void _drop;
+                        next[i] = rest;
+                        setItems(next);
+                      }}
+                      className="shrink-0 text-xs text-faint transition hover:text-ink"
+                    >
+                      ↺
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    aria-label="Remove"
+                    onClick={() => setItems(items.filter((_, j) => j !== i))}
+                    className="shrink-0 px-1 text-faint transition hover:text-danger"
+                  >
+                    ×
+                  </button>
                 </SortableSocialRow>
               ))}
             </div>
@@ -634,16 +657,16 @@ export function BlockCard({
         <button
           type="button"
           onClick={() => onChange({ is_active: !block.is_active })}
+          aria-label={`${block.is_active ? "Hide" : "Show"} ${summary}`}
+          aria-pressed={block.is_active}
           className="rounded-full border border-line px-3 py-1 text-xs text-soft transition hover:border-ink hover:text-ink"
         >
-          {block.is_active ? "On" : "Off"}
+          {block.is_active ? "Visible" : "Hidden"}
         </button>
         {/* Delete rovno v riadku — netreba blok rozklikavat. */}
         <button
           type="button"
-          onClick={() => {
-            if (confirm(`Delete “${summary}”?`)) onDelete();
-          }}
+          onClick={onDelete}
           aria-label="Delete block"
           className="px-1.5 text-faint transition hover:text-danger"
         >
@@ -674,7 +697,9 @@ export function BlockCard({
         <div className="space-y-3 border-t border-line bg-paper/60 p-4">
           {block.type === "link" && (
             <>
-              <p className="rounded-lg bg-ink/[0.04] px-3 py-2 text-[11px] font-semibold tracking-wide text-soft uppercase">Content</p>
+              <p className="rounded-lg bg-ink/[0.04] px-3 py-2 text-[11px] font-semibold tracking-wide text-soft uppercase">
+                Content
+              </p>
               <Field label="Title">
                 <input
                   value={block.config.title ?? ""}
@@ -691,7 +716,9 @@ export function BlockCard({
                 />
               </Field>
 
-              <p className="mt-2 rounded-lg bg-ink/[0.04] px-3 py-2 text-[11px] font-semibold tracking-wide text-soft uppercase">Layout</p>
+              <p className="mt-2 rounded-lg bg-ink/[0.04] px-3 py-2 text-[11px] font-semibold tracking-wide text-soft uppercase">
+                Layout
+              </p>
               <div className="rounded-xl border border-line bg-surface p-4">
                 <div>
                   <p className="text-sm font-semibold">Grid layout</p>
@@ -721,7 +748,10 @@ export function BlockCard({
                                 : "border-line hover:border-soft"
                             }`}
                           >
-                            <span className="mb-2 flex h-5 w-full items-center gap-1" aria-hidden>
+                            <span
+                              className="mb-2 flex h-5 w-full items-center gap-1"
+                              aria-hidden
+                            >
                               {key === "full" ? (
                                 <span className="h-3.5 w-full rounded border border-current bg-current/10" />
                               ) : (
@@ -768,82 +798,160 @@ export function BlockCard({
               <p className="mt-2 rounded-lg bg-ink/[0.04] px-3 py-2 text-[11px] font-semibold tracking-wide text-soft uppercase">
                 Look
               </p>
-              <ButtonStyle
-                config={block.config}
-                onPatch={patchConfig}
-                userId={userId}
-              />
-              <p className="text-center text-[11px] text-faint">
-                Overall theme, background &amp; fonts live in{" "}
-                <span className="font-medium">Design</span>.
-              </p>
-
-              <p className="mt-2 rounded-lg bg-ink/[0.04] px-3 py-2 text-[11px] font-semibold tracking-wide text-soft uppercase">Access</p>
-              {/* VIP zamok — Pro+ */}
-              {vip ? (
-                <div className="space-y-2 rounded-lg border border-line p-3">
-                  <label className="flex items-center gap-2 text-sm font-medium">
-                    <input
-                      type="checkbox"
-                      checked={block.config.lockCode !== undefined}
-                      onChange={(e) =>
-                        patchConfig({
-                          lockCode: e.target.checked
-                            ? (block.config.lockCode ?? "")
-                            : undefined,
-                        })
-                      }
-                    />
-                    Lock as VIP (require a code)
-                  </label>
-                  {block.config.lockCode !== undefined && (
-                    <>
+              <button
+                type="button"
+                onClick={onCustomizeButton}
+                className="studio-edit-style"
+              >
+                Customise this button{" "}
+                <span>Style, image, icon & animation →</span>
+              </button>
+              <details className="studio-advanced">
+                <summary>Access restrictions</summary>
+                {/* VIP zamok — Pro+ */}
+                {vip ? (
+                  <div className="space-y-2 rounded-lg border border-line p-3">
+                    <label className="flex items-center gap-2 text-sm font-medium">
                       <input
-                        value={block.config.lockCode ?? ""}
-                        placeholder="Access code — e.g. VIP2026"
-                        maxLength={64}
+                        type="checkbox"
+                        checked={block.config.lockCode !== undefined}
                         onChange={(e) =>
-                          patchConfig({ lockCode: e.target.value })
+                          patchConfig({
+                            lockCode: e.target.checked
+                              ? (block.config.lockCode ?? "")
+                              : undefined,
+                          })
                         }
-                        className="field py-2 text-sm"
                       />
-                      <p className="text-xs text-soft">
-                        Fans must enter this code to open the link. The code and
-                        the destination never appear in your page&apos;s source.
-                      </p>
-                    </>
-                  )}
-                </div>
-              ) : (
-                <Link
-                  href="/#pricing"
-                  className="flex items-center justify-between gap-3 rounded-lg border border-dashed border-line p-3 text-sm text-soft transition hover:border-soft"
-                >
-                  <span>🔒 Lock this link behind a VIP code</span>
-                  <span className="btn-ink px-3 py-1 text-xs">Pro</span>
-                </Link>
-              )}
+                      Lock as VIP (require a code)
+                    </label>
+                    {block.config.lockCode !== undefined && (
+                      <>
+                        <input
+                          value={block.config.lockCode ?? ""}
+                          placeholder="Access code — e.g. VIP2026"
+                          maxLength={64}
+                          onChange={(e) =>
+                            patchConfig({ lockCode: e.target.value })
+                          }
+                          className="field py-2 text-sm"
+                        />
+                        <p className="text-xs text-soft">
+                          Fans must enter this code to open the link. The code
+                          and the destination never appear in your page&apos;s
+                          source.
+                        </p>
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  <Link
+                    href="/#pricing"
+                    className="flex items-center justify-between gap-3 rounded-lg border border-dashed border-line p-3 text-sm text-soft transition hover:border-soft"
+                  >
+                    <span>🔒 Lock this link behind a VIP code</span>
+                    <span className="btn-ink px-3 py-1 text-xs">Pro</span>
+                  </Link>
+                )}
+              </details>
             </>
           )}
 
           {(block.type === "headline" || block.type === "text") && (
-            <div className="space-y-3"><Field label={block.config.isSection ? "Section title" : block.type === "headline" ? "Heading" : "Text"}>
-              {block.type === "headline" ? (
-                <input
-                  value={block.config.text ?? ""}
-                  onChange={(e) => patchConfig({ text: e.target.value })}
-                  className="field py-2.5"
-                />
-              ) : (
-                <textarea
-                  rows={3}
-                  value={block.config.text ?? ""}
-                  onChange={(e) => patchConfig({ text: e.target.value })}
-                  className="field py-2.5"
-                />
+            <div className="space-y-3">
+              <Field
+                label={
+                  block.config.isSection
+                    ? "Section title"
+                    : block.type === "headline"
+                      ? "Heading"
+                      : "Text"
+                }
+              >
+                {block.type === "headline" ? (
+                  <input
+                    value={block.config.text ?? ""}
+                    onChange={(e) => patchConfig({ text: e.target.value })}
+                    className="field py-2.5"
+                  />
+                ) : (
+                  <textarea
+                    rows={3}
+                    value={block.config.text ?? ""}
+                    onChange={(e) => patchConfig({ text: e.target.value })}
+                    className="field py-2.5"
+                  />
+                )}
+              </Field>
+              {block.type === "headline" && block.config.isSection && (
+                <div className="grid gap-3 rounded-xl border border-line bg-surface p-4 sm:grid-cols-2">
+                  <label className="text-xs text-soft">
+                    Background
+                    <input
+                      type="color"
+                      value={block.config.sectionBg ?? "#ffffff"}
+                      onChange={(e) =>
+                        patchConfig({ sectionBg: e.target.value })
+                      }
+                      className="mt-1 block h-9 w-full rounded-lg border border-line p-1"
+                    />
+                  </label>
+                  <label className="text-xs text-soft">
+                    Text
+                    <input
+                      type="color"
+                      value={block.config.sectionText ?? "#191813"}
+                      onChange={(e) =>
+                        patchConfig({ sectionText: e.target.value })
+                      }
+                      className="mt-1 block h-9 w-full rounded-lg border border-line p-1"
+                    />
+                  </label>
+                  <label className="text-xs text-soft">
+                    Border
+                    <input
+                      type="color"
+                      value={block.config.sectionBorder ?? "#e7e4dc"}
+                      onChange={(e) =>
+                        patchConfig({ sectionBorder: e.target.value })
+                      }
+                      className="mt-1 block h-9 w-full rounded-lg border border-line p-1"
+                    />
+                  </label>
+                  <label className="text-xs text-soft">
+                    Content layout
+                    <select
+                      value={block.config.sectionLayout ?? "stack"}
+                      onChange={(e) =>
+                        patchConfig({
+                          sectionLayout: e.target.value as "stack" | "grid",
+                        })
+                      }
+                      className="field mt-1 py-2"
+                    >
+                      <option value="stack">Stack</option>
+                      <option value="grid">Two-column grid</option>
+                    </select>
+                  </label>
+                  <label className="text-xs text-soft sm:col-span-2">
+                    Corners
+                    <select
+                      value={block.config.sectionRadius ?? "rounded"}
+                      onChange={(e) =>
+                        patchConfig({
+                          sectionRadius: e.target.value as
+                            "soft" | "rounded" | "square",
+                        })
+                      }
+                      className="field mt-1 py-2"
+                    >
+                      <option value="soft">Soft</option>
+                      <option value="rounded">Rounded</option>
+                      <option value="square">Square</option>
+                    </select>
+                  </label>
+                </div>
               )}
-            </Field>
-            {block.type === "headline" && block.config.isSection && <div className="grid gap-3 rounded-xl border border-line bg-surface p-4 sm:grid-cols-2"><label className="text-xs text-soft">Background<input type="color" value={block.config.sectionBg ?? "#ffffff"} onChange={(e) => patchConfig({ sectionBg: e.target.value })} className="mt-1 block h-9 w-full rounded-lg border border-line p-1" /></label><label className="text-xs text-soft">Text<input type="color" value={block.config.sectionText ?? "#191813"} onChange={(e) => patchConfig({ sectionText: e.target.value })} className="mt-1 block h-9 w-full rounded-lg border border-line p-1" /></label><label className="text-xs text-soft">Border<input type="color" value={block.config.sectionBorder ?? "#e7e4dc"} onChange={(e) => patchConfig({ sectionBorder: e.target.value })} className="mt-1 block h-9 w-full rounded-lg border border-line p-1" /></label><label className="text-xs text-soft">Content layout<select value={block.config.sectionLayout ?? "stack"} onChange={(e) => patchConfig({ sectionLayout: e.target.value as "stack" | "grid" })} className="field mt-1 py-2"><option value="stack">Stack</option><option value="grid">Two-column grid</option></select></label><label className="text-xs text-soft sm:col-span-2">Corners<select value={block.config.sectionRadius ?? "rounded"} onChange={(e) => patchConfig({ sectionRadius: e.target.value as "soft" | "rounded" | "square" })} className="field mt-1 py-2"><option value="soft">Soft</option><option value="rounded">Rounded</option><option value="square">Square</option></select></label></div>}
             </div>
           )}
 
@@ -855,7 +963,16 @@ export function BlockCard({
                 userId={userId}
                 onChange={(patch) => patchConfig(patch)}
               />
-              {block.config.mediaType !== "video" && <Field label="Alt text (describe the image)"><input value={block.config.alt ?? ""} placeholder="Portrait in a studio" onChange={(e) => patchConfig({ alt: e.target.value })} className="field py-2.5" /></Field>}
+              {block.config.mediaType !== "video" && (
+                <Field label="Alt text (describe the image)">
+                  <input
+                    value={block.config.alt ?? ""}
+                    placeholder="Portrait in a studio"
+                    onChange={(e) => patchConfig({ alt: e.target.value })}
+                    className="field py-2.5"
+                  />
+                </Field>
+              )}
               <Field label="Links to (optional)">
                 <input
                   value={block.config.href ?? ""}
@@ -914,7 +1031,10 @@ export function BlockCard({
               {(block.config.faqs ?? []).map((item, i) => {
                 const faqs = block.config.faqs ?? [];
                 return (
-                  <div key={i} className="space-y-2 rounded-lg border border-line p-3">
+                  <div
+                    key={i}
+                    className="space-y-2 rounded-lg border border-line p-3"
+                  >
                     <input
                       value={item.q}
                       placeholder="Question"
@@ -995,9 +1115,7 @@ export function BlockCard({
                 <input
                   value={block.config.buttonLabel ?? ""}
                   placeholder="Send"
-                  onChange={(e) =>
-                    patchConfig({ buttonLabel: e.target.value })
-                  }
+                  onChange={(e) => patchConfig({ buttonLabel: e.target.value })}
                   className="field py-2.5"
                 />
               </Field>
@@ -1014,39 +1132,41 @@ export function BlockCard({
             </>
           )}
 
-          {/* Scheduling — plati pre kazdy typ bloku */}
-          <div className="grid gap-3 border-t border-line pt-3 sm:grid-cols-2">
-            <Field label="Show from (optional)">
-              <input
-                type="datetime-local"
-                value={toLocalInput(block.starts_at)}
-                onChange={(e) =>
-                  onChange({ starts_at: fromLocalInput(e.target.value) })
-                }
-                className="field py-2"
-              />
-            </Field>
-            <Field label="Hide after (optional)">
-              <input
-                type="datetime-local"
-                value={toLocalInput(block.ends_at)}
-                onChange={(e) =>
-                  onChange({ ends_at: fromLocalInput(e.target.value) })
-                }
-                className="field py-2"
-              />
-            </Field>
-            {(block.starts_at || block.ends_at) && (
-              <button
-                type="button"
-                onClick={() => onChange({ starts_at: null, ends_at: null })}
-                className="justify-self-start text-xs text-soft underline underline-offset-2 hover:text-ink"
-              >
-                Clear schedule
-              </button>
-            )}
-          </div>
-
+          <details className="studio-advanced">
+            <summary>Schedule visibility</summary>
+            {/* Scheduling — plati pre kazdy typ bloku */}
+            <div className="grid gap-3 border-t border-line pt-3 sm:grid-cols-2">
+              <Field label="Show from (optional)">
+                <input
+                  type="datetime-local"
+                  value={toLocalInput(block.starts_at)}
+                  onChange={(e) =>
+                    onChange({ starts_at: fromLocalInput(e.target.value) })
+                  }
+                  className="field py-2"
+                />
+              </Field>
+              <Field label="Hide after (optional)">
+                <input
+                  type="datetime-local"
+                  value={toLocalInput(block.ends_at)}
+                  onChange={(e) =>
+                    onChange({ ends_at: fromLocalInput(e.target.value) })
+                  }
+                  className="field py-2"
+                />
+              </Field>
+              {(block.starts_at || block.ends_at) && (
+                <button
+                  type="button"
+                  onClick={() => onChange({ starts_at: null, ends_at: null })}
+                  className="justify-self-start text-xs text-soft underline underline-offset-2 hover:text-ink"
+                >
+                  Clear schedule
+                </button>
+              )}
+            </div>
+          </details>
           <div className="flex items-center justify-between pt-1">
             <button
               type="button"

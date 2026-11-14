@@ -6,11 +6,9 @@ import { createClient } from "@/lib/supabase/server";
 import { planOf, allowsBlock, allowsTheme } from "@/lib/plans";
 import type { Block, BlockType } from "@/lib/blocks";
 import type { Design } from "@/lib/design";
+import { cleanTrackedLinks } from "@/lib/channels";
 import { designForPlan } from "@/lib/design-tiers";
-import {
-  createSubscriptionCheckout,
-  findPromotionCode,
-} from "@/lib/checkout";
+import { createSubscriptionCheckout, findPromotionCode } from "@/lib/checkout";
 
 export type ActionState = { error?: string } | undefined;
 
@@ -67,7 +65,7 @@ async function requireProfile(profileId: string) {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, owner_id, username")
+    .select("id, owner_id, username, design")
     .eq("id", profileId)
     .maybeSingle();
 
@@ -89,15 +87,16 @@ export type RedeemGrant = {
 };
 
 export type RedeemState =
-  | { error?: string; ok?: string; granted?: RedeemGrant }
-  | undefined;
+  { error?: string; ok?: string; granted?: RedeemGrant } | undefined;
 
 /** Existujuci user zada promokod v nastaveniach → uplatni grant (Pro/Business). */
 export async function redeemCode(
   _prev: RedeemState,
   formData: FormData,
 ): Promise<RedeemState> {
-  const code = String(formData.get("code") ?? "").trim().toLowerCase();
+  const code = String(formData.get("code") ?? "")
+    .trim()
+    .toLowerCase();
   if (!code) return { error: "Enter a code." };
 
   const supabase = await createClient();
@@ -153,7 +152,9 @@ export async function redeemPromoCode(
   _prev: PromoRedeemState,
   formData: FormData,
 ): Promise<PromoRedeemState> {
-  const code = String(formData.get("code") ?? "").trim().toUpperCase();
+  const code = String(formData.get("code") ?? "")
+    .trim()
+    .toUpperCase();
   if (!code) return { error: "Enter a code." };
 
   const supabase = await createClient();
@@ -297,11 +298,12 @@ export async function saveProfile(
     avatar_url?: string | null;
     theme?: string;
     design?: Design;
+    trackedLinks?: import("@/lib/channels").TrackedLink[];
     seo_title?: string;
     seo_description?: string;
   },
 ): Promise<ActionState> {
-  const { supabase, plan } = await requireProfile(profileId);
+  const { supabase, plan, profile } = await requireProfile(profileId);
 
   const clean: Record<string, unknown> = {
     updated_at: new Date().toISOString(),
@@ -326,7 +328,17 @@ export async function saveProfile(
     // Premium polia (obrazkove pozadie, animacie, glass/gradient buttony,
     // avatar ramy, desktop backdrop) sa pre free ocistia uz pri zapise —
     // nedaju sa podstrcit upravenym klientskym requestom.
-    clean.design = designForPlan(patch.design, plan);
+    clean.design = {
+      ...designForPlan(patch.design, plan),
+      trackedLinks: cleanTrackedLinks(patch.design?.trackedLinks),
+    };
+  }
+
+  if (patch.trackedLinks !== undefined) {
+    clean.design = {
+      ...((clean.design ?? profile.design ?? {}) as Design),
+      trackedLinks: cleanTrackedLinks(patch.trackedLinks),
+    };
   }
 
   const { error } = await supabase
@@ -446,9 +458,7 @@ export async function setHideBranding(
  * sama zo zivych riadkov — z klienta sa teda neda podvrhnut obsah, ktory
  * nepresiel cez limity planu.
  */
-export async function publishProfile(
-  profileId: string,
-): Promise<ActionState> {
+export async function publishProfile(profileId: string): Promise<ActionState> {
   const { supabase, profile } = await requireProfile(profileId);
   const { error } = await supabase.rpc("publish_profile", {
     p_profile_id: profileId,

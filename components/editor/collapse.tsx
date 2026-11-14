@@ -11,7 +11,11 @@ export function Collapse({
   children: React.ReactNode;
 }) {
   return (
-    <div className={`lk-collapse ${open ? "is-open" : ""}`}>
+    <div
+      inert={!open}
+      aria-hidden={!open}
+      className={`lk-collapse ${open ? "is-open" : ""}`}
+    >
       <div className="lk-collapse-inner">{children}</div>
     </div>
   );

@@ -3,7 +3,6 @@ import { createClient } from "@/lib/supabase/server";
 import { Editor } from "@/components/editor/editor";
 import { PublishControls } from "@/components/editor/publish-controls";
 import { ProfileSwitcher } from "@/components/editor/profile-switcher";
-import { ShareCard } from "@/components/editor/share-card";
 import { UpgradedWelcome } from "@/components/dashboard/upgraded-welcome";
 import { planOf } from "@/lib/plans";
 import type { Block } from "@/lib/blocks";
@@ -80,7 +79,7 @@ export default async function DashboardPage({
           sa pri jedinom profile (bezny Free ucet) nevykresli vobec (vracia
           null), takze pri justify-between by ostal jediny flex-child a
           prehodil by sa na zaciatok riadku namiesto na koniec. */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-start sm:gap-3">
+      <div className="studio-topbar flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-start sm:gap-3">
         <ProfileSwitcher
           profiles={profiles.map((x) => ({
             id: x.id,
@@ -102,16 +101,10 @@ export default async function DashboardPage({
         </div>
       </div>
 
-      <div className="mt-6">
-        <ShareCard
-          username={current.username}
-          isPublished={current.is_published}
-        />
-      </div>
-
-      <div className="mt-8">
+      <div className="mt-5 sm:mt-8">
         <Editor
           key={current.id}
+          isPublished={current.is_published}
           initialProfile={{
             id: current.id,
             username: current.username,

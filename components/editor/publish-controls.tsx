@@ -2,13 +2,11 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
-import {
-  publishProfile,
-  unpublishProfile,
-} from "@/app/dashboard/actions";
+import { useEffect, useRef, useState, useTransition } from "react";
+import { publishProfile, unpublishProfile } from "@/app/dashboard/actions";
 import {
   EDITOR_DRAFT_STATE_EVENT,
+  EDITOR_PUBLISHED_EVENT,
   type EditorDraftState,
 } from "@/lib/editor-draft-state";
 
@@ -68,15 +66,18 @@ export function PublishControls({
   const [needsPublish, setNeedsPublish] = useState(
     !initialPublished || initialHasUnpublished,
   );
+  const draftRevision = useRef(0);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(false);
   const [blockers, setBlockers] = useState<string[]>([]);
+  const [action, setAction] = useState<"publish" | "unpublish">("publish");
   const [feedback, setFeedback] = useState<string | null>(null);
 
   useEffect(() => {
     function onDraftState(event: Event) {
       const detail = (event as CustomEvent<EditorDraftState>).detail;
       if (!detail) return;
+      draftRevision.current = detail.revision;
       if (detail.hasChanges) {
         setNeedsPublish(true);
         setFeedback(null);
@@ -98,25 +99,38 @@ export function PublishControls({
 
   function publish() {
     if (publishDisabled) return;
+    setAction("publish");
+    const revision = draftRevision.current;
     setFeedback(null);
     startTransition(async () => {
-      const result = await publishProfile(profileId);
+      const result = await publishProfile(profileId).catch(() => ({
+        error: "Connection interrupted. Your draft is safe — please try again.",
+      }));
       if (result?.error) {
         setFeedback(result.error);
         return;
       }
       setPublished(true);
-      setNeedsPublish(false);
-      setFeedback("Published successfully — your live page is up to date.");
+      const newerEdits = draftRevision.current !== revision;
+      setNeedsPublish(newerEdits);
+      if (!newerEdits) window.dispatchEvent(new Event(EDITOR_PUBLISHED_EVENT));
+      setFeedback(
+        newerEdits
+          ? "Published. You have newer draft changes ready to publish next."
+          : "Published successfully — your live page is up to date.",
+      );
       router.refresh();
     });
   }
 
   function unpublish() {
     if (isPending) return;
+    setAction("unpublish");
     setFeedback(null);
     startTransition(async () => {
-      const result = await unpublishProfile(profileId);
+      const result = await unpublishProfile(profileId).catch(() => ({
+        error: "Connection interrupted. Your draft is safe — please try again.",
+      }));
       if (result?.error) {
         setFeedback(result.error);
         return;
@@ -129,7 +143,8 @@ export function PublishControls({
   }
 
   let buttonLabel = "Publish page";
-  if (isPending) buttonLabel = published ? "Publishing…" : "Publishing page…";
+  if (isPending)
+    buttonLabel = action === "unpublish" ? "Unpublishing…" : "Publishing…";
   else if (saving) buttonLabel = "Saving draft…";
   else if (saveError) buttonLabel = "Fix save error";
   else if (blocked) buttonLabel = "Upgrade to publish";
@@ -154,14 +169,12 @@ export function PublishControls({
           onClick={publish}
           disabled={publishDisabled}
           aria-describedby="publish-status"
-          className={`ml-auto inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold text-white shadow-sm transition sm:ml-0 ${
+          className={`ml-auto inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white transition sm:ml-0 ${
             upToDate
-              ? "cursor-default bg-indigo-500 shadow-[0_8px_22px_rgba(99,102,241,0.24)]"
-              : "bg-pink-500 shadow-[0_8px_22px_rgba(236,72,153,0.28)] hover:bg-pink-600 hover:-translate-y-0.5"
+              ? "cursor-default bg-indigo-600"
+              : "bg-indigo-600 hover:bg-indigo-700"
           } disabled:hover:translate-y-0 ${
-            publishDisabled && !upToDate
-              ? "cursor-not-allowed opacity-75"
-              : ""
+            publishDisabled && !upToDate ? "cursor-not-allowed opacity-75" : ""
           }`}
         >
           {isPending || saving ? <Spinner /> : upToDate ? <CheckIcon /> : null}
@@ -172,7 +185,7 @@ export function PublishControls({
       <div
         id="publish-status"
         aria-live="polite"
-        className="mt-2 sm:max-w-md sm:text-right"
+        className={`mt-2 sm:max-w-md sm:text-right ${upToDate && !feedback ? "hidden sm:block" : ""}`}
       >
         {blocked ? (
           <div className="rounded-xl border border-pink-500/25 bg-pink-500/[0.06] px-3 py-2.5 text-left text-xs leading-relaxed">

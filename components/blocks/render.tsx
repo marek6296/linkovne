@@ -97,6 +97,7 @@ function LinkBlock({
 
   switch (cfg.buttonStyle) {
     case "fill":
+      backdropFilter = undefined;
       border = `1px solid ${customBg ?? theme.btnBg}`;
       break;
     case "outline":
@@ -730,6 +731,7 @@ export function BlockList({
   const sortableIds = groups.flatMap((g) => g.items.map((b) => b.id));
   return (
     <DndContext
+      id={`preview-${profileId}`}
       sensors={sensors}
       collisionDetection={closestCenter}
       onDragEnd={(e: DragEndEvent) => {
@@ -776,7 +778,9 @@ export function ProfileHeader({
     (theme.avatarRing ? `${theme.avatarRing}, ${dropShadow}` : dropShadow);
   const avatarStyle: React.CSSProperties = {
     width: avatarWidth,
-    height: avatarHeight,
+    maxWidth: "100%",
+    height: "auto",
+    aspectRatio: `${avatarWidth} / ${avatarHeight}`,
     boxSizing: "border-box",
     borderRadius: avatarRadius,
     border: theme.avatarBorder,
@@ -841,7 +845,7 @@ export function ProfileHeader({
         className="profile-header-hero"
         style={{
           minHeight: theme.heroHeightPx,
-          borderRadius: avatarRadius,
+          borderRadius: avatarRadius === "999px" ? "24px" : avatarRadius,
           border: theme.avatarBorder,
           boxShadow: avatarShadow,
         }}
@@ -876,8 +880,8 @@ export function ProfileHeader({
       <div className="profile-header-compact">
         {avatar("profile-compact-avatar", {
           ...avatarStyle,
-          width: avatarWidth,
-          height: avatarHeight,
+          width: `min(38%, ${avatarWidth}px)`,
+          height: "auto",
         })}
         <div className="min-w-0 flex-1 text-left">{identity}</div>
       </div>

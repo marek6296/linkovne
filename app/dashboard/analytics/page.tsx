@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { planOf } from "@/lib/plans";
 import { buildTrafficRows, trafficInsight, trafficLabel } from "@/lib/traffic";
+import { cleanTrackedLinks } from "@/lib/channels";
 import { profileLabel } from "@/lib/site";
 import type { BlockConfig } from "@/lib/blocks";
 import { AnalyticsControls } from "@/components/dashboard/analytics-controls";
@@ -279,7 +280,7 @@ export default async function AnalyticsPage({
 
   const { data: profiles } = await supabase
     .from("profiles")
-    .select("id, username")
+    .select("id, username, design")
     .eq("owner_id", user.id)
     .order("created_at");
 
@@ -298,6 +299,7 @@ export default async function AnalyticsPage({
   // default "all"; pri jednej vzdy ta jedna.
   const wantAll = multi && (p === "all" || !p);
   const current = profiles.find((x) => x.id === p) ?? profiles[0];
+  const trackedLinks = cleanTrackedLinks(current.design?.trackedLinks);
 
   const selector = multi ? (
     <div className="flex max-w-full items-center gap-1 overflow-x-auto rounded-full border border-line bg-surface p-1">
@@ -528,6 +530,7 @@ export default async function AnalyticsPage({
   const fanRows = buildTrafficRows(
     viewList as { referrer?: string | null; source?: string | null }[],
     clickList as { referrer?: string | null; source?: string | null }[],
+    trackedLinks,
   );
   const fanInsight = trafficInsight(fanRows);
 
@@ -560,6 +563,7 @@ export default async function AnalyticsPage({
     const chan = trafficLabel(
       c.referrer as string | null,
       c.source as string | null,
+      trackedLinks,
     );
     const title = titleFor.get(c.block_id as string) ?? "Deleted block";
     const inner = chanMap.get(chan) ?? new Map<string, number>();
@@ -596,6 +600,7 @@ export default async function AnalyticsPage({
       platform: trafficLabel(
         v.referrer as string | null,
         v.source as string | null,
+        trackedLinks,
       ),
       country: (v.country as string | null) ?? null,
       device: (v.device as string | null) ?? null,
@@ -608,6 +613,7 @@ export default async function AnalyticsPage({
       platform: trafficLabel(
         c.referrer as string | null,
         c.source as string | null,
+        trackedLinks,
       ),
       country: (c.country as string | null) ?? null,
       device: (c.device as string | null) ?? null,

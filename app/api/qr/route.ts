@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import QRCode from "qrcode";
+import { SITE_DOMAIN } from "@/lib/site";
 
 const USERNAME_RE = /^[a-z0-9_.]{3,30}$/;
 
@@ -13,7 +14,7 @@ export async function GET(request: NextRequest) {
     return new NextResponse("Invalid username", { status: 400 });
   }
 
-  const target = `${request.nextUrl.origin}/${username}`;
+  const target = `https://${SITE_DOMAIN}/${username}?s=qr`;
 
   const svg = await QRCode.toString(target, {
     type: "svg",

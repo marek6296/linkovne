@@ -1,4 +1,4 @@
-import { channelLabel } from "@/lib/channels";
+import { channelLabel, type TrackedLink } from "@/lib/channels";
 import { SITE_DOMAIN } from "@/lib/site";
 
 /**
@@ -65,8 +65,9 @@ function classifyReferrer(referrer: string | null): string {
 export function trafficLabel(
   referrer: string | null | undefined,
   source: string | null | undefined,
+  links: TrackedLink[] = [],
 ): string {
-  if (source) return channelLabel(source);
+  if (source) return channelLabel(source, links);
   return LABELS[classifyReferrer(referrer ?? null)] ?? "Other sites";
 }
 
@@ -81,6 +82,7 @@ export type TrafficRow = {
 export function buildTrafficRows(
   views: { referrer?: string | null; source?: string | null }[],
   clicks: { referrer?: string | null; source?: string | null }[],
+  links: TrackedLink[] = [],
 ): TrafficRow[] {
   const map = new Map<string, { views: number; clicks: number }>();
   const bump = (label: string, key: "views" | "clicks") => {
@@ -88,8 +90,8 @@ export function buildTrafficRows(
     cur[key] += 1;
     map.set(label, cur);
   };
-  for (const v of views) bump(trafficLabel(v.referrer, v.source), "views");
-  for (const c of clicks) bump(trafficLabel(c.referrer, c.source), "clicks");
+  for (const v of views) bump(trafficLabel(v.referrer, v.source, links), "views");
+  for (const c of clicks) bump(trafficLabel(c.referrer, c.source, links), "clicks");
 
   return [...map.entries()]
     .map(([label, v]) => ({

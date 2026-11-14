@@ -43,7 +43,7 @@ export function DashboardChrome({
   );
 
   return (
-    <div className="min-h-dvh">
+    <div className="dashboard-studio min-h-dvh">
       <header className="border-b border-line bg-surface">
         {/* ── Horny riadok: logo+badge vlavo, ucet vpravo. Na desktope je medzi
             nimi este vycentrovane menu; na mobile ide menu do vlastneho riadka
@@ -76,7 +76,7 @@ export function DashboardChrome({
             )}
             {isAdmin && <AdminBell />}
             {isAdmin && (
-              <Link href="/admin" className="btn-quiet px-2.5 sm:px-4">
+              <Link href="/admin" className="btn-quiet hidden px-4 sm:inline-flex">
                 Admin
               </Link>
             )}

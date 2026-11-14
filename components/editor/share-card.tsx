@@ -1,20 +1,33 @@
 "use client";
 
 import { useState } from "react";
-import { CHANNELS } from "@/lib/channels";
-import { profileLabel, ALT_PREFIXES } from "@/lib/site";
+import {
+  CHANNELS,
+  normaliseSource,
+  trackingSlug,
+  type TrackedLink,
+} from "@/lib/channels";
+import { profileLabel, ALT_PREFIXES, SITE_DOMAIN } from "@/lib/site";
 import { Collapse } from "@/components/editor/collapse";
 
 export function ShareCard({
   username,
   isPublished,
+  trackedLinks,
+  onTrackedLinksChange,
 }: {
+  trackedLinks: TrackedLink[];
+  onTrackedLinksChange: (links: TrackedLink[]) => void;
   username: string;
   isPublished: boolean;
 }) {
+  const [label, setLabel] = useState("");
+  const [source, setSource] = useState("");
+  const [trackingError, setTrackingError] = useState("");
+  const [copyError, setCopyError] = useState("");
   const [copied, setCopied] = useState<string | null>(null);
   const [panel, setPanel] = useState<"none" | "qr" | "channels" | "alt">(
-    "none",
+    "channels",
   );
 
   const path = `/${username}`;
@@ -28,15 +41,17 @@ export function ShareCard({
 
   async function copy(url: string, key: string) {
     try {
+      setCopyError("");
       await navigator.clipboard.writeText(url);
       setCopied(key);
       setTimeout(() => setCopied(null), 1800);
     } catch {
       setCopied(null);
+      setCopyError("Could not copy. Select and copy the URL manually.");
     }
   }
 
-  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const origin = `https://${SITE_DOMAIN}`;
 
   return (
     <div className="card p-5">
@@ -48,8 +63,9 @@ export function ShareCard({
               : "Your page (not published yet)"}
           </p>
           <a
-            href={path}
+            href={`${origin}${path}`}
             target="_blank"
+            rel="noopener noreferrer"
             className="mt-0.5 block truncate text-lg font-medium hover:underline"
           >
             {profileLabel("")}
@@ -90,12 +106,24 @@ export function ShareCard({
           >
             QR code
           </button>
-          <a href={path} target="_blank" className="btn-ink px-4 py-2 text-sm">
-            View page
-          </a>
+          {isPublished && (
+            <a
+              href={`${origin}${path}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-ink px-4 py-2 text-sm"
+            >
+              View page
+            </a>
+          )}
         </div>
       </div>
 
+      {copyError && (
+        <p role="alert" className="mt-3 text-sm text-danger">
+          {copyError}
+        </p>
+      )}
       {!isPublished && (
         <p className="mt-3 text-sm text-soft">
           Visitors can&apos;t see it yet — hit Publish when you&apos;re ready.
@@ -106,9 +134,8 @@ export function ShareCard({
         <div className="mt-5 border-t border-line pt-5">
           <p className="text-sm font-medium">Alternative links</p>
           <p className="mt-1 max-w-lg text-sm text-soft">
-            Same page, a different-looking address. Rotate them across your bios
-            — if one gets blocked, the others keep working and your page never
-            goes down.
+            These addresses open the same page. Use the format you prefer for
+            each of your bios.
           </p>
 
           <div className="mt-4 grid gap-2 sm:grid-cols-2">
@@ -137,12 +164,123 @@ export function ShareCard({
 
       <Collapse open={panel === "channels"}>
         <div className="mt-5 border-t border-line pt-5">
-          <p className="text-sm font-medium">One link per platform</p>
-          <p className="mt-1 max-w-lg text-sm text-soft">
-            Put a different link in each bio. Your page looks identical, but
-            analytics will tell you exactly which platform sends real clicks.
+          <h2 className="text-base font-semibold">Accounts & campaigns</h2>
+          <p className="mt-1 text-sm text-soft">
+            Create a separate link for each Instagram account, campaign or
+            channel. Visits and clicks appear under its source in Analytics.
           </p>
-
+          <form
+            className="studio-tracking-form"
+            onSubmit={(event) => {
+              event.preventDefault();
+              const key = normaliseSource(source);
+              if (!label.trim() || !key || key !== source) {
+                setTrackingError(
+                  "Use a label and a source of 2–24 letters, numbers, hyphens or underscores.",
+                );
+                return;
+              }
+              if (
+                trackedLinks.some((item) => item.source === key) ||
+                CHANNELS.some((item) => item.key === key)
+              ) {
+                setTrackingError(
+                  "That source already exists. Add a different account name or campaign suffix.",
+                );
+                return;
+              }
+              if (trackedLinks.length >= 50) {
+                setTrackingError(
+                  "You can save up to 50 tracking links per page.",
+                );
+                return;
+              }
+              onTrackedLinksChange([
+                ...trackedLinks,
+                { label: label.trim(), source: key },
+              ]);
+              setLabel("");
+              setSource("");
+              setTrackingError("");
+            }}
+          >
+            <label>
+              <span>Account or campaign name</span>
+              <input
+                className="field"
+                maxLength={60}
+                placeholder="Instagram · personal"
+                value={label}
+                onChange={(e) => {
+                  setLabel(e.target.value);
+                  setSource(trackingSlug(e.target.value));
+                }}
+                required
+              />
+            </label>
+            <label>
+              <span>Tracking source</span>
+              <input
+                className="field"
+                maxLength={24}
+                placeholder="instagram-personal"
+                value={source}
+                onChange={(e) => setSource(e.target.value.toLowerCase())}
+                required
+                aria-describedby="source-help"
+              />
+            </label>
+            <p id="source-help" className="text-xs text-soft">
+              {profileLabel(username)}?s={source || "your-source"}
+            </p>
+            <button className="btn-ink px-4 py-2.5 text-sm" type="submit">
+              Add tracking link
+            </button>
+          </form>
+          {trackingError && (
+            <p role="alert" className="mt-2 text-sm text-danger">
+              {trackingError}
+            </p>
+          )}
+          <div className="mt-4 space-y-2">
+            {trackedLinks.map((item) => (
+              <div key={item.source} className="studio-tracking-row">
+                <div>
+                  <strong>{item.label}</strong>
+                  <code>
+                    {origin}
+                    {path}?s={item.source}
+                  </code>
+                </div>
+                <button
+                  type="button"
+                  className="btn-line px-3 py-2 text-xs"
+                  onClick={() =>
+                    copy(`${origin}${path}?s=${item.source}`, item.source)
+                  }
+                >
+                  {copied === item.source ? "Copied" : "Copy"}
+                </button>
+                <button
+                  type="button"
+                  aria-label={`Remove ${item.label} from saved links`}
+                  onClick={() =>
+                    onTrackedLinksChange(
+                      trackedLinks.filter(
+                        (link) => link.source !== item.source,
+                      ),
+                    )
+                  }
+                  className="studio-icon-button"
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+          <p className="mt-6 text-xs font-semibold uppercase tracking-wide text-soft">
+            Standard platform links
+          </p>
           <div className="mt-4 grid gap-2 sm:grid-cols-2">
             {CHANNELS.map((c) => {
               const url = `${origin}${path}?s=${c.key}`;
@@ -181,8 +319,8 @@ export function ShareCard({
           <div className="text-sm">
             <p className="font-medium">Put it on anything</p>
             <p className="mt-1 max-w-xs text-soft">
-              Business cards, packaging, a poster in your shop. It always
-              points at your page — even if you change your links later.
+              Business cards, packaging, a poster in your shop. It always points
+              at your page — even if you change your links later.
             </p>
             <a
               href={`/api/qr?u=${encodeURIComponent(username)}&download=1`}

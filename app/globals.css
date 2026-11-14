@@ -1007,3 +1007,14 @@ html.lk-escaping main > :not(.lk-gate):not(script) {
     @apply rounded-xl border border-danger/25 bg-danger/5 px-4 py-2.5 text-sm text-danger;
   }
 }
+
+/* Profile geometry: shared by editor preview and published page. */
+.profile-header-compact > :last-child{min-width:0;flex:1}
+.profile-header-compact > .profile-compact-avatar{flex-shrink:0}
+.profile-name,.profile-bio,.profile-handle{overflow-wrap:anywhere;max-width:100%}
+.profile-link{overflow-wrap:anywhere;min-height:44px}
+.profile-link > span{min-width:0}
+.profile-header-hero{display:flex;align-items:flex-end}
+.profile-hero-identity{position:relative;inset:auto;width:100%;padding:1.4rem 1.35rem;margin-top:auto}
+.lk-collapse:not(.is-open){visibility:hidden}
+@media(prefers-reduced-motion:reduce){.lk-collapse,.lk-collapse-inner,.lk-section-in{transition:none!important;animation:none!important}}

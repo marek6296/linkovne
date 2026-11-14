@@ -40,6 +40,8 @@ export type FontKey =
   | "syne";
 
 export type Design = {
+  /** Sharing metadata; independent of the visual theme. */
+  trackedLinks?: import("./channels").TrackedLink[];
   /** Overall page composition, independent from colors and typography. */
   profileLayout?: ProfileLayout;
   contentWidth?: ContentWidth;
@@ -314,6 +316,7 @@ export function resolveTheme(
   const bg = safeColor(design.btnBg) ?? base.btnBg;
   const fg = safeColor(design.btnText) ?? base.btnText;
 
+  if (design.btnStyle && design.btnStyle !== "glass") t.btnBackdrop = undefined;
   switch (design.btnStyle) {
     case "fill":
       t.btnBg = bg;
