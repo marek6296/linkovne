@@ -28,7 +28,6 @@ export function HeroShowcase() {
       <div className={styles.toolbar}><span>ONE CREATOR. YOUR WAY.</span><span>0{selected + 1} / 03</span></div>
       <div className={styles.display}>
         <div className={styles.browser}>
-          <div className={styles.address}><span aria-hidden="true">↗</span> linkovne.com/sofia<span className={styles.demo}>DEMO</span></div>
           <div className={styles.viewport}>
             <div key={look.name} className={styles.profile} style={{ background: theme.page, color: theme.text, fontFamily: theme.font }}>
               <div className={styles.content}>
