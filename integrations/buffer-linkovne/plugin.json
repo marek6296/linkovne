@@ -1,0 +1,24 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "buffer-linkovne",
+  "version": "1.0.0",
+  "description": "A separate Buffer connection for Linkovne social media, drafts, publishing and analytics.",
+  "author": { "name": "Marek" },
+  "keywords": ["buffer", "linkovne", "social-media", "marketing"],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "Buffer Linkovne",
+        "shortDescription": "Linkovne social media",
+        "longDescription": "Manage Linkovne's connected social channels through the official Buffer MCP server. Read the queue, prepare drafts and ideas, schedule requested posts and check performance. Uses a dedicated OAuth connection so Linkovne remains separate from other Buffer accounts.",
+        "developerName": "Marek",
+        "category": "Business & Operations",
+        "capabilities": [],
+        "logo": "./assets/icon.svg",
+        "composerIcon": "./assets/icon.svg",
+        "brandColor": "#6366F1",
+        "defaultPrompt": "Show my Linkovne channels and upcoming Buffer posts."
+      }
+    }
+  }
+}
