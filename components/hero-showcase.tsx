@@ -1,38 +1,50 @@
 "use client";
 
-import Image from "next/image";
 import { useState } from "react";
+import Link from "next/link";
+import { ProfileHeader, BlockList } from "@/components/blocks/render";
+import { resolveTheme } from "@/lib/design";
+import { templateByKey } from "@/lib/templates";
+import type { Block } from "@/lib/blocks";
 import styles from "./hero-showcase.module.css";
 
+const LOOKS = [
+  { name: "Editorial", template: "paper", layout: "centered", detail: "Serif type · soft corners · a timeless portrait", color: "#f4f1ea" },
+  { name: "After hours", template: "maison", layout: "compact", detail: "Dark canvas · gold details · links in a grid", color: "#211e19" },
+  { name: "Cover", template: "mono", layout: "hero", detail: "Full-width photo · clean type · bold links", color: "#d1bba5" },
+] as const;
+
 export function HeroShowcase() {
-  const [theme, setTheme] = useState(0);
-  const [paused, setPaused] = useState(false);
+  const [selected, setSelected] = useState(0);
+  const look = LOOKS[selected];
+  const template = templateByKey(look.template)!;
+  const theme = resolveTheme(template.theme, { ...template.design, profileLayout: look.layout });
+  const blocks: Block[] = [
+    { id: "demo-social", type: "socials", position: 0, is_active: true, config: { items: [{ platform: "instagram", url: "https://instagram.com" }, { platform: "youtube", url: "https://youtube.com" }, { platform: "tiktok", url: "https://tiktok.com" }] } },
+    ...["The summer edit", "My travel diary", "Work with me"].map((title, i): Block => ({ id: `demo-${i}`, type: "link", position: i + 1, is_active: true, config: { title, url: "#", width: selected === 1 && i < 2 ? "half" : "full" } })),
+  ];
   return (
-    <div className={`${styles.scene} ${paused ? styles.paused : ""}`} data-theme={theme}>
-      <div className={styles.orbit} aria-hidden="true" />
-      <div className={styles.stage}>
-        <div className={styles.address}><span>↗</span> linkovne.com/sofia <span className={styles.live}>● Published</span></div>
-        <div className={styles.phone}>
-          <div className={styles.topline}><span>SL</span><span>↗</span></div>
-          <div className={styles.avatar}><Image src="/sofia-lane.png" alt="Sofia Lane, fictional lifestyle creator" width={86} height={86} priority className={styles.portrait} /></div>
-          <h2>Sofia Lane</h2>
-          <p>Style, little escapes & everyday magic.</p>
-          <div className={styles.socials} aria-label="Example social links"><span>◎</span><span>𝕏</span><span>▷</span></div>
-          <div className={`${styles.link} ${styles.featured}`}><span>✳</span><div>Come explore with me<small>Travel diaries & favourite places.</small></div><span>↗</span></div>
-          <div className={styles.art}><div className={styles.sculpture} /><span>THE SOFIA EDIT</span><strong>A life well travelled.</strong></div>
-          <div className={styles.link}><span>↗</span><div>Let’s work together</div><span>↗</span></div>
-          <div className={styles.link}><span>♡</span><div>My favourite things</div><span>↗</span></div>
-          <div className={styles.brand}>Made with <b>linkovne</b></div>
+    <section className={styles.showcase} aria-label="Explore Linkovne profile styles">
+      <div className={styles.toolbar}><span>ONE CREATOR. YOUR WAY.</span><span>0{selected + 1} / 03</span></div>
+      <div className={styles.display}>
+        <div className={styles.browser}>
+          <div className={styles.address}><span aria-hidden="true">↗</span> linkovne.com/sofia<span className={styles.demo}>DEMO</span></div>
+          <div className={styles.viewport}>
+            <div key={look.name} className={styles.profile} style={{ background: theme.page, color: theme.text, fontFamily: theme.font }}>
+              <div className={styles.content}>
+                <ProfileHeader displayName="Sofia Lane" username="sofia" bio="Personal style. Places worth saving." avatarUrl="/sofia-lane.png" theme={theme} />
+                <div className={styles.links} inert><BlockList blocks={blocks} theme={theme} profileId="landing-demo" preview /></div>
+              </div>
+              <span className={styles.brand}>sofia’s corner of the internet / linkovne</span>
+            </div>
+          </div>
         </div>
-        <div className={styles.note}><span className={styles.check}>✓</span><div>Your world.<br /><strong>One beautiful link.</strong></div></div>
-        <div className={styles.custom}><span>✳</span><div>YOUR STYLE<small>Unmistakably you.</small></div></div>
       </div>
-      <div className={styles.controls}>
-        <span>Make it yours</span>
-        {["Cobalt", "Rose", "Forest"].map((name, i) => <button key={name} type="button" aria-label={`${name} theme`} aria-pressed={theme === i} onClick={() => setTheme(i)} className={styles.swatch} style={{ background: ["#a4b5ff", "#edb6cf", "#b9d5a5"][i] }} />)}
-        <button type="button" className={styles.pause} onClick={() => setPaused(!paused)} aria-label={paused ? "Play animation" : "Pause animation"}>{paused ? "▶" : "Ⅱ"}</button>
+      <div className={styles.options} role="group" aria-label="Choose a profile style">
+        {LOOKS.map((item, index) => <button key={item.name} type="button" aria-pressed={selected === index} onClick={() => setSelected(index)} className={styles.option}><span className={styles.sample} style={{ background: item.color }} aria-hidden="true">{index === 0 ? "Aa" : index === 1 ? "Aa" : "↗"}</span><span>{item.name}</span><span className={styles.tick} aria-hidden="true">{selected === index ? "✓" : ""}</span></button>)}
       </div>
-      <span className={styles.caption}>Example profile · built from Linkovne blocks</span>
-    </div>
+      <p className={styles.detail} aria-live="polite">{look.detail}</p>
+      <div className={styles.bottom}><span>Real layouts. Made in Linkovne.</span><Link href="/register">Make it yours <span aria-hidden="true">↗</span></Link></div>
+    </section>
   );
 }
