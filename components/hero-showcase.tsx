@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { SphereGrid, type SpherePerson } from "./sphere-grid";
+import sphereStyles from "./sphere-showcase.module.css";
 import { ProfileHeader, BlockList } from "@/components/blocks/render";
 import { resolveTheme, type Design } from "@/lib/design";
 import type { Block } from "@/lib/blocks";
@@ -12,7 +15,7 @@ const LOOKS: { name: string; bio: string; links: string[]; design: Design }[] = 
   { name: "Professional", bio: "Content creator & brand partner. Based in Lisbon, working worldwide.", links: ["Selected partnerships", "Media kit & audience", "Book a collaboration"], design: { bg: "solid", bgColor: "#262626", textColor: "#ffffff", font: "sans", fontHeading: "sans", btnBg: "#ffffff", btnText: "#262626", btnStyle: "fill", btnShape: "rounded", btnShadow: "none", avatarShape: "rounded", avatarSize: "md", avatarFrame: "none", profileLayout: "compact" } },
 ];
 
-function ProfileDemo({ selected }: { selected: number }) {
+function ProfileDemo({ selected, person }: { selected: number; person: SpherePerson }) {
   const look = LOOKS[selected];
   const theme = resolveTheme("classic", look.design);
   const blocks: Block[] = [
@@ -22,54 +25,39 @@ function ProfileDemo({ selected }: { selected: number }) {
   return (
     <div className={styles.profile} style={{ background: theme.page, color: theme.text, fontFamily: theme.font }}>
       <div className={styles.content}>
-        <ProfileHeader displayName="Sofia Lane" username="sofia" bio={look.bio} avatarUrl="/sofia-lane.png" theme={theme} />
+        <ProfileHeader displayName={person.name} username={person.name.toLowerCase().replace(/ /g, "")} bio={look.bio} avatarUrl={person.src} theme={theme} />
         <div className={styles.links} inert><BlockList blocks={blocks} theme={theme} profileId="landing-demo" preview /></div>
       </div>
-      <span className={styles.brand}>sofia’s corner of the internet / linkovne</span>
+      <span className={styles.brand}>Example profile · made with linkovne</span>
     </div>
   );
 }
 
-export function HeroShowcase() {
-  const [selected, setSelected] = useState(0);
-  const [reduced, setReduced] = useState(true);
-  const [visible, setVisible] = useState(false);
-  const [pageVisible, setPageVisible] = useState(true);
-  const root = useRef<HTMLElement>(null);
+const NAMES = ["Emma Reed", "Noah Blake", "Mia Laurent", "Luca Hayes", "Ava Chen", "Leo Martin", "Isla Brooks", "Oliver King", "Chloe Parker", "Ethan Cole", "Zoe Rivera", "James West", "Nina Stone", "Theo Quinn", "Ella Scott", "Max Bennett", "Ruby Lane", "Finn Woods", "Lily Hart", "Alex Moore", "Clara Evans", "Sam Foster", "Amelia Ross", "Oscar Miles"];
+const PEOPLE: SpherePerson[] = NAMES.map((name, i) => ({ id: `person-${i}`, name, src: `/demo-portraits/person-${i}.jpg`, look: i % 3 }));
+PEOPLE.push({ id: "sofia", name: "Sofia Lane", src: "/sofia-lane.png", look: 0 });
 
+function ProfileModal({ person, onClose }: { person: SpherePerson; onClose: () => void }) {
+  const dialog = useRef<HTMLDialogElement>(null);
   useEffect(() => {
-    const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const updateMotion = () => setReduced(preference.matches);
-    const updateVisibility = () => setPageVisible(!document.hidden);
-    updateMotion();
-    updateVisibility();
-    preference.addEventListener("change", updateMotion);
-    document.addEventListener("visibilitychange", updateVisibility);
-    const observer = new IntersectionObserver(([entry]) => setVisible(entry.isIntersecting), { threshold: 0.2 });
-    if (root.current) observer.observe(root.current);
-    return () => {
-      preference.removeEventListener("change", updateMotion);
-      document.removeEventListener("visibilitychange", updateVisibility);
-      observer.disconnect();
-    };
+    const previous = document.activeElement as HTMLElement | null;
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    dialog.current?.showModal();
+    return () => { document.body.style.overflow = overflow; previous?.focus(); };
   }, []);
+  return createPortal(<dialog ref={dialog} className={sphereStyles.modal} aria-label={`${person.name} — example Linkovne profile`} onCancel={onClose} onClick={event => { if (event.target === event.currentTarget) onClose(); }}>
+    <div className={sphereStyles.modalCard}>
+      <button type="button" className={sphereStyles.close} onClick={onClose} aria-label="Close profile">×</button>
+      <ProfileDemo selected={person.look} person={person} />
+    </div>
+  </dialog>, document.body);
+}
 
-  useEffect(() => {
-    if (reduced || !visible || !pageVisible) return;
-    const timer = window.setInterval(() => setSelected(current => (current + 1) % LOOKS.length), 5000);
-    return () => window.clearInterval(timer);
-  }, [reduced, visible, pageVisible, selected]);
-
-  return (
-    <section ref={root} className={styles.showcase} aria-label="Linkovne profile designs">
-      <div className={styles.deck}>
-        {LOOKS.map((look, index) => {
-          const position = (index - selected + LOOKS.length) % LOOKS.length;
-          return <div key={look.name} className={styles.card} data-position={position} aria-hidden={position !== 0} inert={position !== 0}>
-            <ProfileDemo selected={index} />
-          </div>;
-        })}
-      </div>
-    </section>
-  );
+export function HeroShowcase() {
+  const [person, setPerson] = useState<SpherePerson | null>(null);
+  return <>
+    <SphereGrid images={PEOPLE} onSelect={setPerson} paused={!!person} />
+    {person && <ProfileModal person={person} onClose={() => setPerson(null)} />}
+  </>;
 }

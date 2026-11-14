@@ -1,0 +1,13 @@
+.sphere{position:relative;width:100%;max-width:500px;aspect-ratio:1;margin:auto;perspective:1000px;isolation:isolate;user-select:none;cursor:grab;touch-action:pan-y}
+.sphere:active{cursor:grabbing}
+.portrait{position:absolute;padding:0;border:2px solid #ffffff55;border-radius:50%;overflow:hidden;box-shadow:0 7px 17px #0002;cursor:pointer;transition:transform .2s ease-out;background:#e8e5e8;touch-action:pan-y}
+.portrait img{width:100%;height:100%;object-fit:cover;pointer-events:none}
+.portrait:focus-visible{outline:3px solid #6366f1;outline-offset:4px}
+.modal{border:0;padding:16px;background:transparent;margin:auto;max-width:100vw;max-height:100dvh;overflow:auto}
+.modal::backdrop{background:#0007;backdrop-filter:blur(6px)}
+.modalCard{position:relative;width:min(330px,calc(100vw - 32px));border-radius:24px;overflow:hidden;box-shadow:0 30px 90px #0005;animation:profileIn .25s ease-out}
+.close{position:absolute;z-index:20;right:10px;top:9px;width:30px;height:30px;border-radius:50%;background:#ffffffeb;color:#202020;font-size:23px;line-height:1;cursor:pointer;box-shadow:0 2px 6px #0001}
+.close:focus-visible{outline:2px solid #6366f1;outline-offset:2px}
+@keyframes profileIn{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
+@media(max-width:640px){.sphere{max-width:320px}}
+@media(prefers-reduced-motion:reduce){.portrait{transition:none}.modalCard{animation:none}}
