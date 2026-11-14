@@ -33,7 +33,6 @@ function ProfileDemo({ selected }: { selected: number }) {
 export function HeroShowcase() {
   const [selected, setSelected] = useState(0);
   const [paused, setPaused] = useState(false);
-  const [moving, setMoving] = useState(false);
   const [reduced, setReduced] = useState(true);
   const [visible, setVisible] = useState(false);
   const [pageVisible, setPageVisible] = useState(true);
@@ -57,27 +56,23 @@ export function HeroShowcase() {
   }, []);
 
   useEffect(() => {
-    if (paused || moving || reduced || !visible || !pageVisible) return;
-    const timer = window.setInterval(() => setMoving(true), 5200);
+    if (paused || reduced || !visible || !pageVisible) return;
+    const timer = window.setInterval(() => setSelected(current => (current + 1) % LOOKS.length), 5000);
     return () => window.clearInterval(timer);
-  }, [paused, moving, reduced, visible, pageVisible]);
+  }, [paused, reduced, visible, pageVisible, selected]);
 
   return (
     <section ref={root} className={styles.showcase} aria-label="Linkovne profile designs">
-      <div className={styles.deck} data-moving={moving}>
+      <div className={styles.deck}>
         {LOOKS.map((look, index) => {
           const position = (index - selected + LOOKS.length) % LOOKS.length;
-          return <div key={look.name} className={styles.card} data-position={position} aria-hidden={position !== 0} inert={position !== 0}
-            onAnimationEnd={(event) => {
-              if (event.target !== event.currentTarget || position !== 0 || !moving) return;
-              setSelected(current => (current + 1) % LOOKS.length);
-              setMoving(false);
-            }}>
+          return <div key={look.name} className={styles.card} data-position={position} aria-hidden={position !== 0} inert={position !== 0}>
             <ProfileDemo selected={index} />
           </div>;
         })}
         <div className={styles.motionControls}>
-          <button type="button" disabled={moving} onClick={() => { if (reduced) setSelected(current => (current + 1) % LOOKS.length); else setMoving(true); }} aria-label="Show next profile design">↗</button>
+          <button type="button" onClick={() => { setPaused(true); setSelected(current => (current - 1 + LOOKS.length) % LOOKS.length); }} aria-label="Show previous profile design">←</button>
+          <button type="button" onClick={() => { setPaused(true); setSelected(current => (current + 1) % LOOKS.length); }} aria-label="Show next profile design">→</button>
           {!reduced && <button type="button" onClick={() => setPaused(!paused)} aria-label={paused ? "Play profile animation" : "Pause profile animation"} aria-pressed={paused}>{paused ? "▷" : "Ⅱ"}</button>}
         </div>
       </div>
