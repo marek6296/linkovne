@@ -10,7 +10,7 @@ import styles from "./hero-showcase.module.css";
 
 const LOOKS = [
   { name: "Editorial", template: "paper", layout: "centered", detail: "Serif type · soft corners · a timeless portrait", color: "#f4f1ea" },
-  { name: "After hours", template: "maison", layout: "compact", detail: "Dark canvas · gold details · links in a grid", color: "#211e19" },
+  { name: "Studio", template: "mono", layout: "compact", detail: "Cobalt canvas · clean type · links in a grid", color: "#2548ef" },
   { name: "Cover", template: "mono", layout: "hero", detail: "Full-width photo · clean type · bold links", color: "#d1bba5" },
 ] as const;
 
@@ -18,7 +18,7 @@ export function HeroShowcase() {
   const [selected, setSelected] = useState(0);
   const look = LOOKS[selected];
   const template = templateByKey(look.template)!;
-  const theme = resolveTheme(template.theme, { ...template.design, profileLayout: look.layout });
+  const theme = resolveTheme(template.theme, { ...template.design, ...(selected === 1 ? { bgColor: "#2548ef", textColor: "#ffffff", btnBg: "#ffffff", btnText: "#1835b5", font: "sans" as const, fontHeading: "sans" as const, btnShape: "rounded" as const, avatarShape: "rounded" as const, avatarFrame: "none" as const, avatarRing: false } : {}), profileLayout: look.layout });
   const blocks: Block[] = [
     { id: "demo-social", type: "socials", position: 0, is_active: true, config: { items: [{ platform: "instagram", url: "https://instagram.com" }, { platform: "youtube", url: "https://youtube.com" }, { platform: "tiktok", url: "https://tiktok.com" }] } },
     ...["The summer edit", "My travel diary", "Work with me"].map((title, i): Block => ({ id: `demo-${i}`, type: "link", position: i + 1, is_active: true, config: { title, url: "#", width: selected === 1 && i < 2 ? "half" : "full" } })),
