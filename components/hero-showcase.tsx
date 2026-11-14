@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 import { ProfileHeader, BlockList } from "@/components/blocks/render";
 import { resolveTheme } from "@/lib/design";
 import { templateByKey } from "@/lib/templates";
@@ -14,8 +13,7 @@ const LOOKS = [
   { name: "Cover", template: "mono", layout: "hero", detail: "Full-width photo · clean type · bold links", color: "#d1bba5" },
 ] as const;
 
-export function HeroShowcase() {
-  const [selected, setSelected] = useState(0);
+function ProfileDemo({ selected }: { selected: number }) {
   const look = LOOKS[selected];
   const template = templateByKey(look.template)!;
   const theme = resolveTheme(template.theme, { ...template.design, ...(selected === 1 ? { bgColor: "#2548ef", textColor: "#ffffff", btnBg: "#ffffff", btnText: "#1835b5", font: "sans" as const, fontHeading: "sans" as const, btnShape: "rounded" as const, avatarShape: "rounded" as const, avatarFrame: "none" as const, avatarRing: false } : {}), profileLayout: look.layout });
@@ -24,25 +22,61 @@ export function HeroShowcase() {
     ...["The summer edit", "My travel diary", "Work with me"].map((title, i): Block => ({ id: `demo-${i}`, type: "link", position: i + 1, is_active: true, config: { title, url: "#", width: selected === 1 && i < 2 ? "half" : "full" } })),
   ];
   return (
-    <section className={styles.showcase} aria-label="Explore Linkovne profile styles">
-      <div className={styles.display}>
-        <div className={styles.browser}>
-          <div className={styles.viewport}>
-            <div key={look.name} className={styles.profile} style={{ background: theme.page, color: theme.text, fontFamily: theme.font }}>
-              <div className={styles.content}>
-                <ProfileHeader displayName="Sofia Lane" username="sofia" bio="Personal style. Places worth saving." avatarUrl="/sofia-lane.png" theme={theme} />
-                <div className={styles.links} inert><BlockList blocks={blocks} theme={theme} profileId="landing-demo" preview /></div>
-              </div>
-              <span className={styles.brand}>sofia’s corner of the internet / linkovne</span>
-            </div>
+    <div className={styles.profile} style={{ background: theme.page, color: theme.text, fontFamily: theme.font }}>
+      <div className={styles.content}>
+        <ProfileHeader displayName="Sofia Lane" username="sofia" bio="Personal style. Places worth saving." avatarUrl="/sofia-lane.png" theme={theme} />
+        <div className={styles.links} inert><BlockList blocks={blocks} theme={theme} profileId="landing-demo" preview /></div>
+      </div>
+      <span className={styles.brand}>sofia’s corner of the internet / linkovne</span>
+    </div>
+  );
+}
+
+export function HeroShowcase() {
+  const [selected, setSelected] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const [reduced, setReduced] = useState(true);
+  const [visible, setVisible] = useState(false);
+  const [pageVisible, setPageVisible] = useState(true);
+  const root = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const updateMotion = () => setReduced(preference.matches);
+    const updateVisibility = () => setPageVisible(!document.hidden);
+    updateMotion();
+    updateVisibility();
+    preference.addEventListener("change", updateMotion);
+    document.addEventListener("visibilitychange", updateVisibility);
+    const observer = new IntersectionObserver(([entry]) => setVisible(entry.isIntersecting), { threshold: 0.2 });
+    if (root.current) observer.observe(root.current);
+    return () => {
+      preference.removeEventListener("change", updateMotion);
+      document.removeEventListener("visibilitychange", updateVisibility);
+      observer.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (paused || hovered || reduced || !visible || !pageVisible) return;
+    const timer = window.setInterval(() => setSelected(current => (current + 1) % LOOKS.length), 5500);
+    return () => window.clearInterval(timer);
+  }, [paused, hovered, reduced, visible, pageVisible]);
+
+  return (
+    <section ref={root} className={styles.showcase} aria-label="Linkovne profile designs" onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
+      <div className={styles.deck}>
+        {LOOKS.map((look, index) => (
+          <div key={look.name} className={styles.card} data-position={(index - selected + LOOKS.length) % LOOKS.length} aria-hidden={index !== selected} inert>
+            <ProfileDemo selected={index} />
           </div>
+        ))}
+        <div className={styles.motionControls}>
+          <button type="button" onClick={() => { setPaused(true); setSelected(current => (current + 1) % LOOKS.length); }} aria-label="Show next profile design">↗</button>
+          {!reduced && <button type="button" onClick={() => setPaused(!paused)} aria-label={paused ? "Play profile animation" : "Pause profile animation"} aria-pressed={paused}>{paused ? "▷" : "Ⅱ"}</button>}
         </div>
       </div>
-      <div className={styles.options} role="group" aria-label="Choose a profile style">
-        {LOOKS.map((item, index) => <button key={item.name} type="button" aria-pressed={selected === index} onClick={() => setSelected(index)} className={styles.option}><span className={styles.sample} style={{ background: item.color }} aria-hidden="true">{index === 0 ? "Aa" : index === 1 ? "Aa" : "↗"}</span><span>{item.name}</span><span className={styles.tick} aria-hidden="true">{selected === index ? "✓" : ""}</span></button>)}
-      </div>
-      <p className={styles.detail} aria-live="polite">{look.detail}</p>
-      <div className={styles.bottom}><span>Real layouts. Made in Linkovne.</span><Link href="/register">Make it yours <span aria-hidden="true">↗</span></Link></div>
     </section>
   );
 }
