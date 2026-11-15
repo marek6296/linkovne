@@ -101,7 +101,7 @@ export default async function DashboardPage({
         />
       </section>
 
-      <div className="mt-1">
+      <div>
         <Editor
           key={current.id}
           isPublished={current.is_published}
