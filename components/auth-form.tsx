@@ -16,7 +16,8 @@ function Submit({
     ? `gradient-button gradient-button--dark gradient-button--${accent} w-full px-6 py-3`
     : "btn-ink w-full";
   return (
-    <button type="submit" disabled={pending} className={cls}>
+    <button type="submit" disabled={pending} className={`${cls} auth-submit`} aria-busy={pending}>
+      {pending && <span className="action-spinner" aria-hidden />}
       {pending ? "One moment…" : label}
     </button>
   );
@@ -47,7 +48,7 @@ export function AuthForm({
 
   if (state?.ok) {
     return (
-      <p className="rounded-xl border border-ok/25 bg-ok/5 px-4 py-3 text-sm text-ok">
+      <p role="status" className="feedback-enter rounded-xl border border-ok/25 bg-ok/5 px-4 py-3 text-sm text-ok">
         {state.ok}
       </p>
     );
@@ -88,7 +89,7 @@ export function AuthForm({
       )}
 
       {state?.error && (
-        <p role="alert" className="alert-error">
+        <p role="alert" className="alert-error feedback-enter">
           {state.error}
         </p>
       )}

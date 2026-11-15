@@ -730,6 +730,16 @@ export function Editor({
   // ich na Free nikdy neulozi a publish toolbar presne vypise, co blokuje live.
   const theme = resolveTheme(profile.theme, profile.design);
   const previewBlocks = blocks.filter(isVisibleNow);
+  const workspacePanel = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const animation = workspacePanel.current?.animate(
+      [{ opacity: 0.45, translate: "0 6px" }, { opacity: 1, translate: "0 0" }],
+      { duration: 180, easing: "ease-out" },
+    );
+    return () => animation?.cancel();
+  }, [workspace]);
+
   const previewBranding = !(plan.hideBranding && profile.hide_branding);
   return (
     <div className="studio-editor">
@@ -770,7 +780,7 @@ export function Editor({
 
       <div className="studio-workspace">
         {/* ---------- Editor column ---------- */}
-        <div className={tab === "edit" ? "" : "hidden lg:block"}>
+        <div ref={workspacePanel} className={tab === "edit" ? "" : "hidden lg:block"}>
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h1 className="text-xl font-semibold tracking-tight">

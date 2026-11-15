@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+import { NavigationFeedback } from "@/components/navigation-feedback";
 import type { Metadata } from "next";
 import {
   Bricolage_Grotesque,
@@ -141,6 +143,7 @@ export default function RootLayout({
       className={`${sans.variable} ${serif.variable} ${display.variable} ${grotesk.variable} ${classic.variable} ${mono.variable} ${manrope.variable} ${montserrat.variable} ${raleway.variable} ${lora.variable} ${cormorant.variable} ${syne.variable}`}
     >
       <body>
+        <Suspense fallback={null}><NavigationFeedback /></Suspense>
         {children}
         {/* Navstevnost linkovne.com (len marketingove stranky, bez cookies) */}
         <SiteTracker />

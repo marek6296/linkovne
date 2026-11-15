@@ -968,3 +968,47 @@ html.lk-escaping main > :not(.lk-gate):not(script) {
 .profile-hero-identity{position:relative;inset:auto;width:100%;padding:1.4rem 1.35rem;margin-top:auto}
 .lk-collapse:not(.is-open){visibility:hidden}
 @media(prefers-reduced-motion:reduce){.lk-collapse,.lk-collapse-inner,.lk-section-in{transition:none!important;animation:none!important}}
+
+/* Product motion: brief, compositor-only, without blocking interaction. */
+@keyframes workspace-arrive { from { opacity: .35; translate: 0 8px; } to { opacity: 1; translate: 0 0; } }
+@keyframes section-arrive { from { opacity: 0; translate: 0 24px; } to { opacity: 1; translate: 0 0; } }
+@keyframes navigation-travel { from { transform: translateX(-100%); } to { transform: translateX(350%); } }
+@keyframes action-spin { to { transform: rotate(360deg); } }
+.workspace-enter,.auth-form-enter { animation: workspace-arrive .28s cubic-bezier(.2,.7,.2,1); }
+.auth-shell { animation: workspace-arrive .32s ease-out; }
+.feedback-enter { animation: workspace-arrive .2s ease-out; }
+.navigation-progress { position: fixed; inset: 0 0 auto; height: 3px; z-index: 9999; overflow: hidden; pointer-events: none; background: #6257da18; }
+.navigation-progress > span { display: block; height: 100%; width: 30%; background: #5145e5; animation: navigation-travel 1.1s ease-in-out infinite; }
+.auth-submit { display:flex; align-items:center; justify-content:center; gap:10px; }
+.action-spinner { width:16px; height:16px; border:2px solid currentColor; border-right-color:transparent; border-radius:50%; animation:action-spin .7s linear infinite; }
+.landing .scroll-awaiting { opacity:0; translate:0 24px; }
+.landing .scroll-arrived { animation:section-arrive .65s cubic-bezier(.2,.7,.2,1) both; }
+.landing-hero-copy { animation:workspace-arrive .6s ease-out; }
+:is(.dashboard-studio,.admin-workspace,.auth-shell) button { transition:background-color .15s,color .15s,box-shadow .15s,opacity .15s; }
+:is(.dashboard-studio,.admin-workspace,.auth-shell) button:active:not(:disabled) { scale:.98; }
+/* Native top-layer dialogs retain focus trapping and Escape behaviour during exit. */
+@supports (transition-behavior: allow-discrete) {
+  dialog { opacity:0; translate:0 8px; transition:opacity .18s,translate .18s,display .18s allow-discrete,overlay .18s allow-discrete; }
+  dialog[open] { opacity:1; translate:0 0; }
+  dialog::backdrop { opacity:0; transition:opacity .18s,display .18s allow-discrete,overlay .18s allow-discrete; }
+  dialog[open]::backdrop { opacity:1; }
+  @starting-style { dialog[open] { opacity:0; translate:0 8px; } dialog[open]::backdrop { opacity:0; } }
+}
+@media(prefers-reduced-motion:reduce) {
+  .workspace-enter,.auth-shell,.auth-form-enter,.feedback-enter,.landing-hero-copy,.landing .scroll-arrived { animation:none!important; }
+  .landing .scroll-awaiting { opacity:1; translate:none; }
+  .navigation-progress > span { animation:none; width:100%; opacity:.6; }
+  .action-spinner { animation:none; }
+  dialog,dialog::backdrop { transition:none!important; translate:none!important; }
+  :is(.dashboard-studio,.admin-workspace,.auth-shell) button:active:not(:disabled) { scale:1; }
+}
+@supports (interpolate-size: allow-keywords) {
+ :is(.landing,.dashboard-studio,.admin-workspace) details::details-content {
+   interpolate-size:allow-keywords; height:0; overflow:clip;
+   transition:height .22s ease,content-visibility .22s allow-discrete;
+ }
+ :is(.landing,.dashboard-studio,.admin-workspace) details[open]::details-content { height:auto; }
+ /* Action popovers must be allowed outside their trigger's box. */
+ .profile-actions-menu::details-content { overflow:visible; }
+}
+@media(prefers-reduced-motion:reduce){details::details-content{transition:none!important}}

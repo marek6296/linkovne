@@ -262,3 +262,12 @@ to{opacity:1;translate:0 0}
 .hero-stage-canvas.is-ready { opacity:1; }
 .hero-stage-poster { position:absolute; inset:50px 55px; border-radius:26px; overflow:hidden; }
 .hero-stage-poster img { object-fit:cover; }
+
+/* Native anchor scrolling; no scroll hijacking or continuous scroll listeners. */
+html:has(.landing) { scroll-behavior:smooth; }
+@supports (transition-behavior: allow-discrete) {
+ .landing-menu { opacity:1; translate:0 0; transition:opacity .18s,translate .18s,display .18s allow-discrete; }
+ .landing-menu[hidden] { opacity:0; translate:0 -8px; }
+ @starting-style { .landing-menu:not([hidden]) { opacity:0; translate:0 -8px; } }
+}
+@media(prefers-reduced-motion:reduce){html:has(.landing){scroll-behavior:auto}}

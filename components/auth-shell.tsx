@@ -21,7 +21,7 @@ export function AuthShell({
   children: React.ReactNode;
 }) {
   return (
-    <main className="grid min-h-dvh lg:grid-cols-2">
+    <main className="auth-shell grid min-h-dvh lg:grid-cols-2">
       {/* Colour panel — hover spusti tu istu „squishy" animaciu pozadia ako
           bento karty na landingu/pricingu (sq-card). `sq-bg-only` potlaci
           zvacsenie celeho panela, hyba sa len pozadie. */}
@@ -45,7 +45,7 @@ export function AuthShell({
 
       {/* Form */}
       <div className="flex items-center justify-center px-6 py-16">
-        <div className="w-full max-w-sm">
+        <div className="auth-form-enter w-full max-w-sm">
           <Link href="/" className="mb-8 block lg:hidden">
             <Logo className="h-6 w-auto" />
           </Link>

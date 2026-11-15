@@ -14,11 +14,12 @@ export function HeroStage() {
     setReady(false);
     setFailed(false);
     let cancelled = false;
+    const controller = new AbortController();
     let dispose: (() => void) | undefined;
-    import("./hero-world").then(({ createHeroWorld }) => createHeroWorld(host.current!, !reduced))
+    import("./hero-world").then(({ createHeroWorld }) => createHeroWorld(host.current!, !reduced, controller.signal))
       .then(cleanup => { if (cancelled) cleanup(); else { dispose = cleanup; setReady(true); } })
       .catch(() => { if (!cancelled) setFailed(true); });
-    return () => { cancelled = true; dispose?.(); };
+    return () => { cancelled = true; controller.abort(); dispose?.(); };
   }, [reduced]);
   return <div className="hero-stage" role="img" aria-label="Animated examples of Linkovne pages for a photographer, musician, influencer, business and athlete">
     {failed && <div className="hero-stage-poster"><Image src="/landing/hero-sofia.webp" alt="Sofia Lane, example creator" fill sizes="(max-width:760px) 80vw, 400px" /></div>}

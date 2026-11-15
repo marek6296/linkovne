@@ -8,7 +8,7 @@ function Bar({ className = "" }: { className?: string }) {
 
 export default function DashboardLoading() {
   return (
-    <div>
+    <div className="workspace-loading" role="status" aria-label="Loading workspace">
       <Bar className="h-8 w-48" />
       <Bar className="mt-3 h-4 w-64" />
 

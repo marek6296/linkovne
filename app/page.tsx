@@ -1,3 +1,4 @@
+import { LandingScrollReveal } from "@/components/landing/scroll-reveal";
 import { HeroStage } from "@/components/landing/hero-stage";
 import { CreatorSpotlight, CreatorGallery } from "@/components/landing/creator-experience";
 import { AudienceGlobe } from "@/components/landing/audience-globe";
@@ -49,6 +50,7 @@ export default async function Home() {
 
   return (
     <div className="landing">
+      <LandingScrollReveal />
       <script
         type="application/ld+json"
         // Staticky objekt z nasho kodu (ziadne user data) — bezpecne.

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 /**
  * CTA na zaplatenie planu. POST /api/stripe/checkout a presmeruje na Stripe.
@@ -20,6 +21,7 @@ export function UpgradeButton({
   noteClassName?: string;
   children: React.ReactNode;
 }) {
+  const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
 
@@ -38,7 +40,7 @@ export function UpgradeButton({
         body: JSON.stringify({ plan, promo }),
       });
       if (res.status === 401) {
-        window.location.href = "/register";
+        router.push("/register");
         return;
       }
       const data = (await res.json().catch(() => null)) as {

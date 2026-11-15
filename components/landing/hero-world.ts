@@ -10,12 +10,12 @@ const themes = [
   { name: "Luca Reed", kind: "athlete", image: "/landing/hero-athlete.webp", colour: "#c9d7fa", ink: "#21346d", title: ["LUCA", "REED"], subtitle: "Runner. Coach. Keep moving.", links: ["Train with me", "Races & partnerships"], tile: "Your next 5K", tileCta: "Explore the training plan  ↗", art: "/landing/hero-training.webp" },
 ];
 
-export async function createHeroWorld(host: HTMLDivElement, animate: boolean) {
-  await document.fonts.ready;
+export async function createHeroWorld(host: HTMLDivElement, animate: boolean, signal?: AbortSignal) {
   const images = new Map<string, HTMLImageElement>();
-  await Promise.all([...new Set(themes.flatMap(t => [t.image, t.art]))].map(src => new Promise<void>((resolve, reject) => {
+  await Promise.all([document.fonts.ready, ...[...new Set(themes.flatMap(t => [t.image, t.art]))].map(src => new Promise<void>((resolve, reject) => {
     const img = new Image(); img.onload = () => { images.set(src, img); resolve(); }; img.onerror = reject; img.src = src;
-  })));
+  }))]);
+  if (signal?.aborted) throw new DOMException("Scene cancelled", "AbortError");
   const font = getComputedStyle(document.body).getPropertyValue("--font-bricolage").trim() || "sans-serif";
   const textures: THREE.Texture[] = [];
   function canvasTexture(draw: (c: CanvasRenderingContext2D) => void, w = W, h = H) {
