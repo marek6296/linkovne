@@ -7,7 +7,6 @@ const themes = [
   { name: "Noah James", kind: "music", image: "/landing/hero-noah.webp", colour: "#3449df", ink: "#fffaf5", title: ["NOAH", "JAMES"], subtitle: "Sound for the slow days.", links: ["Listen to the new EP", "Shows & bookings"], tile: "After hours", art: "/templates/vinyl-sunset.webp" },
   { name: "Studio Forma", kind: "design", image: "/templates/cobalt-glass.webp", colour: "#ebe6f8", ink: "#25223c", title: ["studio", "forma"], subtitle: "Objects. Ideas. A different angle.", links: ["Selected work", "Let’s make something"], tile: "Form & light", art: "/templates/rose-crystal.webp" },
 ];
-type Theme = typeof themes[number];
 
 export async function createHeroWorld(host: HTMLDivElement, animate: boolean) {
   await document.fonts.ready;
@@ -18,8 +17,10 @@ export async function createHeroWorld(host: HTMLDivElement, animate: boolean) {
   const font = getComputedStyle(document.body).getPropertyValue("--font-bricolage").trim() || "sans-serif";
   const textures: THREE.Texture[] = [];
   function canvasTexture(draw: (c: CanvasRenderingContext2D) => void, w = W, h = H) {
-    const canvas = document.createElement("canvas"); canvas.width = w; canvas.height = h;
-    draw(canvas.getContext("2d")!);
+    const canvas = document.createElement("canvas"); canvas.width = w * 2; canvas.height = h * 2;
+    const context = canvas.getContext("2d")!;
+    context.scale(2, 2); context.imageSmoothingQuality = "high";
+    draw(context);
     const texture = new THREE.CanvasTexture(canvas); texture.colorSpace = THREE.SRGBColorSpace;
     textures.push(texture); return texture;
   }
@@ -34,8 +35,8 @@ export async function createHeroWorld(host: HTMLDivElement, animate: boolean) {
   const faces = themes.map(t => canvasTexture(c => {
     c.fillStyle = t.colour; c.fillRect(0,0,W,H);
     c.save(); c.beginPath(); c.rect(0,0,W,740); c.clip(); photo(c,t.image,0,0,W,740); c.restore();
-    const gradient = c.createLinearGradient(0,340,0,640); gradient.addColorStop(0,"transparent"); gradient.addColorStop(1,t.colour);
-    c.fillStyle = gradient; c.fillRect(0,340,W,400);
+    const gradient = c.createLinearGradient(0,480,0,650); gradient.addColorStop(0,"transparent"); gradient.addColorStop(1,t.colour);
+    c.fillStyle = gradient; c.fillRect(0,480,W,260);
     c.fillStyle = t.ink; c.font = `${t.kind === "design" ? 500 : 800} ${t.kind === "music" ? 104 : 115}px ${font}`;
     c.fillText(t.title[0],48,630); c.fillText(t.title[1],48,734);
     c.font = `400 28px ${font}`; c.fillText(t.subtitle,50,791);
@@ -45,10 +46,9 @@ export async function createHeroWorld(host: HTMLDivElement, animate: boolean) {
     c.fillStyle = "#fffaf5"; c.fillRect(0,0,600,660); c.save(); c.beginPath(); c.roundRect(22,22,556,450,30); c.clip(); photo(c,t.art,22,22,556,450); c.restore();
     c.fillStyle = "#25223c"; c.font = `650 46px ${font}`; c.fillText(t.tile,32,539); c.font = `400 27px ${font}`; c.fillText(t.kind === "music" ? "The new EP  •  Listen now" : t.kind === "design" ? "View the collection  ↗" : "Explore the journal  ↗",32,597);
   },600,660));
-  const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true, powerPreference:"low-power" });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2)); renderer.outputColorSpace=THREE.SRGBColorSpace;
+  const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true, powerPreference:"high-performance" });
+  renderer.setPixelRatio(Math.min(3, Math.max(2, window.devicePixelRatio))); renderer.outputColorSpace=THREE.SRGBColorSpace;
   renderer.setClearColor(0x000000,0); host.appendChild(renderer.domElement);
-  textures.forEach(t=>t.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy()));
   const scene=new THREE.Scene();
   const camera=new THREE.PerspectiveCamera(33,1,.1,100); camera.position.set(0,.05,11.7);
   scene.add(new THREE.HemisphereLight(0xffffff,0xb894b7,3));
@@ -72,10 +72,11 @@ export async function createHeroWorld(host: HTMLDivElement, animate: boolean) {
     const uv=surface.attributes.uv; for(let i=0;i<p.count;i++)uv.setXY(i,(p.getX(i)+w/2)/w,(p.getY(i)+h/2)/h);geometries.push(surface);
     const front=new THREE.Mesh(surface,flat(texture));front.position.z=depth/2+.027;g.add(front);
     const rear=new THREE.Mesh(surface,flat(back));rear.rotation.y=Math.PI;rear.position.z=-depth/2-.027;g.add(rear);
-    return {group:g,front};
+    return {group:g,front,rear};
   }
-  const main=panel(2.75,4.35,.07,faces[0]); main.group.position.set(.15,.18,0);rotor.add(main.group);
-  const accessory=new THREE.Group();rotor.add(accessory);
+  const main=panel(2.75,4.35,.07,faces[0],faces[1]); main.group.position.set(0,.18,0);rotor.add(main.group);
+  function createAccessories() {
+  const accessory=new THREE.Group();
   const tile=panel(1.65,1.83,.06,tiles[0]);tile.group.position.set(-1.0,-1.55,.65);tile.group.rotation.z=.08;accessory.add(tile.group);
   const props=themes.map(()=>new THREE.Group());props.forEach(g=>accessory.add(g));
   function mesh(geo:THREE.BufferGeometry,mat:THREE.Material,parent:THREE.Group) { geometries.push(geo); const m=new THREE.Mesh(geo,mat);parent.add(m);return m; }
@@ -94,10 +95,30 @@ export async function createHeroWorld(host: HTMLDivElement, animate: boolean) {
   const knot=mesh(new THREE.TorusKnotGeometry(.46,.13,120,18),material("#b5baff",.88,.19),props[2]);props[2].position.set(1.45,.9,.38);props[2].rotation.set(.2,-.35,.15);
   const socials=new THREE.Group();socials.position.set(1.83,-.87,.15);accessory.add(socials);
   ["◎","♪","▶"].forEach((symbol,i)=>{const t=canvasTexture(c=>{c.fillStyle="#3449df";c.fillRect(0,0,160,160);c.fillStyle="#fffaf5";c.textAlign="center";c.textBaseline="middle";c.font="bold 90px sans-serif";c.fillText(symbol,80,82);},160,160);const p=panel(.43,.43,.05,t,t);p.group.position.y=-i*.56;socials.add(p.group);});
-  let index=0; let elapsed=0; let last=performance.now(); let frame=0; let visible=true; let disposed=false; let pointerX=0,pointerY=0;
-  const dwell=4.4,turn=2.4,period=dwell+turn;
-  function select(i:number){index=i;(main.front.material as THREE.MeshBasicMaterial).map=faces[i];(tile.front.material as THREE.MeshBasicMaterial).map=tiles[i];props.forEach((p,n)=>p.visible=n===i);host.dataset.scene=themes[i].name;}
-  select(0);
+    return {group:accessory, tile, props, vinyl, knot};
+  }
+  const sides=[createAccessories(),createAccessories()];
+  sides[1].group.rotation.y=Math.PI;
+  sides.forEach(side=>rotor.add(side.group));
+  let elapsed=0; let last=performance.now(); let frame=0; let visible=true; let disposed=false; let pointerX=0,pointerY=0; let preparedCycle=-1;
+  const dwell=4.4,turn=1.8,period=dwell+turn;
+  function prepare(cycle:number) {
+    // Only prepare the hidden face. The visible face already contains the incoming profile.
+    const current=cycle%2, next=1-current;
+    const theme=cycle%themes.length, nextTheme=(theme+1)%themes.length;
+    const faceMeshes=[main.front,main.rear];
+    if(cycle===0) {
+      (faceMeshes[current].material as THREE.MeshBasicMaterial).map=faces[theme];
+      (sides[current].tile.front.material as THREE.MeshBasicMaterial).map=tiles[theme];
+      sides[current].props.forEach((p,n)=>p.visible=n===theme);
+    }
+    (faceMeshes[next].material as THREE.MeshBasicMaterial).map=faces[nextTheme];
+    (sides[next].tile.front.material as THREE.MeshBasicMaterial).map=tiles[nextTheme];
+    sides[next].props.forEach((p,n)=>p.visible=n===nextTheme);
+    preparedCycle=cycle;
+  }
+  prepare(0);
+  textures.forEach(t=>t.anisotropy=renderer.capabilities.getMaxAnisotropy());
   function resize(){const w=host.clientWidth,h=host.clientHeight;if(!w||!h)return;renderer.setSize(w,h);camera.aspect=w/h;camera.position.z=camera.aspect<.82?11.7:10.7;camera.updateProjectionMatrix();}
   const resizeObserver=new ResizeObserver(resize);resizeObserver.observe(host);resize();
   const intersection=new IntersectionObserver(([entry])=>{visible=entry.isIntersecting;},{threshold:.05});intersection.observe(host);
@@ -107,15 +128,21 @@ export async function createHeroWorld(host: HTMLDivElement, animate: boolean) {
   function render(now:number){if(disposed)return;frame=requestAnimationFrame(render);const dt=Math.max(0,Math.min((now-last)/1000,.05));last=now;if(!visible||document.hidden)return;
     if(animate)elapsed+=dt;
     const cycle=Math.floor(elapsed/period),phase=elapsed%period;
-    const progress=Math.max(0,(phase-dwell)/turn);const angle=ease(progress)*Math.PI*2;
-    // Change content only while the opaque universal back faces the camera.
-    const target=(cycle+(progress>=.5?1:0))%themes.length;if(target!==index)select(target);
-    const fold=progress===0?1:Math.pow(Math.abs(Math.cos(Math.PI*progress)),2);
-    accessory.scale.setScalar(.08+.92*fold);
-    rotor.rotation.set(-.035, -.26+angle, -.025);
+    if(cycle!==preparedCycle)prepare(cycle);
+    const progress=Math.max(0,(phase-dwell)/turn);
+    // A real half-turn: the following profile is already on the reverse face.
+    const angle=(cycle%2)*Math.PI+ease(progress)*Math.PI;
+    const rotation=-.26+angle;
+    sides.forEach((side,i)=>{
+      const facing=Math.cos(rotation+i*Math.PI);
+      side.group.visible=facing>0;
+      side.group.scale.setScalar(Math.max(.001,facing));
+    });
+    host.dataset.scene=themes[(cycle+(Math.cos(rotation)*(cycle%2===0?1:-1)<0?1:0))%themes.length].name;
+    rotor.rotation.set(-.035, rotation, -.025);
     rig.rotation.y+=(pointerX*.13-rig.rotation.y)*.045;rig.rotation.x+=(-pointerY*.07-rig.rotation.x)*.045;
     rig.position.y=animate?Math.sin(elapsed*.7)*.035:0;
-    if(animate){vinyl.rotation.z=-elapsed*.16;knot.rotation.y=elapsed*.18;}
+    if(animate)sides.forEach(({vinyl,knot})=>{vinyl.rotation.z=-elapsed*.16;knot.rotation.y=elapsed*.18;});
     renderer.render(scene,camera);
   }
   frame=requestAnimationFrame(render);
