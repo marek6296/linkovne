@@ -261,3 +261,10 @@ to{opacity:1;translate:0 0}
 @media(max-width:420px) { .ls-creators .ls-portrait-card { left: 16%; width: 270px; } .ls-creators .ls-photo-print { right: 0; width: 115px; } .ls-creators .ls-play-key { left: 0; } }
 .ls-creators .ls-play-key { left: -2%; top: 370px; }
 @media(max-width:420px) { .ls-creators .ls-play-key { left: -1%; } }
+/* Keep each animated object in its own composited layer. A shared preserve-3d
+   context lets rotating planes intersect and reverse their occlusion order. */
+.ls-creators .ls-world { transform-style: flat; perspective: 1100px; isolation: isolate; }
+.ls-creators .ls-pedestal { z-index: 0; }
+.ls-creators .ls-portrait-card { z-index: 1; }
+.ls-creators .ls-photo-print { z-index: 2; }
+.ls-creators .ls-play-key { z-index: 3; }
