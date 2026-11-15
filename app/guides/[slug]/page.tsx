@@ -33,7 +33,7 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
       <nav aria-label="Breadcrumb" className="text-sm text-soft"><Link href="/">Home</Link> / <Link href="/guides">Guides</Link></nav>
       <article>
         <h1 className="mt-8 font-grotesk text-4xl leading-tight font-extrabold tracking-tight sm:text-5xl">{g.title}</h1>
-        <p className="mt-4 text-sm text-soft">By <Link href="/about" className="underline">Linkovne</Link> · Updated <time dateTime={g.updated}>15 November 2026</time></p>
+        <p className="mt-4 text-sm text-soft">By <Link href="/about" className="underline">Linkovne</Link> · Updated <time dateTime={g.updated}>{new Date(`${g.updated}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })}</time></p>
         <p className="mt-8 rounded-2xl border border-pink-200 bg-white p-6 text-lg leading-relaxed">{g.answer}</p>
         <nav aria-label="On this page" className="my-10 rounded-2xl border border-line p-6"><p className="mb-3 font-bold">On this page</p><ul className="space-y-2 text-sm">{g.sections.map((s,i) => <li key={s.heading}><a href={`#section-${i+1}`} className="underline decoration-line underline-offset-4">{s.heading}</a></li>)}</ul></nav>
         {g.sections.map((s,i) => <section key={s.heading} id={`section-${i+1}`} className="mt-12 scroll-mt-8">

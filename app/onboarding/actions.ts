@@ -1,5 +1,6 @@
 "use server";
 
+import { createHash } from "node:crypto";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
@@ -8,7 +9,7 @@ import { templateByKey, templateBlocks } from "@/lib/templates";
 import { socialHref, type SocialPlatform } from "@/lib/blocks";
 import type { RedeemGrant } from "@/app/dashboard/actions";
 
-export type OnboardingResult = { error?: string; ok?: boolean };
+export type OnboardingResult = { error?: string; ok?: boolean; conversionId?: string };
 
 /**
  * Uplatni invite kod z cookie (nastavenej v /i/<code> pred registraciou) HNED
@@ -94,6 +95,14 @@ export async function completeOnboarding(
     }
   }
   if (!user) redirect("/login");
+
+  // A stale wizard must not turn each additional profile into a signup.
+  const { count: existingProfiles, error: countError } = await supabase
+    .from("profiles").select("id", { count: "exact", head: true }).eq("owner_id", user.id);
+  const firstProfile = !countError && existingProfiles === 0;
+  // Existing users predate acquisition measurement. Never label their recreated page a signup.
+  const eligibleForSignup = firstProfile && !user.user_metadata?.linkovne_ads_onboarded
+    && Date.parse(user.created_at) >= Date.parse("2026-11-16T00:00:00Z");
 
   // Ucet musi existovat skor ako profil
   const { error: accErr } = await supabase
@@ -208,6 +217,15 @@ export async function completeOnboarding(
     cookieStore.delete("ref");
   }
 
+  // Durable namespaced marker survives profile deletion. Failure must not block onboarding
+  // or emit an unverifiable acquisition event; the stable transaction ID also covers races.
+  let conversionId: string | undefined;
+  if (eligibleForSignup) {
+    const { error: markerError } = await supabase.auth.updateUser({
+      data: { linkovne_ads_onboarded: true },
+    });
+    if (!markerError) conversionId = createHash("sha256").update(`linkovne:onboarding:${user.id}`).digest("hex");
+  }
   revalidatePath("/", "layout");
-  return { ok: true };
+  return { ok: true, conversionId };
 }

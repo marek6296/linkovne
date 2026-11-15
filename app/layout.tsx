@@ -14,6 +14,7 @@ import {
   Syne,
 } from "next/font/google";
 import "./globals.css";
+import { GoogleAdsMeasurement } from "@/components/google-ads";
 import { SiteTracker } from "@/components/site-tracker";
 import { BRAND_TITLE, SITE_URL } from "@/lib/site";
 
@@ -143,6 +144,7 @@ export default function RootLayout({
         {children}
         {/* Navstevnost linkovne.com (len marketingove stranky, bez cookies) */}
         <SiteTracker />
+        <GoogleAdsMeasurement />
       </body>
     </html>
   );

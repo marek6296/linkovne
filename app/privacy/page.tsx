@@ -6,7 +6,7 @@ export const metadata = marketingMetadata("/privacy", "Privacy Policy", `How ${B
 
 export default function PrivacyPage() {
   return (
-    <LegalShell title="Privacy Policy" updated="22 July 2026">
+    <LegalShell title="Privacy Policy" updated="16 November 2026">
       <p>
         This Privacy Policy explains how {BRAND_TITLE} (“we”, “us”) collects,
         uses and protects your personal data when you use {SITE_DOMAIN} and the
@@ -47,9 +47,23 @@ export default function PrivacyPage() {
 
       <h2>Cookies</h2>
       <p>
-        We use only essential cookies needed to keep you signed in. We do not use
-        analytics, advertising or tracking cookies, so no cookie-consent banner
-        is required for optional cookies.
+        Essential cookies keep you signed in. On our own marketing and account-setup
+        pages, we ask before loading optional Google Ads measurement. If you allow it,
+        Google may use advertising cookies (such as _gcl_*) and ad-click identifiers
+        to associate an ad visit with completed account setup. We do not send your
+        email, password, profile content or payment details to Google through this
+        measurement. Enhanced conversions and ad personalisation are not enabled.
+        Hosted creator pages and their custom domains do not load this Google tag.
+      </p>
+
+      <p>
+        Rejecting optional measurement does not affect your account. Change or withdraw
+        your choice using “Privacy choices” on our marketing pages. Your choice is
+        stored in your browser until you change it or clear site data. Withdrawing
+        stops future measurement and clears the advertising cookies we can access.
+        Our built-in creator-page visit and click statistics remain cookie-free.
+        Google may receive your IP address and browser information when its tag loads
+        after consent. Learn more in <a href="https://policies.google.com/technologies/partner-sites">Google’s partner-site privacy information</a>.
       </p>
 
       <h2>How we use your data</h2>
@@ -57,6 +71,7 @@ export default function PrivacyPage() {
         <li>To provide and operate your account and pages.</li>
         <li>To process subscriptions and prevent fraud (via Stripe).</li>
         <li>To show you your own visit and click statistics.</li>
+        <li>With consent, to measure which ads lead to completed account setup.</li>
         <li>To send essential service emails (e.g. password resets).</li>
         <li>To keep the service secure and comply with our legal obligations.</li>
       </ul>
@@ -84,6 +99,7 @@ export default function PrivacyPage() {
         <li>
           <strong>Stripe</strong> — subscription payments.
         </li>
+        <li><strong>Google Ads</strong> — optional advertising measurement on our own marketing and account-setup pages, only after consent.</li>
         <li>
           <strong>Resend</strong> — transactional email delivery.
         </li>

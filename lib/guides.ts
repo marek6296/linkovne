@@ -13,6 +13,38 @@ export type Guide = {
 /** Product-led reference content: visible HTML and machine summaries share these facts. */
 export const GUIDES: Guide[] = [
   {
+    slug: "link-in-bio-for-ai-creators",
+    title: "Link in bio for AI creators: profiles, links and analytics",
+    description: "Set up a link-in-bio page for an AI creator or virtual influencer. Keep identities separate, label content clearly and track traffic without confusing clicks with sales.",
+    updated: "2026-11-16",
+    answer: `An AI creator's link-in-bio page brings social profiles, approved subscription destinations and contact details together under one address. Linkovne offers a free starter page, up to ${f.proProfiles} profiles on Pro (${f.proPrice}), and up to ${f.businessProfiles} profiles plus custom domains on Business (${f.businessPrice}). The page builder organises links; it does not generate AI models or guarantee social-platform approval.`,
+    sections: [
+      {
+        heading: "Build the page around the visitor's next step",
+        paragraphs: ["A visitor coming from Instagram or TikTok should recognise the creator immediately. Use a consistent display name and avatar, a short description of the character, and a small set of useful destinations. Put the most relevant approved destination first rather than filling the page with every account you operate.", "If the persona or its content is AI-generated, disclose that clearly where the platform and your audience require it. A link page is not a substitute for the destination platform's disclosure, identity-verification, age or content rules. Do not present a virtual persona as a verified real person."],
+        steps: ["Create your Linkovne account and choose the creator's page name.", "Add a recognisable image and a clear description, including AI disclosure where appropriate.", "Add the creator's official social accounts, approved destinations and business contact options.", "Check all links in the mobile preview, then publish and open the public page.", "Use a separate tracked URL for each social account so you can compare visits and clicks."],
+      },
+      {
+        heading: "Keep multiple AI creator identities separate",
+        paragraphs: [`Use one profile per creator so visitors see the right identity and destinations. Pro includes up to ${f.proProfiles} profiles; Business includes up to ${f.businessProfiles}. These are separate pages under one login, not separate staff accounts or client permission roles.`, "Give main and backup social accounts distinct source names, such as instagram_main and instagram_backup. Keep a simple record of which public URL is used in each bio. A backup account linking to the wrong character's page can make both the visitor experience and your analytics misleading."],
+      },
+      {
+        heading: "Choose a custom domain when ownership matters",
+        paragraphs: [`Business (${f.businessPrice}) lets you connect a domain you own. Register and renew the domain separately, keep access to its DNS settings, and test HTTPS after connecting it. A custom domain is optional: you can start with a Linkovne address and upgrade later.`, "Domain health checks detect reachability problems. They do not prove that Instagram, TikTok or another platform accepts the content or link. Do not use domain changes, gated links or redirects to evade platform enforcement. A confirmation gate helps visitors understand a destination; it does not make restricted content permissible."],
+      },
+      {
+        heading: "Measure the funnel without calling every click a sale",
+        paragraphs: ["Review profile visits, destination clicks and traffic sources to see which social accounts bring interested visitors. If a destination gets few clicks, check its label, placement and whether the page matches what the social post promised.", "A click to a subscription platform is not a confirmed subscriber or revenue. To measure sales on another service, use that service's own reporting or a supported integration. Linkovne's built-in profile analytics do not verify purchases made on external platforms. Keep account-creation results, public-page traffic and subscription revenue as separate measures."],
+      },
+    ],
+    faqs: [
+      { q: "Can I use Linkovne for an AI creator?", a: "Yes, you can organise an AI creator's approved links and social accounts. You remain responsible for truthful disclosures and compliance with the rules of Linkovne and each destination platform." },
+      { q: "Does Linkovne create AI models or their content?", a: "No. Linkovne builds and manages link-in-bio pages. Its AI page builder helps draft page content; it is not an image or virtual-model generator." },
+      { q: "Can I manage several AI creators?", a: `Pro supports up to ${f.proProfiles} profiles and Business up to ${f.businessProfiles}, under one login. Business also includes custom domains.` },
+      { q: "Will a custom domain stop Instagram from blocking a link?", a: "No. A domain you own gives you control of the address, but it does not override social-platform policies or guarantee that the URL will be accepted." },
+    ],
+  },
+  {
     slug: "link-in-bio-for-models",
     title: "Link in bio for models: a practical setup guide",
     description: "Build a clear link page for your portfolio, social accounts and enquiries. Plan your links, protect private destinations and measure traffic sources.",

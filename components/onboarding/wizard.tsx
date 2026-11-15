@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { recordCreatorConversion } from "@/lib/google-ads";
 import { completeOnboarding, claimPendingInvite } from "@/app/onboarding/actions";
 import type { RedeemGrant } from "@/app/dashboard/actions";
 import { templateByKey } from "@/lib/templates";
@@ -114,6 +115,8 @@ export function Wizard({
         if (res.error.toLowerCase().includes("address")) setStep(1);
         return;
       }
+
+      await recordCreatorConversion(res.conversionId);
 
       // Vybral Pro (a nejde cez invite kod) → rovno do Stripe checkoutu.
       // Stranka uz existuje, takze aj ked platbu zrusi, ma hotovy free ucet.
