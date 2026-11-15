@@ -1,4 +1,5 @@
-import { CreatorStage, ContentStudio } from "@/components/landing/landing-scenes";
+import { CreatorPortrait, CreatorSpotlight, CreatorGallery } from "@/components/landing/creator-experience";
+import { AudienceGlobe } from "@/components/landing/audience-globe";
 import "@/components/landing/landing.css";
 import { LandingNav } from "@/components/landing/landing-interactive";
 import { productGraph, jsonLd } from "@/lib/seo";
@@ -61,22 +62,15 @@ export default async function Home() {
             <p>Your links, your content, your style.<br className="landing-desktop-break" /> Bring it all together on a page that’s yours.</p>
             <Link href="/register" className="landing-button landing-button-blue">Create your free page <span aria-hidden>↗</span></Link>
           </div>
-          <CreatorStage />
+          <CreatorPortrait />
         </section>
       </div>
       <main>
-        <section id="features" className="landing-blue-section">
-          <div className="landing-feature landing-width">
-            <ContentStudio />
-            <div><h2>Make yourself<br />at home.</h2><p>Choose your colours, add your links and arrange things your way. From your first post to your latest project, there’s a place for it here.</p><Link href="/register" className="landing-button landing-button-pink">Build your page <span aria-hidden>↗</span></Link></div>
-          </div>
-        </section>
+        <CreatorSpotlight />
+        <CreatorGallery />
         <section id="analytics" className="landing-feature landing-width">
           <div><h2>See what<br />gets the clicks.</h2><p>Find out where people discover you and what they open next. Views, clicks and traffic sources, together in one dashboard.</p><Link href="/register" className="landing-button landing-button-blue">Explore Linkovne <span aria-hidden>↗</span></Link></div>
-          <div className="landing-analytics-scene" aria-label="Illustrative analytics preview">
-            <div className="landing-chart"><div className="landing-chart-heading"><span>Page views</span><span>This week</span></div><strong>12,840 <span aria-hidden>↗</span></strong><div className="landing-bars" aria-hidden>{[28,44,38,64,53,80,100].map((height,i)=><span key={i} style={{height:`${height}%`}} />)}</div><div className="landing-chart-days"><span>Mon</span><span>Sun</span></div></div>
-            <div className="landing-source"><span>Top source</span><strong>Instagram ↗</strong><span>Example data</span></div>
-          </div>
+          <AudienceGlobe />
         </section>
         <section id="domains" className="landing-domain-section"><div className="landing-feature landing-width"><div className="landing-domain-scene" aria-label="Example custom domain"><div className="landing-domain-card"><span className="landing-domain-dot" />emma.com<span aria-hidden>↗</span></div><div className="landing-domain-shadow" aria-hidden /></div><div><h2>Your name.<br />Your domain.</h2><p>Give your page its own address. Connect a domain you own with Business, and manage up to ten profiles from one account.</p><a href="#pricing" className="landing-button">Find your plan <span aria-hidden>↗</span></a></div></div></section>
 
