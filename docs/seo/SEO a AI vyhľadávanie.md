@@ -52,4 +52,4 @@ Oficiálne podklady:
 - Bing doména úspešne overená meta tagom; sitemap prijatá, Processing.
 - IndexNow prijal 8 marketingových URL s HTTP 202 (key validation pending).
 - PageSpeed API vrátilo 429, performance skóre preto nezmerané.
-- Externý listing: pripravený podklad, AlternativeTo čaká na Marekovo prihlásenie a overený email. Nič na AlternativeTo neodoslané ani schválené.
+- Externý listing: AlternativeTo odoslané 15. 11. 2026 cez účet Marek-Donoval; app ID `0b6a8cf9-ac99-485b-ac9b-4e8ef06d359a`. Kompletný profil, logo, 2 screenshoty a Linktree/Beacons/AllMyLinks väzby. Bezplatná fronta; čaká na review, zatiaľ nie verejný backlink. Screenshot assety nasadené commitom `1db7ead`.
