@@ -24,9 +24,9 @@ export function CreatorPortrait() {
 }
 
 const STORIES = [
-  {image:"/landing/story-2.jpg",title:"Make it your own.",text:"Your colours, your photos, your links. Build a page that feels like you, right down to the details.",name:"Taylor",role:"Independent creator",href:"/register",cta:"Create your page"},
-  {image:"/landing/story-0.jpg",title:"Bring your work together.",text:"Give your portfolio, latest projects and contact details one home. Share it everywhere you show up.",name:"Alex",role:"Design & photography",href:"/register",cta:"Build your portfolio"},
-  {image:"/landing/story-1.jpg",title:"Room for every profile.",text:"Manage up to ten creator profiles from one account with Business. Keep each page’s content and style its own.",name:"Jordan",role:"Creator management",href:"#pricing",cta:"Explore the plans"},
+  {image:"/landing/taylor-portrait.png",title:"Make it your own.",text:"Your colours, your photos, your links. Build a page that feels like you, right down to the details.",name:"Taylor",role:"Independent creator",href:"/register",cta:"Create your page"},
+  {image:"/landing/alex-portrait.png",title:"Bring your work together.",text:"Give your portfolio, latest projects and contact details one home. Share it everywhere you show up.",name:"Alex",role:"Design & photography",href:"/register",cta:"Build your portfolio"},
+  {image:"/landing/jordan-portrait.png",title:"Room for every profile.",text:"Manage up to ten creator profiles from one account with Business. Keep each page’s content and style its own.",name:"Jordan",role:"Creator management",href:"#pricing",cta:"Explore the plans"},
 ];
 export function CreatorSpotlight() {
  const [index,setIndex]=useState(0);
@@ -41,7 +41,7 @@ export function CreatorSpotlight() {
  const story=STORIES[index];
  return <section ref={ref} id="features" className="creator-spotlight" aria-label="Ways to use Linkovne">
   <div className="spotlight-layout landing-width">
-   <div className="spotlight-photo"><AnimatePresence initial={false} mode="sync"><motion.div key={story.image} className="spotlight-photo-layer" initial={{opacity:0,scale:1.04}} animate={{opacity:1,scale:1}} exit={{opacity:0}} transition={{duration:reduced?0:.7}}><Image src={story.image} alt={`${story.name}, illustrative creator portrait`} fill sizes="(max-width:760px) 90vw, 620px" className="spotlight-image" /></motion.div></AnimatePresence><div className="spotlight-person"><strong>{story.name}</strong><span>{story.role}</span></div></div>
+   <div className="spotlight-photo"><AnimatePresence initial={false} mode="sync"><motion.div key={story.image} className="spotlight-photo-layer" initial={{opacity:0,scale:1.04}} animate={{opacity:1,scale:1}} exit={{opacity:0}} transition={{duration:reduced?0:.7}}><Image src={story.image} alt={`${story.name}, illustrative creator portrait`} fill quality={90} sizes="(max-width:760px) 90vw, 620px" className="spotlight-image" /></motion.div></AnimatePresence><div className="spotlight-person"><strong>{story.name}</strong><span>{story.role}</span></div></div>
    <div className="spotlight-copy"><AnimatePresence initial={false} mode="wait"><motion.div key={index} initial={{opacity:0,y:12}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-8}} transition={{duration:reduced?0:.25}}><h2>{story.title}</h2><p>{story.text}</p></motion.div></AnimatePresence><Link href={story.href} className="landing-button landing-button-blue">{story.cta}<span aria-hidden>↗</span></Link><div className="spotlight-progress" aria-hidden="true">{STORIES.map((_,i)=><span key={i} className={i===index?"active":""}/>)}</div></div>
   </div>
  </section>;
