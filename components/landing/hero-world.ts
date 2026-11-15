@@ -3,9 +3,11 @@ import * as THREE from "three";
 const W = 720;
 const H = 1120;
 const themes = [
-  { name: "Sofia Lane", kind: "photo", image: "/landing/hero-sofia.webp", colour: "#f6c9e0", ink: "#272238", title: ["Sofia", "Lane."], subtitle: "Photography & travel", links: ["The travel journal", "Work with me"], tile: "Summer, on film.", art: "/templates/amalfi-summer.webp" },
-  { name: "Noah James", kind: "music", image: "/landing/hero-noah.webp", colour: "#3449df", ink: "#fffaf5", title: ["NOAH", "JAMES"], subtitle: "Sound for the slow days.", links: ["Listen to the new EP", "Shows & bookings"], tile: "After hours", art: "/templates/vinyl-sunset.webp" },
-  { name: "Studio Forma", kind: "design", image: "/templates/cobalt-glass.webp", colour: "#ebe6f8", ink: "#25223c", title: ["studio", "forma"], subtitle: "Objects. Ideas. A different angle.", links: ["Selected work", "Let’s make something"], tile: "Form & light", art: "/templates/rose-crystal.webp" },
+  { name: "Sofia Lane", kind: "photo", image: "/landing/hero-sofia.webp", colour: "#f6c9e0", ink: "#272238", title: ["Sofia", "Lane."], subtitle: "Photography & travel", links: ["The travel journal", "Work with me"], tile: "Summer, on film.", tileCta: "Explore the journal  ↗", art: "/templates/amalfi-summer.webp" },
+  { name: "Noah James", kind: "music", image: "/landing/hero-noah.webp", colour: "#3449df", ink: "#fffaf5", title: ["NOAH", "JAMES"], subtitle: "Sound for the slow days.", links: ["Listen to the new EP", "Shows & bookings"], tile: "After hours", tileCta: "The new EP  •  Listen now", art: "/templates/vinyl-sunset.webp" },
+  { name: "Nina Rose", kind: "influencer", image: "/landing/hero-influencer.webp", colour: "#efd4c7", ink: "#452c35", title: ["Nina", "Rose."], subtitle: "Style, beauty & everyday life", links: ["My favourite finds", "Brand collaborations"], tile: "The style edit", tileCta: "Discover my favourites  ↗", art: "/landing/hero-style.webp" },
+  { name: "Bright & Co.", kind: "business", image: "/landing/hero-business.webp", colour: "#e0e6f5", ink: "#253557", title: ["Bright", "& Co."], subtitle: "Good people. Better business.", links: ["Explore our services", "Book a consultation"], tile: "Let’s talk.", tileCta: "Meet the team  ↗", art: "/landing/hero-office.webp" },
+  { name: "Luca Reed", kind: "athlete", image: "/landing/hero-athlete.webp", colour: "#c9d7fa", ink: "#21346d", title: ["LUCA", "REED"], subtitle: "Runner. Coach. Keep moving.", links: ["Train with me", "Races & partnerships"], tile: "Your next 5K", tileCta: "Explore the training plan  ↗", art: "/landing/hero-training.webp" },
 ];
 
 export async function createHeroWorld(host: HTMLDivElement, animate: boolean) {
@@ -37,14 +39,14 @@ export async function createHeroWorld(host: HTMLDivElement, animate: boolean) {
     c.save(); c.beginPath(); c.rect(0,0,W,740); c.clip(); photo(c,t.image,0,0,W,740); c.restore();
     const gradient = c.createLinearGradient(0,480,0,650); gradient.addColorStop(0,"transparent"); gradient.addColorStop(1,t.colour);
     c.fillStyle = gradient; c.fillRect(0,480,W,260);
-    c.fillStyle = t.ink; c.font = `${t.kind === "design" ? 500 : 800} ${t.kind === "music" ? 104 : 115}px ${font}`;
+    c.fillStyle = t.ink; c.font = `800 ${t.kind === "music" ? 104 : 115}px ${font}`;
     c.fillText(t.title[0],48,630); c.fillText(t.title[1],48,734);
     c.font = `400 28px ${font}`; c.fillText(t.subtitle,50,791);
     t.links.forEach((link,i) => { round(c,42,844+i*101,636,80,24,i===0 ? "#fffaf5" : t.kind === "music" ? "#f4c7df" : "#272238"); c.fillStyle=i===0 || t.kind==="music" ? "#272238" : "#fffaf5"; c.font=`500 29px ${font}`; c.fillText(link,70,894+i*101); c.fillText("↗",620,894+i*101); });
   }));
   const tiles = themes.map(t => canvasTexture(c => {
     c.fillStyle = "#fffaf5"; c.fillRect(0,0,600,660); c.save(); c.beginPath(); c.roundRect(22,22,556,450,30); c.clip(); photo(c,t.art,22,22,556,450); c.restore();
-    c.fillStyle = "#25223c"; c.font = `650 46px ${font}`; c.fillText(t.tile,32,539); c.font = `400 27px ${font}`; c.fillText(t.kind === "music" ? "The new EP  •  Listen now" : t.kind === "design" ? "View the collection  ↗" : "Explore the journal  ↗",32,597);
+    c.fillStyle = "#25223c"; c.font = `650 46px ${font}`; c.fillText(t.tile,32,539); c.font = `400 27px ${font}`; c.fillText(t.tileCta,32,597);
   },600,660));
   const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true, powerPreference:"high-performance" });
   renderer.setPixelRatio(Math.min(3, Math.max(2, window.devicePixelRatio))); renderer.outputColorSpace=THREE.SRGBColorSpace;
@@ -91,11 +93,31 @@ export async function createHeroWorld(host: HTMLDivElement, animate: boolean) {
   for(let r=.31;r<.70;r+=.035){const groove=mesh(new THREE.TorusGeometry(r,.0035,5,96),material("#454151",.4,.45),vinyl);groove.position.z=.036;}
   const label=mesh(new THREE.CylinderGeometry(.26,.26,.008,64),material("#ef91c5"),vinyl);label.rotation.x=Math.PI/2;label.position.z=.041;
   const hole=mesh(new THREE.CylinderGeometry(.039,.039,.012,32),material("#181626"),vinyl);hole.rotation.x=Math.PI/2;hole.position.z=.048;
-  // Sculptural chrome knot for the designer theme.
-  const knot=mesh(new THREE.TorusKnotGeometry(.46,.13,120,18),material("#b5baff",.88,.19),props[2]);props[2].position.set(1.45,.9,.38);props[2].rotation.set(.2,-.35,.15);
+  // Recognisable fashion accessory: two lenses, rims, bridge and folded arms.
+  const glasses=props[2];glasses.position.set(1.42,.92,.45);glasses.rotation.set(.15,-.25,-.18);
+  const frameMaterial=material("#643a28",.25,.24), lensMaterial=material("#211c27",.3,.2);
+  for(const x of [-.31,.31]) {
+    const rim=mesh(new THREE.TorusGeometry(.25,.045,12,64),frameMaterial,glasses);rim.scale.set(1.12,.82,1);rim.position.x=x;
+    const lens=mesh(new THREE.SphereGeometry(.235,40,24),lensMaterial,glasses);lens.scale.set(1.12,.82,.11);lens.position.x=x;
+    const arm=mesh(new THREE.CylinderGeometry(.027,.027,.55,12),frameMaterial,glasses);arm.rotation.x=Math.PI/2;arm.position.set(x<0?-.59:.59,.05,-.24);
+  }
+  const bridge=mesh(new THREE.CylinderGeometry(.026,.026,.15,16),frameMaterial,glasses);bridge.rotation.z=Math.PI/2;bridge.position.y=.045;
+  // A miniature laptop for the business page, with an actual screen and keyboard.
+  const laptop=props[3];laptop.position.set(1.46,.93,.4);laptop.rotation.set(.08,-.35,-.12);
+  const screenTexture=canvasTexture(c=>{c.fillStyle="#243351";c.fillRect(0,0,480,320);round(c,22,22,436,276,12,"#eef1fa");c.fillStyle="#3449df";c.font=`700 42px ${font}`;c.fillText("Bright & Co.",42,88);c.fillStyle="#253557";c.font=`500 22px ${font}`;c.fillText("Let’s grow together.",42,132);round(c,42,166,170,86,8,"#f6c9e0");round(c,228,166,188,86,8,"#c8d5fb");},480,320);
+  const screen=panel(1.12,.76,.06,screenTexture);laptop.add(screen.group);
+  const keyboardTexture=canvasTexture(c=>{c.fillStyle="#c5c9d3";c.fillRect(0,0,480,300);for(let row=0;row<4;row++)for(let col=0;col<10;col++)round(c,25+col*43,20+row*34,33,24,4,"#394154");round(c,162,174,156,88,8,"#a4aabb");},480,300);
+  const keyboard=panel(1.16,.74,.045,keyboardTexture);keyboard.group.rotation.x=-1.2;keyboard.group.position.set(0,-.48,.32);laptop.add(keyboard.group);
+  // A stopwatch with a legible dial for the runner.
+  const watch=props[4];watch.position.set(1.42,.94,.4);watch.rotation.set(.1,-.2,-.12);
+  const caseBody=mesh(new THREE.CylinderGeometry(.43,.43,.14,80),material("#c8d2e7",.72,.26),watch);caseBody.rotation.x=Math.PI/2;
+  const dialTexture=canvasTexture(c=>{c.fillStyle="#fffaf5";c.fillRect(0,0,400,400);c.translate(200,200);for(let i=0;i<60;i++){c.save();c.rotate(i*Math.PI/30);c.strokeStyle="#253557";c.lineWidth=i%5===0?5:2;c.beginPath();c.moveTo(0,-172);c.lineTo(0,i%5===0?-149:-160);c.stroke();c.restore();}c.fillStyle="#253557";c.textAlign="center";c.font=`700 33px ${font}`;c.fillText("60",0,-106);c.fillText("30",0,130);c.fillText("15",122,12);c.fillText("45",-122,12);c.strokeStyle="#3449df";c.lineWidth=8;c.lineCap="round";c.beginPath();c.moveTo(0,25);c.lineTo(58,-104);c.stroke();c.fillStyle="#3449df";c.beginPath();c.arc(0,0,12,0,Math.PI*2);c.fill();},400,400);
+  const dial=mesh(new THREE.CircleGeometry(.388,80),flat(dialTexture),watch);dial.position.z=.075;
+  const crown=mesh(new THREE.CylinderGeometry(.095,.095,.13,24),material("#3449df",.25,.3),watch);crown.position.y=.49;
+  const button=mesh(new THREE.CylinderGeometry(.065,.065,.12,20),material("#3449df"),watch);button.position.set(.34,.33,0);button.rotation.z=-.7;
   const socials=new THREE.Group();socials.position.set(1.83,-.87,.15);accessory.add(socials);
   ["◎","♪","▶"].forEach((symbol,i)=>{const t=canvasTexture(c=>{c.fillStyle="#3449df";c.fillRect(0,0,160,160);c.fillStyle="#fffaf5";c.textAlign="center";c.textBaseline="middle";c.font="bold 90px sans-serif";c.fillText(symbol,80,82);},160,160);const p=panel(.43,.43,.05,t,t);p.group.position.y=-i*.56;socials.add(p.group);});
-    return {group:accessory, tile, props, vinyl, knot};
+    return {group:accessory, tile, props, vinyl};
   }
   const sides=[createAccessories(),createAccessories()];
   sides[1].group.rotation.y=Math.PI;
@@ -142,7 +164,7 @@ export async function createHeroWorld(host: HTMLDivElement, animate: boolean) {
     rotor.rotation.set(-.035, rotation, -.025);
     rig.rotation.y+=(pointerX*.13-rig.rotation.y)*.045;rig.rotation.x+=(-pointerY*.07-rig.rotation.x)*.045;
     rig.position.y=animate?Math.sin(elapsed*.7)*.035:0;
-    if(animate)sides.forEach(({vinyl,knot})=>{vinyl.rotation.z=-elapsed*.16;knot.rotation.y=elapsed*.18;});
+    if(animate)sides.forEach(({vinyl})=>{vinyl.rotation.z=-elapsed*.16;});
     renderer.render(scene,camera);
   }
   frame=requestAnimationFrame(render);

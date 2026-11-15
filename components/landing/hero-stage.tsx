@@ -16,7 +16,7 @@ export function HeroStage() {
       .catch(() => { /* Keep the static example when WebGL is unavailable. */ });
     return () => { cancelled = true; dispose?.(); };
   }, [reduced]);
-  return <div className="hero-stage" role="img" aria-label="Animated examples of a musician, designer and photographer’s Linkovne pages">
+  return <div className="hero-stage" role="img" aria-label="Animated examples of Linkovne pages for a photographer, musician, influencer, business and athlete">
     {!ready && <div className="hero-stage-fallback"><span>SOFIA<br/>LANE</span><p>Photography & travel</p><div>Explore my work ↗</div><div>Get in touch ↗</div></div>}
     <div ref={host} className="hero-stage-canvas" aria-hidden="true" />
   </div>;
