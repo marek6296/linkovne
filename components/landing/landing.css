@@ -7,7 +7,10 @@
 .landing-nav{display:flex;align-items:center;gap:34px;background:#fffaf6;padding:18px 24px;border-radius:18px;box-shadow:0 3px 0 #22213708}
 .landing-logo{width:154px;height:auto}
 .landing-nav-links{display:flex;gap:30px;margin-left:22px;font-size:15px;font-weight:500}
-.landing-nav-links a:hover,.landing-login:hover{color:var(--lp-blue)}
+.landing-nav-links a,.landing-login{position:relative;isolation:isolate;color:var(--lp-ink)}
+.landing-nav-links a::before,.landing-login::before{content:"";position:absolute;inset:-14px -12px;border-radius:16px;background:#eeefeb;opacity:0;z-index:-1;transition:opacity .18s ease;pointer-events:none}
+.landing-nav-links a:hover::before,.landing-nav-links a:focus-visible::before,.landing-login:hover::before,.landing-login:focus-visible::before{opacity:1}
+.landing-nav-links a:focus-visible,.landing-login:focus-visible{outline:2px solid var(--lp-blue);outline-offset:9px;border-radius:8px}
 .landing-nav-actions{display:flex;align-items:center;gap:22px;margin-left:auto}
 .landing-login{font-size:15px}
 .landing-button{display:inline-flex;align-items:center;justify-content:center;gap:24px;min-height:56px;padding:17px 26px;background:var(--lp-ink);color:white;font-size:16px;font-weight:600;border-radius:13px;transition:transform .2s,box-shadow .2s}
