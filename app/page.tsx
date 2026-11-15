@@ -66,8 +66,8 @@ export default async function Home() {
         </section>
       </div>
       <main>
-        <CreatorSpotlight />
         <CreatorGallery />
+        <CreatorSpotlight />
         <section id="analytics" className="landing-feature landing-width">
           <div><h2>See what<br />gets the clicks.</h2><p>Find out where people discover you and what they open next. Views, clicks and traffic sources, together in one dashboard.</p><Link href="/register" className="landing-button landing-button-blue">Explore Linkovne <span aria-hidden>↗</span></Link></div>
           <AudienceGlobe />
