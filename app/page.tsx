@@ -311,6 +311,7 @@ export default async function Home() {
       <footer className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-5 gap-y-3 px-6 py-8 text-sm text-faint">
         <Wordmark />
         <nav className="flex flex-wrap items-center gap-x-5 gap-y-2">
+          <Link href="/vs" className="transition hover:text-ink">Compare alternatives</Link>
           {COMPARE_SLUGS.map((slug) => (
             <Link
               key={slug}

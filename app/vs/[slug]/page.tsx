@@ -3,7 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Logo } from "@/components/logo";
 import { Wordmark } from "@/components/wordmark";
-import { COMPETITORS, COMPARE_SLUGS } from "@/lib/compare";
+import { COMPETITORS, COMPARE_SLUGS, getCompetitor } from "@/lib/compare";
+import { jsonLd } from "@/lib/seo";
 import { BRAND_TITLE, SITE_URL } from "@/lib/site";
 
 export function generateStaticParams() {
@@ -16,11 +17,11 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const c = COMPETITORS[slug];
+  const c = getCompetitor(slug);
   if (!c) return { title: "Not found" };
 
-  const title = `${BRAND_TITLE} vs ${c.name} — which link in bio tool fits you?`;
-  const description = `A feature-by-feature comparison of ${BRAND_TITLE} and ${c.name}: pricing, custom domains, analytics privacy and link protection — so you can pick with your eyes open.`;
+  const title = `${c.searchName ?? c.name} alternative for models & agencies · ${BRAND_TITLE}`;
+  const description = `Compare ${BRAND_TITLE} with ${c.searchName ?? c.name}: creator profiles, custom domains, analytics and plan limits. Official sources and clear reasons to choose either tool.`;
 
   return {
     title: { absolute: title },
@@ -56,7 +57,7 @@ export default async function ComparePage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const c = COMPETITORS[slug];
+  const c = getCompetitor(slug);
   if (!c) notFound();
 
   const hasUnconfirmed = c.rows.some((r) => r.unconfirmed);
@@ -64,6 +65,13 @@ export default async function ComparePage({
 
   return (
     <div className="min-h-dvh bg-[#f8f5f7]">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd({
+        "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
+          { "@type": "ListItem", position: 2, name: "Compare alternatives", item: `${SITE_URL}/vs` },
+          { "@type": "ListItem", position: 3, name: `${BRAND_TITLE} vs ${c.name}`, item: `${SITE_URL}/vs/${c.slug}` },
+        ],
+      }) }} />
       <header className="mx-auto flex w-full max-w-4xl items-center justify-between px-6 py-6">
         <Link href="/" aria-label="linkovne — home">
           <Logo className="h-7 w-auto" />
@@ -77,6 +85,7 @@ export default async function ComparePage({
       </header>
 
       <main className="mx-auto max-w-4xl px-6 pb-24">
+        <nav aria-label="Comparison navigation" className="pt-4 text-sm text-soft"><Link href="/vs" className="underline">← All creator-page comparisons</Link></nav>
         <section className="pt-8 pb-14 text-center sm:pt-14">
           <p className="font-mono text-sm font-bold tracking-wide text-pink-500 uppercase">
             Comparison
@@ -136,6 +145,10 @@ export default async function ComparePage({
         {c.additionalSources?.map(source => <p key={source.url} className="mt-3 text-xs text-faint">Additional official source: <a href={source.url} className="underline">{source.label}</a></p>)}
         <p className="mt-4 text-sm text-soft">This comparison is published by Linkovne. Profile counts are not team seats. Prices use each provider’s listed currency; domain registration and plan inclusions differ.</p>
 
+        <section className="mt-12 grid gap-5 sm:grid-cols-2" aria-label="Choose by workflow">
+          <div className="card p-6"><h2 className="text-xl font-bold">When to consider Linkovne</h2><p className="mt-4 leading-7 text-soft">{c.chooseUs}</p></div>
+          <div className="card p-6"><h2 className="text-xl font-bold">When to consider {c.name}</h2><p className="mt-4 leading-7 text-soft">{c.chooseThem}</p></div>
+        </section>
         <section className="mt-16 text-center">
           <h2 className="font-grotesk text-2xl font-bold tracking-tight sm:text-3xl">
             Try {BRAND_TITLE} free — see for yourself

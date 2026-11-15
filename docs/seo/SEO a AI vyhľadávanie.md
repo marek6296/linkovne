@@ -53,3 +53,16 @@ Oficiálne podklady:
 - IndexNow prijal 8 marketingových URL s HTTP 202 (key validation pending).
 - PageSpeed API vrátilo 429, performance skóre preto nezmerané.
 - Externý listing: AlternativeTo odoslané 15. 11. 2026 cez účet Marek-Donoval; app ID `0b6a8cf9-ac99-485b-ac9b-4e8ef06d359a`. Kompletný profil, logo, 2 screenshoty a Linktree/Beacons/AllMyLinks väzby. Bezplatná fronta; čaká na review, zatiaľ nie verejný backlink. Screenshot assety nasadené commitom `1db7ead`.
+
+## Druhá etapa — alternatívy a meranie AI viditeľnosti
+Schválený rozsah Marekom: doplniť priamych konkurentov, reálne preveriť AI odporúčania a pokračovať v relevantných externých profiloch. Zachovať existujúci stack a dizajn; nepoužívať nevyskúšané tvrdenia o konkurencii ani platené služby bez rozpočtu.
+
+- [ ] Pridať Linkme, AllMyLinks, hoo.be do /vs; vlastné zhrnutie vhodnosti a citované fakty, aktuálne dátumy overenia.
+- [ ] Pridať /vs rozcestník pre vyhľadávací zámer „alternatives“, interné odkazy, sitemap a llms odkazy. Vlastné /vs na top-level nekoliduje s profilmi (username má minimálne 3 znaky).
+- [ ] Zabezpečiť, že neznáme/prototype názvy konkurentov vracajú 404. Testovať lookup, render a metadata nových stránok.
+- [ ] Overiť aktuálne odporúčania Gemini a ChatGPT v čerstvých konverzáciách; oddeliť nebrandové objavenie od výslovnej otázky o značke, zaznamenať prompt/dátum/režim/obmedzenia. Žiadne generalizovanie z jednej vzorky.
+- [ ] Ďalší relevantný profil: SaaSHub, po Marekovom prihlásení a jeho prijatí podmienok; žiadne falošné recenzie ani zmienky.
+- [ ] Testy, build, code review, deploy cez GitHub, produkčný HTTP smoke, IndexNow a Google sitemap.
+- [ ] Aktualizovať existujúcu SEO poznámku a kartu vo vaulte.
+
+Oficiálne zdroje overované 15. 11. 2026: link.me/pricing, link.me/faq, support.allmylinks.com (custom domains, multiple accounts, visitor statistics), hoo.be/pricing, hoo.be/for-agencies. Číselné paid ceny Linkme sa z dostupného pricing HTML nedajú overiť; neuvádzať ich. AllMyLinks blog z roku 2020 nepoužívať ako aktuálny cenník.

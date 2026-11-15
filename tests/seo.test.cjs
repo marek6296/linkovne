@@ -66,3 +66,15 @@ test("private and active Creator-mode profiles never enter sitemap candidates", 
   assert.equal(canIndexPublicProfile(null), false);
   assert.equal(canIndexPublicProfile({ ...published, creator_mode: true, plan: "free" }), true);
 });
+test("competitor lookup rejects inherited property names and covers direct creator alternatives", () => {
+  const { getCompetitor } = load("lib/compare.ts");
+  for (const slug of ["linkme", "allmylinks", "hoobe"]) {
+    const competitor = getCompetitor(slug);
+    assert.equal(competitor.slug, slug);
+    assert.match(competitor.sourceUrl, /^https:\/\//);
+    assert.ok(competitor.chooseUs && competitor.chooseThem);
+  }
+  for (const slug of ["constructor", "toString", "__proto__", "nonexistent"]) {
+    assert.equal(getCompetitor(slug), undefined);
+  }
+});

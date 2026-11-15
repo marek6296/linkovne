@@ -14,6 +14,7 @@ export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticPages: MetadataRoute.Sitemap = [
+    { url: `${SITE_URL}/vs`, changeFrequency: "monthly", priority: 0.8 },
     { url: `${SITE_URL}/about`, changeFrequency: "monthly", priority: 0.6 },
     { url: `${SITE_URL}/guides`, changeFrequency: "monthly", priority: 0.8 },
     ...GUIDES.map(g => ({ url: `${SITE_URL}/guides/${g.slug}`, lastModified: new Date(`${g.updated}T00:00:00Z`), changeFrequency: "monthly" as const, priority: 0.8 })),

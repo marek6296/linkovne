@@ -6,7 +6,7 @@ from xml.etree import ElementTree
 
 base = (sys.argv[1] if len(sys.argv) > 1 else 'https://linkovne.com').rstrip('/')
 origin = 'https://linkovne.com'
-paths = ['/', '/about', '/guides', '/guides/link-in-bio-for-models', '/guides/agency-link-in-bio', '/guides/custom-domain-link-in-bio', '/vs/linktree', '/vs/beacons', '/privacy', '/terms']
+paths = ['/', '/about', '/guides', '/guides/link-in-bio-for-models', '/guides/agency-link-in-bio', '/guides/custom-domain-link-in-bio', '/vs', '/vs/linkme', '/vs/allmylinks', '/vs/hoobe', '/vs/linktree', '/vs/beacons', '/privacy', '/terms']
 
 class Page(HTMLParser):
     def __init__(self):
@@ -57,3 +57,9 @@ try: fetch('/guides/does-not-exist')
 except urllib.error.HTTPError as error: assert error.code==404
 else: raise AssertionError('Unknown guide must be a real 404')
 print('PASS unknown guide 404')
+
+for path in ['/vs/constructor','/vs/toString','/vs/__proto__','/vs/does-not-exist']:
+    try: fetch(path)
+    except urllib.error.HTTPError as error: assert error.code==404,(path,error.code)
+    else: raise AssertionError('Unknown comparison must return 404: '+path)
+print('PASS invalid/prototype competitor 404')

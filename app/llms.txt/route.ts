@@ -1,3 +1,4 @@
+import { COMPARE_SLUGS, COMPETITORS } from "@/lib/compare";
 import { SITE_URL } from "@/lib/site";
 import { GUIDES } from "@/lib/guides";
 import { productFacts as f } from "@/lib/seo";
@@ -28,8 +29,8 @@ export function GET() {
 - [Plans](${SITE_URL}/#pricing): monthly EUR pricing and included features.
 - [Creator guides](${SITE_URL}/guides): practical product-led setup guides.
 ${GUIDES.map(g => `- [${g.title}](${SITE_URL}/guides/${g.slug}): ${g.description}`).join("\n")}
-- [Linkovne vs Linktree](${SITE_URL}/vs/linktree): dated comparison; consult linked official competitor sources for current details.
-- [Linkovne vs Beacons](${SITE_URL}/vs/beacons): dated comparison; unconfirmed facts are marked.
+- [Compare Linktree and Link.me alternatives](${SITE_URL}/vs): choose by creator-page workflow, with official sources.
+${COMPARE_SLUGS.map(slug => `- [Linkovne vs ${COMPETITORS[slug].name}](${SITE_URL}/vs/${slug}): dated comparison, sources and reasons to choose either tool.`).join("\n")}
 - [Privacy](${SITE_URL}/privacy)
 - [Terms](${SITE_URL}/terms)
 - [Sitemap](${SITE_URL}/sitemap.xml)
