@@ -7,22 +7,6 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useInView, useReducedMotion } from "motion/react";
 
-export function CreatorPortrait() {
-  const reduced = useReducedMotion();
-  return <motion.div className="creator-portrait-scene" initial={false}>
-    <div className="creator-outline" aria-hidden="true" />
-    <motion.article className="creator-cover-card" initial={{opacity:0,y:24}} animate={{opacity:1,y:0}} transition={{type:"spring",stiffness:100,damping:22}} whileHover={reduced ? undefined : {y:-7,scale:1.015}} aria-label="Example Linkovne page for Sofia Lane">
-      <div className="creator-cover-image"><Image src="/sofia-lane.png" alt="Example creator Sofia Lane" fill sizes="(max-width:760px) 85vw, 440px" priority className="creator-cover-photo" /></div>
-      <div className="creator-cover-shade" />
-      <motion.div className="creator-cover-content" initial={reduced ? false : {opacity:0,y:20,filter:"blur(5px)"}} animate={{opacity:1,y:0,filter:"blur(0px)"}} transition={{delay:.25,type:"spring",stiffness:100,damping:20}}>
-        <h3>Sofia Lane</h3><p>Style, travel & everything in between.</p>
-        <div className="creator-example-links"><span>The summer edit <b>↗</b></span><span>Travel journal <b>↗</b></span><span>Work with me <b>↗</b></span></div>
-      </motion.div>
-    </motion.article>
-    <div className="creator-side-word" aria-hidden="true">your space.</div>
-  </motion.div>;
-}
-
 const STORIES = [
   {image:"/landing/taylor-portrait.png",title:"Make it your own.",text:"Your colours, your photos, your links. Build a page that feels like you, right down to the details.",name:"Taylor",role:"Independent creator",href:"/register",cta:"Create your page"},
   {image:"/landing/alex-portrait.png",title:"Bring your work together.",text:"Give your portfolio, latest projects and contact details one home. Share it everywhere you show up.",name:"Alex",role:"Design & photography",href:"/register",cta:"Build your portfolio"},

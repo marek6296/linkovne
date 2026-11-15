@@ -1,4 +1,5 @@
-import { CreatorPortrait, CreatorSpotlight, CreatorGallery } from "@/components/landing/creator-experience";
+import { HeroStage } from "@/components/landing/hero-stage";
+import { CreatorSpotlight, CreatorGallery } from "@/components/landing/creator-experience";
 import { AudienceGlobe } from "@/components/landing/audience-globe";
 import "@/components/landing/landing.css";
 import { LandingNav } from "@/components/landing/landing-interactive";
@@ -62,7 +63,7 @@ export default async function Home() {
             <p>Your links, your content, your style.<br className="landing-desktop-break" /> Bring it all together on a page that’s yours.</p>
             <Link href="/register" className="landing-button landing-button-blue">Create your free page <span aria-hidden>↗</span></Link>
           </div>
-          <CreatorPortrait />
+          <HeroStage />
         </section>
       </div>
       <main>
