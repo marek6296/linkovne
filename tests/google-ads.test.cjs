@@ -28,3 +28,20 @@ test('isolated Google document blocks foreign messages and only starts after con
  const id='a'.repeat(64);listener({origin:'https://linkovne.com',source:parent,data:{type:'linkovne:ads-convert',id}});
  const event=context.dataLayer.find(x=>x[0]==='event')[2];assert.equal(event.transaction_id,id);assert.equal(event.page_location,'https://linkovne.com/onboarding');event.event_callback();assert.equal(messages[0][0].id,id);
 });
+test('actual onboarding emits one stable conversion only for a newly acquired first profile',async()=>{
+ const {createHash}=require('node:crypto');
+ const state={count:0,markerError:false,user:{id:'test-user-opaque-id',created_at:'2026-11-16T12:00:00Z',user_metadata:{}}};
+ const client={auth:{getUser:async()=>({data:{user:state.user}}),updateUser:async({data})=>{if(state.markerError)return {error:{message:'offline'}};Object.assign(state.user.user_metadata,data);return {error:null};}},rpc:async()=>({data:true}),from:()=>{const q={select:()=>q,eq:async()=>({count:state.count,error:null}),upsert:async()=>({error:null}),insert:()=>q,single:async()=>({data:{id:'profile'},error:null})};return q;}};
+ const mocks={
+  'node:crypto':{createHash},'next/navigation':{redirect:()=>{throw Error('unexpected redirect');}},'next/cache':{revalidatePath:()=>{}},'next/headers':{cookies:async()=>({get:()=>null,delete:()=>{}})},
+  '@/lib/supabase/server':{createClient:async()=>client},'@/lib/templates':{templateByKey:()=>({key:'paper',theme:'classic',design:{}}),templateBlocks:()=>[]},'@/lib/blocks':{socialHref:()=>''},
+ };
+ const m={exports:{}};const code=ts.transpileModule(fs.readFileSync('app/onboarding/actions.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
+ new Function('require','module','exports',code)(key=>{if(!(key in mocks))throw Error(key);return mocks[key];},m,m.exports);
+ const payload={username:'testcreator',template:'paper'};
+ const first=await m.exports.completeOnboarding(payload);assert.equal(first.ok,true);assert.match(first.conversionId,/^[a-f0-9]{64}$/);assert.equal(state.user.user_metadata.linkovne_ads_onboarded,true);
+ state.count=1;assert.equal((await m.exports.completeOnboarding(payload)).conversionId,undefined);
+ state.count=0;assert.equal((await m.exports.completeOnboarding(payload)).conversionId,undefined);
+ state.user.user_metadata={};state.user.created_at='2026-10-01T00:00:00Z';assert.equal((await m.exports.completeOnboarding(payload)).conversionId,undefined);
+ state.user.created_at='2026-11-16T12:00:00Z';state.markerError=true;assert.equal((await m.exports.completeOnboarding(payload)).conversionId,undefined);
+});
