@@ -253,12 +253,12 @@ to{opacity:1;translate:0 0}
 
 /* One WebGL depth buffer for the entire rotating assembly. */
 .hero-stage { position:relative; width:100%; height:580px; max-width:600px; margin:auto; }
-.hero-stage-canvas { position:absolute; inset:-35px -25px; touch-action:pan-y; }
+.hero-stage-canvas { position:absolute; inset:-35px -25px; touch-action:pan-y; opacity:0; transition:opacity .3s ease; }
 .hero-stage-canvas canvas { display:block; width:100%; height:100%; }
-.hero-stage-fallback { position:absolute; inset:50px 55px; padding:36px 25px; border-radius:26px; background:#3449df; color:#fffaf5; transform:rotate(-5deg); }
-.hero-stage-fallback>span { display:block; font-size:65px; font-weight:800; line-height:1; margin-top:30px; }
-.hero-stage-fallback p { margin:25px 0; }
-.hero-stage-fallback>div { padding:16px; background:#f8cde2; color:#222137; margin-top:12px; border-radius:12px; }
 @media(max-width:1050px) and (min-width:761px) { .hero-stage { height:530px; } }
 @media(max-width:760px) { .hero-stage { height:540px; max-width:470px; } .hero-stage-canvas { inset:-15px -15px; } }
 @media(max-width:390px) { .hero-stage { height:460px; } }
+
+.hero-stage-canvas.is-ready { opacity:1; }
+.hero-stage-poster { position:absolute; inset:50px 55px; border-radius:26px; overflow:hidden; }
+.hero-stage-poster img { object-fit:cover; }

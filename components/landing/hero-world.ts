@@ -167,6 +167,7 @@ export async function createHeroWorld(host: HTMLDivElement, animate: boolean) {
     if(animate)sides.forEach(({vinyl})=>{vinyl.rotation.z=-elapsed*.16;});
     renderer.render(scene,camera);
   }
-  frame=requestAnimationFrame(render);
+  // Paint the first frame before resolving so the component reveals a complete scene.
+  render(performance.now());
   return ()=>{disposed=true;cancelAnimationFrame(frame);resizeObserver.disconnect();intersection.disconnect();host.removeEventListener("pointermove",move);host.removeEventListener("pointerleave",leave);geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());renderer.dispose();renderer.domElement.remove();};
 }
