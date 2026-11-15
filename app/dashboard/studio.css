@@ -77,14 +77,11 @@
 }
 .studio-preview-column .profile-preview-canvas {
   border-radius: 28px;
-  border: 1px solid #dedee5;
+  border: 0;
   box-shadow: 0 12px 32px #2020270d;
 }
 .studio-preview-column .profile-preview-viewport {
   border-radius: 28px;
-  max-height: calc(100dvh - 210px);
-  overflow-y: auto;
-  scrollbar-width: thin;
 }
 .studio-notice {
   padding: 12px 16px;
@@ -366,9 +363,6 @@
 .studio-design-panel > div {
   box-shadow: none;
 }
-.studio-preview-column .profile-preview-viewport {
-  max-height: calc(100dvh - 100px);
-}
 .studio-editor .lk-section-in {
   animation: none;
 }
@@ -378,12 +372,6 @@
 .studio-dialog .field {
   font-size: 14px;
   border-radius: 10px;
-}
-@media (max-width: 1023px) {
-  .studio-preview-column .profile-preview-viewport {
-    height: 650px;
-    max-height: 75dvh;
-  }
 }
 
 @media (max-width: 639px) {
@@ -873,3 +861,11 @@
     animation: none !important;
   }
 }
+
+.profile-delete-trigger { padding: 8px 10px; border-radius: 8px; font-size: 13px; color: #a33c48; transition: background .15s; }
+.profile-delete-trigger:hover { background: #fcebee; }
+.profile-delete-trigger:disabled { opacity: .5; cursor: wait; }
+.profile-delete-dialog { width: min(480px, calc(100vw - 32px)); }
+.profile-dialog-actions .profile-delete-confirm { border: 1px solid #bd3449; background: #bd3449; color: #fff; border-radius: 10px; padding: 10px 16px; font-size: 14px; }
+.profile-dialog-actions .profile-delete-confirm:disabled { opacity: .45; cursor: not-allowed; }
+.profile-dialog-actions .profile-delete-confirm:not(:disabled):hover { background: #9e293b; }

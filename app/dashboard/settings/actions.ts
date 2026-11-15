@@ -194,10 +194,20 @@ export async function removeDomain(domainId: string) {
 
 // ---------------------------------------------------------------- danger zone
 
-export async function deleteProfile(profileId: string) {
-  const { supabase } = await ownsProfile(profileId);
-  await supabase.from("profiles").delete().eq("id", profileId);
-  revalidatePath("/dashboard");
+export async function deleteProfile(
+  profileId: string,
+  _prev: SettingsState,
+  formData: FormData,
+): Promise<SettingsState> {
+  const { supabase, user, profile } = await ownsProfile(profileId);
+  if (formData.get("username") !== profile.username) {
+    return { error: `Type ${profile.username} exactly to confirm deletion.` };
+  }
+  const { data, error } = await supabase.from("profiles").delete()
+    .eq("id", profileId).eq("owner_id", user.id).select("id").maybeSingle();
+  if (error || !data) return { error: "Couldn't delete the profile. Please try again." };
+  revalidatePath(`/${profile.username}`);
+  revalidatePath("/dashboard", "layout");
   redirect("/dashboard");
 }
 

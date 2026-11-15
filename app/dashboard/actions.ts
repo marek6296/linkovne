@@ -597,10 +597,3 @@ export async function createProfile(
   revalidatePath("/dashboard");
   redirect("/dashboard");
 }
-
-export async function deleteProfile(profileId: string) {
-  const { supabase } = await requireProfile(profileId);
-  await supabase.from("profiles").delete().eq("id", profileId);
-  revalidatePath("/dashboard");
-  redirect("/dashboard");
-}

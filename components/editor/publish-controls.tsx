@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { DeleteProfileButton } from "./delete-profile-button";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { SITE_DOMAIN, profileLabel } from "@/lib/site";
@@ -259,6 +260,7 @@ export function PublishControls({
               {buttonLabel}
             </button>
           )}
+          <DeleteProfileButton profileId={profileId} username={username} disabled={isPending || saving} />
           {published && (
             <details ref={menu} className="profile-actions-menu">
               <summary aria-label="Page actions" title="Page actions">

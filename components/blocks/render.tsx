@@ -385,9 +385,11 @@ function TipBlock({
 function SortableBlock({
   id,
   children,
+  coordinateScale,
 }: {
   id: string;
   children: React.ReactNode;
+  coordinateScale: number;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id });
@@ -397,7 +399,12 @@ function SortableBlock({
       {...attributes}
       {...listeners}
       style={{
-        transform: CSS.Transform.toString(transform),
+        // Pointer deltas are screen pixels; the fitted preview uses native pixels.
+        transform: CSS.Transform.toString(transform ? {
+          ...transform,
+          x: transform.x / coordinateScale,
+          y: transform.y / coordinateScale,
+        } : null),
         transition,
         opacity: isDragging ? 0.6 : 1,
         touchAction: "none",
@@ -418,12 +425,14 @@ export function BlockList({
   preview = false,
   onSelect,
   onReorder,
+  coordinateScale = 1,
 }: {
   blocks: Block[];
   theme: Theme;
   profileId: string;
   /** In the editor nothing is actually submitted. */
   preview?: boolean;
+  coordinateScale?: number;
   onSelect?: (blockId: string) => void;
   /** Preview drag-to-reorder — presunie blok `activeId` na pozíciu `overId`. */
   onReorder?: (activeId: string, overId: string) => void;
@@ -677,7 +686,7 @@ export function BlockList({
     );
     if (onReorder) {
       return (
-        <SortableBlock key={block.id} id={block.id}>
+        <SortableBlock key={block.id} id={block.id} coordinateScale={coordinateScale}>
           {inner}
         </SortableBlock>
       );

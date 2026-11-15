@@ -285,86 +285,36 @@ body {
   outline-offset: 3px;
 }
 
-/* The editor renders the same single 390 px canvas as every public profile. */
-.profile-preview {
-  max-width: 390px;
-}
-
+/* Render at the public profile's native width, then fit the whole surface.
+   Never crop a shorter viewport out of a taller profile. */
+.profile-preview { max-width: 390px; }
+.profile-preview-fit { position: relative; width: 100%; }
 .profile-preview-canvas {
-  position: relative;
-  width: 100%;
+  position: absolute;
+  left: 50%;
+  width: 390px;
+  margin-left: -195px;
+  transform-origin: top center;
   overflow: hidden;
   isolation: isolate;
 }
-
-.profile-preview-viewport {
-  height: 650px;
-  overflow-x: hidden;
-  overflow-y: auto;
+.profile-preview .profile-preview-viewport {
+  height: auto;
+  max-height: none;
+  overflow: visible;
 }
-
 .profile-preview .profile-stage {
   width: 100%;
-  min-height: 720px;
-  overflow: hidden;
+  min-height: 0;
+  overflow: visible;
   padding: 0;
-}
-
-.profile-preview .profile-preview-canvas {
-  border-radius: 3rem;
-  box-shadow:
-    inset 0 0 0 7px #0a0a0a,
-    0 24px 65px rgba(25, 24, 19, 0.22);
-}
-
-.profile-preview .profile-preview-viewport {
-  border-radius: 3rem;
-}
-
-.profile-preview .profile-stage {
-  min-height: 720px;
   align-items: stretch;
 }
-
 .profile-preview .profile-card {
-  min-height: 720px;
   width: 100%;
   margin: 0;
-  padding: 1.125rem 1.125rem 1.5rem;
   border-radius: 0;
   box-shadow: none;
-}
-
-.profile-preview .profile-content {
-  padding-top: 5.25rem;
-}
-
-.profile-preview .profile-content--compact {
-  padding-top: 5rem;
-}
-
-.profile-preview .profile-content--hero {
-  padding-top: 4.75rem;
-}
-
-.profile-preview .profile-name {
-  font-size: 1.85rem;
-}
-
-.profile-preview .profile-header-compact .profile-name {
-  font-size: 1.65rem;
-}
-
-.profile-preview .profile-hero-identity .profile-name {
-  font-size: 2.35rem;
-}
-
-.profile-preview .profile-bio {
-  font-size: 0.95rem;
-}
-
-.profile-preview .profile-header-compact .profile-bio {
-  font-size: 0.9rem;
 }
 
 @media (min-width: 640px) {
