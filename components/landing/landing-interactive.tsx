@@ -33,20 +33,3 @@ export function LandingNav() {
   </header>;
 }
 
-export function ProfileScene({ editable = false }: { editable?: boolean }) {
-  const [color, setColor] = useState("#ffe7f2");
-  return <div className={`landing-scene${editable ? " landing-scene-editor" : ""}`}>
-    <div className="landing-orb" aria-hidden /><div className="landing-back-card" aria-hidden /><div className="landing-ring" aria-hidden />
-    <div className="landing-phone" style={{ backgroundColor: color }}>
-      {/* Local fictional demo portrait; not a customer profile. */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/demo-portraits/person-0.jpg" alt="Emma Reed, example creator" width="96" height="96" className="landing-avatar" />
-      <h3>Emma Reed</h3><p>Style, travel & everyday life.</p>
-      <div className="landing-socials" aria-label="Example social channels"><span>ig</span><span>♪</span><span>▶</span></div>
-      <div className="landing-profile-link">Shop my favourites <span>↗</span></div><div className="landing-profile-link">The weekly edit <span>↗</span></div><div className="landing-profile-link">Work with me <span>↗</span></div>
-      <span className="landing-profile-brand">linkovne</span>
-    </div>
-    {editable ? <fieldset className="landing-palette"><legend>Pick a colour</legend><div>{[{color:"#ffe7f2",name:"Pink"},{color:"#c9d2ff",name:"Blue"},{color:"#ffedbc",name:"Cream"}].map(c => <button key={c.name} type="button" aria-label={c.name} aria-pressed={c.color===color} onClick={()=>setColor(c.color)} style={{backgroundColor:c.color}} />)}</div></fieldset> : <div className="landing-address">linkovne.com/emma <span aria-hidden>↗</span></div>}
-    <div className="landing-orb landing-orb-small" aria-hidden />
-  </div>;
-}

@@ -1,5 +1,6 @@
+import { CreatorStage, ContentStudio } from "@/components/landing/landing-scenes";
 import "@/components/landing/landing.css";
-import { LandingNav, ProfileScene } from "@/components/landing/landing-interactive";
+import { LandingNav } from "@/components/landing/landing-interactive";
 import { productGraph, jsonLd } from "@/lib/seo";
 import { GUIDES } from "@/lib/guides";
 import Link from "next/link";
@@ -56,17 +57,17 @@ export default async function Home() {
         <LandingNav />
         <section className="landing-hero landing-width">
           <div className="landing-hero-copy">
-            <h1>Big energy.<br />One link.<br /><span>All you.</span></h1>
+            <h1>One profile.<br />One link.<br /><span>All your sites.</span></h1>
             <p>Your links, your content, your style.<br className="landing-desktop-break" /> Bring it all together on a page that’s yours.</p>
             <Link href="/register" className="landing-button landing-button-blue">Create your free page <span aria-hidden>↗</span></Link>
           </div>
-          <ProfileScene />
+          <CreatorStage />
         </section>
       </div>
       <main>
         <section id="features" className="landing-blue-section">
           <div className="landing-feature landing-width">
-            <ProfileScene editable />
+            <ContentStudio />
             <div><h2>Make yourself<br />at home.</h2><p>Choose your colours, add your links and arrange things your way. From your first post to your latest project, there’s a place for it here.</p><Link href="/register" className="landing-button landing-button-pink">Build your page <span aria-hidden>↗</span></Link></div>
           </div>
         </section>
