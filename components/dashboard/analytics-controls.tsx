@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { clearAnalytics } from "@/app/dashboard/analytics/actions";
 
 /**
@@ -20,6 +20,7 @@ export function AnalyticsControls({
 }) {
   const router = useRouter();
   const [custom, setCustom] = useState("");
+  const [pending, startTransition] = useTransition();
 
   const presets = [7, 14, 30].filter((d) => d <= maxDays);
   // Nech je vzdy aspon plny rozsah planu ako preset (napr. free = len 7).
@@ -27,7 +28,11 @@ export function AnalyticsControls({
 
   function go(d: number) {
     const clamped = Math.max(1, Math.min(maxDays, Math.round(d)));
-    router.push(`/dashboard/analytics?p=${profileId}&d=${clamped}`);
+    startTransition(() =>
+      router.push(`/dashboard/analytics?p=${profileId}&d=${clamped}`, {
+        scroll: false,
+      }),
+    );
   }
 
   function applyCustom() {
@@ -36,17 +41,20 @@ export function AnalyticsControls({
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div
+      className="analytics-controls flex flex-wrap items-center gap-2"
+      aria-busy={pending}
+    >
       <div className="flex items-center gap-1 rounded-full border border-line bg-surface p-1">
         {presets.map((d) => (
           <button
             key={d}
             type="button"
             onClick={() => go(d)}
+            aria-pressed={days === d}
+            disabled={pending}
             className={`rounded-full px-3 py-1.5 text-sm font-medium transition ${
-              days === d
-                ? "bg-ink text-paper"
-                : "text-soft hover:text-ink"
+              days === d ? "bg-ink text-paper" : "text-soft hover:text-ink"
             }`}
           >
             {d === 30 ? "30d" : `${d}d`}
@@ -70,13 +78,17 @@ export function AnalyticsControls({
           />
           <button
             type="submit"
-            disabled={!custom}
+            disabled={!custom || pending}
             className="rounded-full px-2.5 py-1.5 text-sm text-soft transition hover:text-ink disabled:opacity-40"
           >
             Go
           </button>
         </form>
       </div>
+
+      <span className="sr-only" role="status">
+        {pending ? "Updating analytics…" : ""}
+      </span>
 
       {/* Tvrde vymazanie — potvrdenie cez confirm(). */}
       <form

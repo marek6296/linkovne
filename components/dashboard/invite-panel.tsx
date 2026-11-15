@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 /**
  * Referral panel — vlastny link, kopirovanie a statistiky. Ciselka pridu zo
@@ -19,27 +19,34 @@ export function InvitePanel({
 }) {
   const [copied, setCopied] = useState(false);
 
+  const [error, setError] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => () => clearTimeout(timer.current), []);
+
   async function copy() {
+    setError(false);
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
-      setTimeout(() => setCopied(false), 1800);
+      clearTimeout(timer.current);
+      timer.current = setTimeout(() => setCopied(false), 1800);
     } catch {
-      /* clipboard nedostupny — user si link oznaci rucne */
+      setError(true);
     }
   }
 
-  const shareText = `Grab your own link-in-bio that survives platform bans — try linkovne:`;
+  const shareText = `Create your own link-in-bio page with Linkovne:`;
 
   return (
-    <div className="space-y-8">
+    <div className="invite-details">
       {/* Link + copy */}
-      <div className="card max-w-xl p-5">
-        <label className="font-mono text-xs tracking-wide text-faint uppercase">
+      <div className="card invite-link-card">
+        <label htmlFor="referral-link" className="invite-link-label">
           Your invite link
         </label>
         <div className="mt-2 flex gap-2">
           <input
+            id="referral-link"
             readOnly
             value={url}
             onFocus={(e) => e.currentTarget.select()}
@@ -53,6 +60,13 @@ export function InvitePanel({
             {copied ? "Copied ✓" : "Copy"}
           </button>
         </div>
+        <p role="status" className="invite-copy-status">
+          {error
+            ? "Select the link above and copy it manually."
+            : copied
+              ? "Link copied to your clipboard."
+              : "Share this link to track your invitations."}
+        </p>
         <div className="mt-3 flex flex-wrap gap-2 text-sm">
           <a
             href={`https://wa.me/?text=${encodeURIComponent(shareText + " " + url)}`}
@@ -74,7 +88,7 @@ export function InvitePanel({
       </div>
 
       {/* Stats */}
-      <div className="grid max-w-xl gap-4 sm:grid-cols-3">
+      <div className="invite-stats">
         <Stat value={signups} label="Signed up" />
         <Stat value={rewarded} label="Subscribed" />
         <Stat value={months} label="Months earned" accent />
@@ -99,9 +113,7 @@ function Stat({
       >
         {value}
       </p>
-      <p className="mt-1 font-mono text-xs tracking-wide text-faint uppercase">
-        {label}
-      </p>
+      <p className="mt-1 text-sm text-soft">{label}</p>
     </div>
   );
 }

@@ -1,0 +1,568 @@
+/* Scoped to the three account pages. The editor and shared chrome stay unchanged. */
+.account-page {
+  width: 100%;
+  max-width: 1120px;
+  margin: 16px auto 64px;
+  color: #232333;
+  animation: account-arrive 0.22s ease-out;
+}
+.account-page * {
+  min-width: 0;
+}
+.account-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+.account-heading h1,
+.analytics-page h1 {
+  font-size: 34px;
+  font-weight: 720;
+  letter-spacing: -1.2px;
+  line-height: 1.15;
+}
+.account-heading p {
+  color: #71717f;
+  font-size: 15px;
+  line-height: 1.6;
+  margin-top: 10px;
+}
+.account-profile-label {
+  padding: 9px 16px;
+  border: 1px solid #e3e3ec;
+  border-radius: 10px;
+  background: white;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.account-profile-switcher {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+.account-profile-switcher a {
+  padding: 9px 16px;
+  border: 1px solid #e0e0e9;
+  border-radius: 10px;
+  background: white;
+  font-size: 14px;
+  transition: background 0.15s;
+}
+.account-profile-switcher a[aria-current="page"] {
+  background: #eeedff;
+  border-color: #d4d0fe;
+  color: #4338ca;
+}
+.account-page .card {
+  border: 1px solid #e5e5ed;
+  border-radius: 18px;
+  box-shadow: 0 2px 5px #20203003;
+}
+.account-page .btn-ink {
+  background: #4540d5;
+  color: white;
+  border-radius: 10px;
+  box-shadow: none;
+  transition:
+    background 0.15s,
+    transform 0.15s;
+  min-height: 42px;
+}
+.account-page .btn-ink:hover {
+  background: #3730b7;
+  transform: translateY(-1px);
+}
+.account-page .btn-line {
+  border-radius: 10px;
+  min-height: 42px;
+  background: white;
+  transition: background 0.15s;
+}
+.account-page .btn-line:hover {
+  background: #f6f6fb;
+}
+.account-page .field {
+  padding: 12px 14px;
+  min-height: 44px;
+  border-radius: 10px;
+  background: #fff;
+  line-height: 1.5;
+}
+.account-page input[type="checkbox"] {
+  width: 17px;
+  height: 17px;
+  accent-color: #4f46e5;
+  flex-shrink: 0;
+}
+.account-page button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+.settings-workspace {
+  display: grid;
+  grid-template-columns: 230px minmax(0, 1fr);
+  gap: 32px;
+  align-items: start;
+}
+.settings-navigation {
+  display: grid;
+  gap: 5px;
+  position: sticky;
+  top: 24px;
+  padding: 8px;
+  background: #eeeef3;
+  border-radius: 15px;
+}
+.settings-navigation button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-align: left;
+  gap: 8px;
+  padding: 13px 14px;
+  font-size: 14px;
+  font-weight: 550;
+  color: #646473;
+  border-radius: 10px;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+.settings-navigation button:hover {
+  background: #ffffff90;
+  color: #242434;
+}
+.settings-navigation button[aria-selected="true"] {
+  background: #fff;
+  color: #4338ca;
+  box-shadow: 0 2px 8px #25254008;
+}
+.settings-navigation button span {
+  font-size: 19px;
+  opacity: 0.5;
+}
+.settings-navigation button:last-child {
+  margin-top: 12px;
+  color: #b3484e;
+}
+.settings-panels {
+  min-height: 450px;
+  border: 1px solid #e3e3ec;
+  border-radius: 20px;
+  background: white;
+  overflow: hidden;
+}
+.settings-panel-heading {
+  padding: 28px 32px;
+  border-bottom: 1px solid #eeeef3;
+}
+.settings-panel-heading h2 {
+  font-size: 21px;
+  letter-spacing: -0.5px;
+  font-weight: 650;
+}
+.settings-panel-heading p {
+  font-size: 14px;
+  color: #737380;
+  line-height: 1.65;
+  margin-top: 7px;
+  overflow-wrap: anywhere;
+}
+.settings-panel-body {
+  padding: 30px 32px;
+}
+.settings-panel-body .card {
+  max-width: none;
+  border: 0;
+  box-shadow: none;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
+}
+.settings-panel-body > div,
+.settings-panel-body > form {
+  max-width: none;
+}
+.settings-panel-body .space-y-4 > label {
+  margin-bottom: 22px;
+}
+.settings-panel-body label > span:first-child {
+  font-size: 14px;
+  color: #454554;
+  margin-bottom: 7px;
+}
+.settings-panel-body [role="status"] {
+  margin-top: 14px;
+}
+.account-eyebrow {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #5a53a6;
+  margin-bottom: 24px;
+}
+.invite-overview {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 24px;
+  margin-bottom: 26px;
+}
+.invite-reward {
+  padding: 38px;
+  border: 1px solid #dedcf7;
+  border-radius: 20px;
+  background: #efedfc;
+}
+.invite-reward h2 {
+  font-size: 35px;
+  line-height: 1.15;
+  font-weight: 720;
+  letter-spacing: -1.1px;
+  color: #302a65;
+}
+.invite-reward > p {
+  font-size: 15px;
+  line-height: 1.8;
+  color: #686080;
+  margin-top: 20px;
+  max-width: 440px;
+}
+.reward-equation {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-top: 26px;
+  margin-top: 26px;
+  border-top: 1px solid #dcd8f0;
+  color: #625b7a;
+  font-size: 13px;
+}
+.reward-equation strong {
+  font-size: 28px;
+  color: #4338ca;
+  letter-spacing: -1px;
+}
+.reward-equation span[aria-hidden] {
+  padding-inline: 8px;
+  font-size: 21px;
+}
+.invite-how {
+  border: 1px solid #e4e4ed;
+  border-radius: 20px;
+  padding: 34px;
+  background: #fff;
+}
+.invite-how h2 {
+  font-size: 20px;
+  font-weight: 650;
+  letter-spacing: -0.4px;
+  margin-bottom: 30px;
+}
+.invite-how ol {
+  display: grid;
+  gap: 28px;
+}
+.invite-how li {
+  display: flex;
+  gap: 16px;
+  align-items: start;
+}
+.invite-step-number {
+  display: grid;
+  place-items: center;
+  width: 31px;
+  height: 31px;
+  flex-shrink: 0;
+  border: 1px solid #dfdfee;
+  border-radius: 10px;
+  font-size: 13px;
+  color: #514bc4;
+  background: #f8f7ff;
+}
+.invite-how strong {
+  font-size: 14px;
+  font-weight: 600;
+}
+.invite-how p {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #777582;
+  margin-top: 5px;
+}
+.invite-details {
+  display: grid;
+  gap: 24px;
+}
+.invite-link-card {
+  padding: 28px 32px;
+}
+.invite-link-label {
+  font-size: 17px;
+  font-weight: 650;
+  display: block;
+  margin-bottom: 16px;
+}
+.invite-link-card input {
+  font-family: inherit;
+  font-size: 15px;
+  background: #f8f8fc !important;
+}
+.invite-copy-status {
+  font-size: 13px;
+  color: #767382;
+  margin-top: 10px;
+  min-height: 20px;
+}
+.invite-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+.invite-stats .card {
+  padding: 25px 28px;
+}
+.invite-stats .text-pink-500 {
+  color: #4f46e5;
+}
+.analytics-page .analytics-stats > .analytics-card {
+  padding: 26px 28px;
+  position: relative;
+}
+.analytics-page .analytics-card .text-4xl {
+  font-size: 42px;
+  line-height: 1.25;
+  font-weight: 650;
+}
+.analytics-page section > div > h2 {
+  font-size: 17px;
+  font-weight: 620;
+}
+.analytics-page .card {
+  overflow: hidden;
+}
+.analytics-page table {
+  min-width: 440px;
+}
+.analytics-page section:has(> table),
+.analytics-page section:has(> div + table) {
+  overflow-x: auto;
+}
+.analytics-page td,
+.analytics-page th {
+  padding-block: 14px;
+}
+.analytics-page .text-faint {
+  color: #7b7b89;
+}
+.analytics-page .card > p.text-xs:last-child {
+  font-size: 12px;
+}
+@keyframes account-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (min-width: 1600px) {
+  .account-page {
+    margin-top: 28px;
+  }
+}
+@media (max-width: 800px) {
+  .account-page {
+    margin-top: 8px;
+  }
+  .settings-workspace {
+    grid-template-columns: 190px minmax(0, 1fr);
+    gap: 18px;
+  }
+  .settings-panel-body,
+  .settings-panel-heading {
+    padding: 24px;
+  }
+  .invite-overview {
+    grid-template-columns: 1fr;
+  }
+  .invite-reward {
+    padding: 30px;
+  }
+  .invite-how ol {
+    gap: 20px;
+  }
+}
+@media (max-width: 600px) {
+  .account-heading {
+    align-items: start;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .account-heading h1,
+  .analytics-page h1 {
+    font-size: 28px;
+  }
+  .account-heading p {
+    font-size: 14px;
+  }
+  .account-profile-label {
+    font-size: 12px;
+    padding: 7px 10px;
+    max-width: 130px;
+  }
+  .settings-workspace {
+    display: block;
+  }
+  .settings-navigation {
+    position: static;
+    display: flex;
+    overflow-x: auto;
+    margin-bottom: 18px;
+    gap: 3px;
+  }
+  .settings-navigation button {
+    white-space: nowrap;
+    flex-shrink: 0;
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+  .settings-navigation button span {
+    display: none;
+  }
+  .settings-navigation button:last-child {
+    margin-top: 0;
+  }
+  .settings-panel-heading,
+  .settings-panel-body {
+    padding: 22px;
+  }
+  .settings-panels {
+    min-height: 0;
+  }
+  .invite-reward,
+  .invite-how,
+  .invite-link-card {
+    padding: 24px;
+  }
+  .invite-reward h2 {
+    font-size: 30px;
+  }
+  .invite-stats {
+    gap: 9px;
+  }
+  .invite-stats .card {
+    padding: 18px 13px;
+  }
+  .invite-stats .text-3xl {
+    font-size: 28px;
+  }
+  .invite-stats p:last-child {
+    font-size: 12px;
+  }
+  .invite-link-card > div.mt-2 {
+    flex-wrap: wrap;
+  }
+  .invite-link-card input {
+    flex-basis: 200px;
+  }
+  .analytics-page .analytics-stats > .analytics-card {
+    padding: 22px;
+  }
+  .analytics-page .analytics-card .text-4xl {
+    font-size: 35px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .account-page {
+    animation: none;
+  }
+  .account-page * {
+    scroll-behavior: auto !important;
+    transition: none !important;
+  }
+}
+
+.billing-description {
+  margin-top: 8px;
+  color: #737380;
+  font-size: 14px;
+}
+.billing-features {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  padding: 24px 0;
+  margin: 22px 0;
+  border-top: 1px solid #eeeef3;
+  border-bottom: 1px solid #eeeef3;
+}
+.billing-features dt {
+  font-size: 13px;
+  color: #737380;
+  margin-bottom: 8px;
+}
+.billing-features dd {
+  font-size: 17px;
+  font-weight: 600;
+}
+.analytics-controls[aria-busy="true"] {
+  opacity: 0.65;
+  transition: opacity 0.15s;
+}
+.account-page :focus-visible {
+  outline: 2px solid #6861df;
+  outline-offset: 3px;
+}
+@media (max-width: 600px) {
+  .billing-features {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .billing-features > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .billing-features dt {
+    margin: 0;
+  }
+  .billing-features dd {
+    font-size: 14px;
+  }
+  .analytics-controls > div {
+    flex-wrap: wrap;
+    border-radius: 14px;
+  }
+}
+
+@media (max-width: 600px) {
+  .analytics-page .analytics-stats {
+    gap: 10px;
+  }
+  .analytics-page .analytics-stats > .analytics-card {
+    padding: 18px 14px;
+  }
+  .analytics-page .analytics-stats-profile .text-4xl {
+    font-size: 28px;
+  }
+  .analytics-page .analytics-stats-profile .text-sm {
+    font-size: 12px;
+  }
+  .analytics-page .analytics-stats-profile .items-baseline {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+}
+
+@media (max-width: 600px) {
+  .account-profile-label {
+    display: none;
+  }
+}

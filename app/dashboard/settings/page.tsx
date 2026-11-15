@@ -1,3 +1,5 @@
+import "@/components/dashboard/workspace.css";
+import { SettingsWorkspace } from "@/components/dashboard/settings-workspace";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { PROFILE_ORDER_KEY, orderProfiles } from "@/lib/profile-order";
@@ -31,7 +33,10 @@ export default async function SettingsPage({
     .eq("owner_id", user.id)
     .order("created_at");
 
-  const profiles = orderProfiles(profileRows ?? [], user.user_metadata?.[PROFILE_ORDER_KEY]);
+  const profiles = orderProfiles(
+    profileRows ?? [],
+    user.user_metadata?.[PROFILE_ORDER_KEY],
+  );
   if (profiles.length === 0) redirect("/onboarding");
 
   const current = profiles.find((x) => x.id === p) ?? profiles[0];
@@ -54,118 +59,121 @@ export default async function SettingsPage({
   const plan = planOf(account?.plan);
 
   return (
-    <div className="space-y-10">
-        {profiles.length > 1 && (
-          <div className="flex flex-wrap gap-2">
-            {profiles.map((x) => (
-              <Link
-                key={x.id}
-                href={`/dashboard/settings?p=${x.id}`}
-                className={`rounded-full border px-3.5 py-1.5 text-sm transition ${
-                  x.id === current.id
-                    ? "border-ink bg-ink text-paper"
-                    : "border-line hover:border-soft"
-                }`}
-              >
-                {x.username}
-              </Link>
-            ))}
-          </div>
-        )}
-
-        <section>
-          <h2 className="font-grotesk font-bold text-2xl tracking-tight">Billing</h2>
-          <p className="mt-1 text-sm text-soft">
-            Your plan, payments and invoices.
-          </p>
-          <div className="mt-4">
-            <BillingPanel
-              plan={account?.plan ?? "free"}
-              status={account?.subscription_status ?? null}
-              expiresAt={account?.plan_expires_at ?? null}
-              hasStripeCustomer={!!account?.stripe_customer_id}
-            />
-          </div>
-        </section>
-
-        <section>
-          <h2 className="font-grotesk font-bold text-2xl tracking-tight">Promo code</h2>
-          <p className="mt-1 text-sm text-soft">
-            Got a code? Redeem it to unlock Pro or Business.
-          </p>
-          <div className="card mt-4 max-w-md p-5">
-            <RedeemForm />
-          </div>
-        </section>
-
-        <section>
-          <h2 className="font-grotesk font-bold text-2xl tracking-tight">Branding</h2>
-          <p className="mt-1 text-sm text-soft">
-            The small “Powered by linkovne” badge on your public page.
-          </p>
-          <div className="mt-4">
-            <BrandingPanel
-              profileId={current.id}
-              hidden={current.hide_branding === true}
-              canHide={plan.hideBranding}
-            />
-          </div>
-        </section>
-
-        <section>
-          <h2 className="font-grotesk font-bold text-2xl tracking-tight">Search &amp; sharing</h2>
-          <p className="mt-1 text-sm text-soft">
-            How <span className="font-medium">{current.username}</span> looks in
-            Google and when shared.
-          </p>
-          <div className="mt-4">
-            <SeoPanel
-              profileId={current.id}
-              seoTitle={current.seo_title ?? ""}
-              seoDescription={current.seo_description ?? ""}
-              isIndexable={current.is_indexable !== false}
-              ageGate={current.age_gate === true}
-            />
-          </div>
-        </section>
-
-        <section>
-          <h2 className="font-grotesk font-bold text-2xl tracking-tight">Custom domain</h2>
-          <p className="mt-1 max-w-xl text-sm text-soft">
-            Your own domain is the whole point — a page nobody else shares can&apos;t
-            be taken down by someone else&apos;s behaviour.
-          </p>
-          <div className="mt-4">
-            <DomainsPanel
-              profileId={current.id}
-              enabled={plan.customDomains}
-              domains={domains ?? []}
-            />
-          </div>
-        </section>
-
-        <section>
-          <h2 className="font-grotesk font-bold text-2xl tracking-tight">Password</h2>
-          <p className="mt-1 text-sm text-soft">
-            Signed in as {user.email}
-          </p>
-          <div className="card mt-4 max-w-sm p-5">
-            <ResetForm redirectTo="/dashboard/settings" />
-          </div>
-        </section>
-
-        <section>
-          <h2 className="font-grotesk font-bold text-2xl tracking-tight text-danger">
-            Danger zone
-          </h2>
-          <div className="mt-4">
-            <DangerZone
-              profileId={current.id}
-              username={current.username}
-              profileCount={profiles.length}
-            />
-          </div>
-        </section>
+    <div className="account-page settings-page">
+      <header className="account-heading">
+        <div>
+          <h1>Settings</h1>
+          <p>Manage your account and the details of your page.</p>
+        </div>
+        <span className="account-profile-label">{current.username}</span>
+      </header>
+      {profiles.length > 1 && (
+        <nav className="account-profile-switcher" aria-label="Choose a profile">
+          {profiles.map((x) => (
+            <Link
+              key={x.id}
+              href={`/dashboard/settings?p=${x.id}`}
+              aria-current={x.id === current.id ? "page" : undefined}
+            >
+              {x.username}
+            </Link>
+          ))}
+        </nav>
+      )}
+      <SettingsWorkspace
+        sections={[
+          {
+            id: "billing",
+            title: "Plan & billing",
+            description: "Your subscription, payment details and invoices.",
+            content: (
+              <BillingPanel
+                plan={account?.plan ?? "free"}
+                status={account?.subscription_status ?? null}
+                expiresAt={account?.plan_expires_at ?? null}
+                hasStripeCustomer={!!account?.stripe_customer_id}
+              />
+            ),
+          },
+          {
+            id: "branding",
+            title: "Page branding",
+            description:
+              "Choose whether the Linkovne badge appears on your public page.",
+            content: (
+              <BrandingPanel
+                key={current.id}
+                profileId={current.id}
+                hidden={current.hide_branding === true}
+                canHide={plan.hideBranding}
+              />
+            ),
+          },
+          {
+            id: "search",
+            title: "Search & sharing",
+            description: `Control how ${current.username} appears in search results and shared links.`,
+            content: (
+              <SeoPanel
+                key={current.id}
+                profileId={current.id}
+                seoTitle={current.seo_title ?? ""}
+                seoDescription={current.seo_description ?? ""}
+                isIndexable={current.is_indexable !== false}
+                ageGate={current.age_gate === true}
+              />
+            ),
+          },
+          {
+            id: "domains",
+            title: "Custom domains",
+            description:
+              "Connect your own domain and check its connection status.",
+            content: (
+              <DomainsPanel
+                key={current.id}
+                profileId={current.id}
+                enabled={plan.customDomains}
+                domains={domains ?? []}
+              />
+            ),
+          },
+          {
+            id: "promo",
+            title: "Redeem a code",
+            description: "Apply a promotional code to your account.",
+            content: (
+              <div className="card p-6">
+                <RedeemForm />
+              </div>
+            ),
+          },
+          {
+            id: "security",
+            title: "Password & security",
+            description: `Signed in as ${user.email}`,
+            content: (
+              <div className="card p-6">
+                <ResetForm redirectTo="/dashboard/settings" />
+              </div>
+            ),
+          },
+          {
+            id: "advanced",
+            title: "Delete profile",
+            description:
+              "Manage permanent deletion of this profile. Review these actions carefully.",
+            content: (
+              <DangerZone
+                key={current.id}
+                profileId={current.id}
+                username={current.username}
+                profileCount={profiles.length}
+              />
+            ),
+          },
+        ]}
+      />
     </div>
   );
 }

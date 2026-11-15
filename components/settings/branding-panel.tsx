@@ -51,6 +51,7 @@ export function BrandingPanel({
           <button
             type="button"
             role="switch"
+            aria-label="Hide Powered by Linkovne"
             aria-checked={on}
             onClick={toggle}
             disabled={pending}

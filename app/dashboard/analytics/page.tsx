@@ -1,3 +1,4 @@
+import "@/components/dashboard/workspace.css";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { PROFILE_ORDER_KEY, orderProfiles } from "@/lib/profile-order";
@@ -70,7 +71,7 @@ function Delta({ now, prev }: { now: number; prev: number }) {
 /** Jednoduchy donut pre rozdelenie (napr. zariadenia). */
 function Donut({ rows }: { rows: { label: string; value: number }[] }) {
   const total = rows.reduce((n, r) => n + r.value, 0);
-  const colors = ["#191813", "#9a8f80", "#cdbfa9", "#e7e4dd"];
+  const colors = ["#4f46e5", "#a5b4fc", "#ec4899", "#e2e5ee"];
   if (total === 0)
     return <p className="py-8 text-center text-sm text-soft">No data yet.</p>;
 
@@ -99,7 +100,7 @@ function Donut({ rows }: { rows: { label: string; value: number }[] }) {
 
   return (
     <div className="flex flex-wrap items-center gap-6">
-      <svg viewBox="0 0 120 120" className="h-32 w-32 shrink-0">
+      <svg viewBox="0 0 120 120" aria-hidden="true" className="h-32 w-32 shrink-0">
         {arcs}
       </svg>
       <ul className="space-y-2 text-sm">
@@ -134,8 +135,8 @@ function StatCard({
   delta?: React.ReactNode;
 }) {
   return (
-    <div className="card p-6">
-      <p className="text-xs font-medium tracking-wide text-faint uppercase">
+    <div className="card analytics-card p-6">
+      <p className="text-sm font-medium text-soft">
         {label}
       </p>
       <div className="mt-2 flex items-baseline gap-2">
@@ -159,13 +160,13 @@ function TrendChart({
 }) {
   const max = Math.max(1, ...rows.map((r) => r.count));
   return (
-    <section className="card p-6">
+    <section className="card analytics-card p-6">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="text-sm font-semibold">Views</h2>
         <p className="text-xs text-faint">Last {chartDays} days</p>
       </div>
 
-      <div className="relative mt-6 h-44">
+      <div className="relative mt-8 h-60">
         {/* mriezky */}
         <div className="absolute inset-0 flex flex-col justify-between">
           {[0, 1, 2, 3].map((i) => (
@@ -177,14 +178,16 @@ function TrendChart({
           {rows.map((r) => (
             <div
               key={r.day}
+              tabIndex={0}
+              aria-label={`${r.day}: ${r.count} views`}
               className="group relative flex flex-1 items-end justify-center"
               style={{ height: "100%" }}
             >
               <span
-                className="w-full rounded-t-md bg-ink/85 transition-all duration-500 group-hover:bg-ink"
-                style={{ height: `${Math.max(2, (r.count / max) * 100)}%` }}
+                className="w-full rounded-t-md bg-indigo-500 transition-colors group-hover:bg-indigo-600 group-focus:bg-indigo-600"
+                style={{ height: `${(r.count / max) * 100}%` }}
               />
-              <span className="pointer-events-none absolute -top-6 rounded-md bg-ink px-1.5 py-0.5 text-[10px] font-medium text-paper opacity-0 transition group-hover:opacity-100">
+              <span className="pointer-events-none absolute -top-6 rounded-md bg-ink px-1.5 py-0.5 text-[10px] font-medium text-paper opacity-0 transition group-hover:opacity-100 group-focus:opacity-100">
                 {r.count}
               </span>
             </div>
@@ -230,7 +233,7 @@ function HBars({
           <span className="w-28 shrink-0 truncate text-soft">{r.label}</span>
           <span className="h-2.5 flex-1 overflow-hidden rounded-full bg-line">
             <span
-              className="block h-full rounded-full bg-ink transition-all duration-500"
+              className="block h-full rounded-full bg-indigo-500 transition-all duration-500"
               style={{ width: `${(r.value / max) * 100}%` }}
             />
           </span>
@@ -342,8 +345,8 @@ export default async function AnalyticsPage({
       .slice(0, 12);
 
     return (
-      <div className="space-y-8">
-          <div className="flex flex-wrap items-end justify-between gap-4">
+      <div className="account-page analytics-page space-y-6">
+          <div className="account-heading flex flex-wrap items-end justify-between gap-4">
             <div>
               <h1 className="font-grotesk font-bold text-3xl tracking-tight">Analytics</h1>
               <p className="mt-1 text-sm text-soft">
@@ -353,13 +356,13 @@ export default async function AnalyticsPage({
             {selector}
           </div>
 
-          <section className="grid gap-4 sm:grid-cols-4">
+          <section className="analytics-stats grid grid-cols-2 gap-4 sm:grid-cols-4">
             <StatCard
-              label="Live"
+              label="Published profiles"
               value={`${ovLive}/${overviewRows.length}`}
             />
-            <StatCard label="Views" value={ovViews} />
-            <StatCard label="Clicks" value={ovClicks} />
+            <StatCard label="Page views" value={ovViews} />
+            <StatCard label="Link clicks" value={ovClicks} />
             <StatCard label="Click rate" value={`${ctr}%`} />
           </section>
 
@@ -626,8 +629,8 @@ export default async function AnalyticsPage({
   const recent = events.slice(0, 40);
 
   return (
-    <div className="space-y-8">
-        <div className="flex flex-wrap items-end justify-between gap-4">
+    <div className="account-page analytics-page space-y-6">
+        <div className="account-heading flex flex-wrap items-end justify-between gap-4">
           <div>
             <h1 className="font-grotesk font-bold text-3xl tracking-tight">Analytics</h1>
             <p className="mt-1 text-sm text-soft">
@@ -654,7 +657,7 @@ export default async function AnalyticsPage({
           )}
         </div>
 
-        <section className="grid gap-4 sm:grid-cols-3">
+        <section className="analytics-stats analytics-stats-profile grid grid-cols-3 gap-4">
           <StatCard
             label="Page views"
             value={totalViews}
@@ -671,12 +674,12 @@ export default async function AnalyticsPage({
         {totalViews === 0 && totalClicks === 0 ? (
           <div className="card flex flex-col items-center gap-3 px-6 py-16 text-center">
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-pink-500/10 text-2xl">
-              📈
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M4 4v16h16M8 15l4-5 4 2 5-7" /></svg>
             </div>
             <h2 className="font-grotesk font-bold text-xl tracking-tight">No visitors yet</h2>
             <p className="max-w-sm text-sm text-soft">
               Share your link — your traffic, top platforms and click-through
-              rates will show up here, updated live.
+              rates will show up here, as people visit your page.
             </p>
             <code className="mt-1 rounded-lg border border-line bg-surface px-3 py-1.5 font-mono text-sm text-soft">
               {profileLabel(current.username)}
@@ -687,14 +690,14 @@ export default async function AnalyticsPage({
             <TrendChart rows={trendRows} chartDays={chartDays} />
 
             <Card
-              title="Where your fans come from"
+              title="Traffic sources"
           aside={
             <p className="text-xs text-faint">Auto-detected — no setup needed</p>
           }
         >
           {fanInsight && (
             <p className="mb-5 rounded-xl border border-pink-500/20 bg-pink-500/5 px-4 py-3 text-sm text-ink">
-              💡 {fanInsight}
+              {fanInsight}
             </p>
           )}
           {fanRows.length === 0 ? (
@@ -729,7 +732,7 @@ export default async function AnalyticsPage({
           )}
         </Card>
 
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid gap-5 lg:grid-cols-3">
           <Card title="Top links">
             <HBars rows={linkRows} emptyLabel="No clicks recorded yet." />
           </Card>

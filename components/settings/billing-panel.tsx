@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { planOf } from "@/lib/plans";
 import { UpgradeButton } from "@/components/upgrade-button";
 
 /**
@@ -38,6 +39,7 @@ export function BillingPanel({
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
 
+  const features = planOf(plan);
   const paid = plan === "pro" || plan === "business";
   const renewal =
     expiresAt &&
@@ -70,7 +72,7 @@ export function BillingPanel({
   }
 
   return (
-    <div className="card max-w-md p-5">
+    <div className="card billing-summary max-w-md p-5">
       <div className="flex items-center justify-between gap-3">
         <div>
           <p className="text-sm text-soft">Current plan</p>
@@ -91,6 +93,25 @@ export function BillingPanel({
         )}
       </div>
 
+      <p className="billing-description">
+        {plan === "admin"
+          ? "Full access for managing Linkovne."
+          : features.tagline}
+      </p>
+      <dl className="billing-features">
+        <div>
+          <dt>Profiles</dt>
+          <dd>Up to {features.profiles}</dd>
+        </div>
+        <div>
+          <dt>Blocks per page</dt>
+          <dd>{features.maxBlocks ?? "Unlimited"}</dd>
+        </div>
+        <div>
+          <dt>Analytics history</dt>
+          <dd>{features.analyticsDays} days</dd>
+        </div>
+      </dl>
       {paid && renewal && (
         <p className="mt-2 text-sm text-soft">
           {status === "canceled" ? "Access until" : "Renews"} {renewal}
@@ -104,7 +125,7 @@ export function BillingPanel({
       )}
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
-        {plan !== "business" && (
+        {(plan === "free" || plan === "pro") && (
           <UpgradeButton
             plan={plan === "pro" ? "business" : "pro"}
             className="btn-ink px-5 py-2 text-sm"
