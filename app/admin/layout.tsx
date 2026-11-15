@@ -7,6 +7,7 @@ import { Logo } from "@/components/logo";
 import { PlanBadge } from "@/components/dashboard/plan-badge";
 import { AdminNav } from "@/components/admin/nav";
 import { AdminBell } from "@/components/dashboard/admin-bell";
+import { NoTrackMarker } from "@/components/site-tracker";
 
 /**
  * Zdielany obal admin panelu — guard + chrome sa nacitaju RAZ, podstranky
@@ -29,6 +30,8 @@ export default async function AdminLayout({
 
   return (
     <div className="min-h-dvh">
+      {/* Toto zariadenie sa uz nepocita do navstevnosti linkovne.com */}
+      <NoTrackMarker />
       <header className="border-b border-line bg-surface">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           {/* Horny riadok: logo + akcie. Na desktope je medzi nimi navigacia. */}

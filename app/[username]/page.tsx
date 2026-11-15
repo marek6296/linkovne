@@ -202,7 +202,8 @@ export default async function PublicProfilePage({
       <ProfileShell
         theme={theme}
         showBranding={brandingVisible}
-        brandingHref={SITE_URL}
+        // utm_source → v admine (Website) vidno, kolko ludi priviedol badge
+        brandingHref={`${SITE_URL}/?utm_source=powered-by`}
         leading={escapeEnabled ? <InAppEscape /> : undefined}
       >
       <ViewBeacon profileId={profile.id} />

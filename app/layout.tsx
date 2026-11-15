@@ -14,6 +14,7 @@ import {
   Syne,
 } from "next/font/google";
 import "./globals.css";
+import { SiteTracker } from "@/components/site-tracker";
 import { BRAND_TITLE, SITE_URL } from "@/lib/site";
 
 // Fonty rozhrania — nacitavaju sa vzdy
@@ -138,7 +139,11 @@ export default function RootLayout({
       lang="en"
       className={`${sans.variable} ${serif.variable} ${display.variable} ${grotesk.variable} ${classic.variable} ${mono.variable} ${manrope.variable} ${montserrat.variable} ${raleway.variable} ${lora.variable} ${cormorant.variable} ${syne.variable}`}
     >
-      <body>{children}</body>
+      <body>
+        {children}
+        {/* Navstevnost linkovne.com (len marketingove stranky, bez cookies) */}
+        <SiteTracker />
+      </body>
     </html>
   );
 }

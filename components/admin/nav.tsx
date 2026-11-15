@@ -10,6 +10,7 @@ import { usePathname } from "next/navigation";
  */
 const ITEMS = [
   { key: "overview", label: "Overview", href: "/admin" },
+  { key: "website", label: "Website", href: "/admin/website" },
   { key: "clients", label: "Clients", href: "/admin/clients" },
   { key: "growth", label: "Growth", href: "/admin/growth" },
   { key: "discounts", label: "Discounts", href: "/admin/discounts" },
@@ -21,19 +22,10 @@ const ITEMS = [
 export function AdminNav() {
   const pathname = usePathname();
 
-  const active = pathname.startsWith("/admin/clients")
-    ? "clients"
-    : pathname.startsWith("/admin/growth")
-      ? "growth"
-      : pathname.startsWith("/admin/discounts")
-        ? "discounts"
-        : pathname.startsWith("/admin/log")
-          ? "log"
-          : pathname.startsWith("/admin/team")
-            ? "team"
-            : pathname.startsWith("/admin/platform")
-              ? "platform"
-              : "overview";
+  // Aktivna sekcia = prva polozka (okrem Overview), ktorej href je prefix URL.
+  const active =
+    ITEMS.find((i) => i.key !== "overview" && pathname.startsWith(i.href))
+      ?.key ?? "overview";
 
   return (
     <nav className="flex items-center gap-1 overflow-x-auto md:justify-center [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">

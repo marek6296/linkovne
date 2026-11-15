@@ -10,8 +10,9 @@ import {
 import { SITE_DOMAIN } from "@/lib/site";
 
 /**
- * Admin → Overview. Biznis metriky (MRR, konverzia, rast) + zivot platformy
- * (navstevy, kliky, top stranky, cerstve udalosti). Guard riesi layout.
+ * Admin → Overview. Biznis metriky (MRR, konverzia, rast), kratky suhrn
+ * navstevnosti NASHO webu (detail v Admin → Website) a zivot profilov tvorcov
+ * (navstevy a kliky ich fanusikov — to su ine cisla, nemiesat). Guard riesi layout.
  */
 
 type AdminMetrics = {
@@ -51,14 +52,25 @@ type OverviewExtra = {
   top_pages: { username: string; views: number; owner_email: string }[];
 };
 
+type SiteSummary = {
+  visitors: number;
+  signups: number;
+  today: number;
+  week: number;
+  prev: { visitors: number };
+};
+
 export default async function AdminOverviewPage() {
   const supabase = await createClient();
-  const [{ data: metricsData }, { data: extraData }] = await Promise.all([
-    supabase.rpc("admin_metrics"),
-    supabase.rpc("admin_overview_extra"),
-  ]);
+  const [{ data: metricsData }, { data: extraData }, { data: siteData }] =
+    await Promise.all([
+      supabase.rpc("admin_metrics"),
+      supabase.rpc("admin_overview_extra"),
+      supabase.rpc("admin_site_traffic", { p_days: 30 }),
+    ]);
   const m = (metricsData ?? {}) as Partial<AdminMetrics>;
   const x = (extraData ?? {}) as Partial<OverviewExtra>;
+  const site = siteData as SiteSummary | null;
 
   const total = m.total_accounts ?? 0;
   const paid = m.paid ?? 0;
@@ -108,7 +120,7 @@ export default async function AdminOverviewPage() {
   ];
 
   const engagement = [
-    { label: "Page views 30d", value: x.views_30d ?? 0 },
+    { label: "Profile views 30d", value: x.views_30d ?? 0 },
     { label: "Link clicks 30d", value: x.clicks_30d ?? 0 },
     { label: "Leads 30d", value: x.leads_30d ?? 0 },
     {
@@ -133,6 +145,47 @@ export default async function AdminOverviewPage() {
           </div>
         ))}
       </section>
+
+      {/* Nas web linkovne.com — potencialni zakaznici (detail v Website) */}
+      {site && (
+        <section className="card flex flex-wrap items-center justify-between gap-x-8 gap-y-4 p-5">
+          <div>
+            <p className="text-sm font-semibold">{SITE_DOMAIN} website · 30 days</p>
+            <p className="mt-1 text-xs text-soft">
+              Potential customers on our marketing site — cookie-less, without
+              bots, admins and logged-in users.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-x-8 gap-y-3">
+            {[
+              { label: "Visitors 30d", value: site.visitors },
+              { label: "Visitors 7d", value: site.week },
+              { label: "Today", value: site.today },
+              { label: "New accounts 30d", value: site.signups },
+              {
+                label: "Visitor → signup",
+                value:
+                  site.visitors > 0
+                    ? `${Math.round((site.signups / site.visitors) * 1000) / 10}%`
+                    : "—",
+              },
+            ].map((s) => (
+              <div key={s.label}>
+                <p className="font-grotesk text-2xl font-bold tabular-nums">
+                  {s.value}
+                </p>
+                <p className="mt-0.5 text-xs text-soft">{s.label}</p>
+              </div>
+            ))}
+          </div>
+          <Link
+            href="/admin/website"
+            className="text-xs text-soft underline underline-offset-4 transition hover:text-ink"
+          >
+            Website traffic →
+          </Link>
+        </section>
+      )}
 
       {/* Platiaci vs. free granty — jadro: odkial realne tecu peniaze */}
       <section className="grid gap-4 lg:grid-cols-2">
@@ -236,7 +289,11 @@ export default async function AdminOverviewPage() {
         </div>
 
         <div className="card p-5">
-          <p className="text-sm font-semibold">Engagement · 30 days</p>
+          <p className="text-sm font-semibold">Creator pages · 30 days</p>
+          <p className="mt-1 text-xs text-soft">
+            Fans visiting our clients&apos; pages and clicking their links — not
+            visitors of {SITE_DOMAIN}.
+          </p>
           <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
             {engagement.map((s) => (
               <div key={s.label}>
@@ -251,7 +308,7 @@ export default async function AdminOverviewPage() {
           {/* Top stranky podla navstev */}
           <div className="mt-5 border-t border-line pt-4">
             <p className="text-xs font-medium tracking-wide text-soft uppercase">
-              Top pages · views 30d
+              Top creator pages · views 30d
             </p>
             <div className="mt-2.5 space-y-1.5">
               {topPages.length === 0 && (
