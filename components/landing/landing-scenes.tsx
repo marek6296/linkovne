@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useRef, type CSSProperties, type ReactNode } from "react";
 
 function Scene({ children, name, className = "" }: { children: ReactNode; name: string; className?: string }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -10,15 +10,9 @@ function Scene({ children, name, className = "" }: { children: ReactNode; name: 
     ref.current?.style.setProperty("--ry", `${(event.clientX-bounds.left-bounds.width/2)/bounds.width*18}deg`);
   }} onPointerLeave={() => {ref.current?.style.setProperty("--rx","0deg");ref.current?.style.setProperty("--ry","0deg");}}><div className="ls-world">{children}</div></div>;
 }
-const creators = [
-  {name:"Emma Reed",role:"Style & travel",photo:0,cover:"coquette-velvet",color:"#f2b6d5",link:"The weekly edit"},
-  {name:"Leo Martin",role:"Music & sound",photo:5,cover:"vinyl-sunset",color:"#ffbd86",link:"Listen to the new EP"},
-  {name:"Ava Chen",role:"Art & illustration",photo:4,cover:"cobalt-glass",color:"#b9c8ff",link:"Explore my work"},
-];
 export function CreatorStage() {
- const [selected,setSelected]=useState(0);
- const person=creators[selected];
- return <Scene name="Explore example creator profiles" className="ls-creators">
+ const person = {name:"Emma Reed",role:"Style & travel",photo:0,cover:"coquette-velvet",color:"#f2b6d5",link:"The weekly edit"};
+ return <Scene name="Example creator page" className="ls-creators">
    <div className="ls-pedestal" aria-hidden />
    <div className="ls-portrait-card" key={person.name} style={{"--creator-color":person.color} as CSSProperties}>
      <div className="ls-cover" style={{backgroundImage:`url(/templates/${person.cover}.webp)`}} />
@@ -33,18 +27,22 @@ export function CreatorStage() {
    <div className="ls-photo-print" aria-hidden><div style={{backgroundImage:"url(/templates/amalfi-summer.webp)"}}/><span>summer, saved.</span></div>
    <div className="ls-play-key" aria-hidden>▶</div>
    <div className="ls-glass-tile" aria-hidden>↗</div>
-   <div className="ls-creators-picker" aria-label="Example creators">{creators.map((creator,i)=><button key={creator.name} aria-label={`Show ${creator.name}`} aria-pressed={selected===i} onClick={()=>setSelected(i)} style={{"--creator-color":creator.color} as CSSProperties}>{/* eslint-disable-next-line @next/next/no-img-element */}<img src={`/demo-portraits/person-${creator.photo}.jpg`} alt="" width={44} height={44}/><span>{creator.name.split(" ")[0]}</span></button>)}</div>
+
  </Scene>;
 }
-export function ContentStudio(){
- const [layout,setLayout]=useState(false);
- return <Scene name="Interactive content composition" className={`ls-studio ${layout?'ls-arranged':''}`}>
-  <div className="ls-studio-base" aria-hidden />
-  <div className="ls-studio-title"><span>AVA’S STUDIO</span><h3>A little<br/>colour.</h3></div>
-  <div className="ls-art-tile" style={{backgroundImage:"url(/templates/cobalt-glass.webp)"}}><span>Selected work ↗</span></div>
-  <div className="ls-note-tile"><span>✳</span><strong>Made<br/>of ideas.</strong></div>
-  <div className="ls-video-tile" style={{backgroundImage:"url(/templates/amalfi-summer.webp)"}}><span>▶</span><strong>A week in the studio</strong></div>
-  <div className="ls-audio-tile"><span className="ls-audio-disc"/><div><strong>On repeat</strong><div className="ls-wave" aria-hidden>{[20,35,14,40,28,16,32,44,20,30].map((h,i)=><i key={i} style={{height:h,animationDelay:`${i*-.17}s`}}/>)}</div></div></div>
-  <button className="ls-arrange" onClick={()=>setLayout(!layout)} aria-pressed={layout}>{layout?'Spread it out':'Bring it together'} <span aria-hidden>↗</span></button>
+export function ContentStudio() {
+ return <Scene name="Example portfolio with an organised image gallery" className="ls-studio">
+   <div className="studio-window">
+     <div className="studio-toolbar" aria-hidden="true"><span/><span/><span/><div>ava.design</div><b>↗</b></div>
+     <div className="studio-page">
+       <header className="studio-heading"><div><h3>Ava Chen</h3><p>Art direction & digital design</p></div><span aria-hidden="true">✳</span></header>
+       <div className="studio-gallery">
+         <div className="studio-project studio-project-main"><div className="studio-image" style={{backgroundImage:"url(/templates/cobalt-glass.webp)"}}/><div className="studio-caption"><strong>Form & light</strong><span>01</span></div></div>
+         <div className="studio-project"><div className="studio-image" style={{backgroundImage:"url(/templates/rose-crystal.webp)"}}/><div className="studio-caption"><strong>Soft shapes</strong><span>02</span></div></div>
+         <div className="studio-project"><div className="studio-image" style={{backgroundImage:"url(/templates/paper-sculpture.webp)"}}/><div className="studio-caption"><strong>Paper studies</strong><span>03</span></div></div>
+       </div>
+       <div className="studio-contact"><span>Let’s work together</span><span aria-hidden="true">↗</span></div>
+     </div>
+   </div>
  </Scene>;
 }
