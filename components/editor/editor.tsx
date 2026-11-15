@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import {
   DndContext,
@@ -210,8 +210,10 @@ export function Editor({
   plan,
   userId,
   isPublished,
+  publishControls,
 }: {
   isPublished: boolean;
+  publishControls?: ReactNode;
   initialProfile: ProfileState;
   initialBlocks: Block[];
   brokenLinks?: string[];
@@ -731,23 +733,26 @@ export function Editor({
   const previewBranding = !(plan.hideBranding && profile.hide_branding);
   return (
     <div className="studio-editor">
-      <nav className="studio-tabs" aria-label="Page editor">
-        {(["content", "design", "share", "settings"] as const).map((item) => (
-          <button
-            key={item}
-            type="button"
-            aria-pressed={workspace === item}
-            onClick={() => {
-              setWorkspace(item);
-              setTab("edit");
-            }}
-          >
-            {item === "share"
-              ? "Share & track"
-              : item.charAt(0).toUpperCase() + item.slice(1)}
-          </button>
-        ))}
-      </nav>
+      <div className="studio-toolbar">
+        <nav className="studio-tabs" aria-label="Page editor">
+          {(["content", "design", "share", "settings"] as const).map((item) => (
+            <button
+              key={item}
+              type="button"
+              aria-pressed={workspace === item}
+              onClick={() => {
+                setWorkspace(item);
+                setTab("edit");
+              }}
+            >
+              {item === "share"
+                ? "Share & track"
+                : item.charAt(0).toUpperCase() + item.slice(1)}
+            </button>
+          ))}
+        </nav>
+        {publishControls}
+      </div>
       {/* Mobile tabs */}
       <div className="mb-6 flex gap-1 rounded-full border border-line bg-surface p-1 lg:hidden">
         {(["edit", "preview"] as const).map((t) => (
@@ -1000,7 +1005,7 @@ export function Editor({
                     </p>
                     {/* Creator / Stealth mode — master ochranny prepinac */}
                     {plan.creatorMode && (
-                      <div className="pb-5">
+                      <div className="py-5">
                         <div className="flex items-start justify-between gap-4">
                           <div className="min-w-0">
                             <p className="flex items-center gap-2 text-sm font-medium">

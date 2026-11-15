@@ -99,20 +99,21 @@ export default async function DashboardPage({
           canAddMore={profiles.length < plan.profiles}
           limit={plan.profiles}
         />
-
-        <PublishControls
-          key={current.id}
-          profileId={current.id}
-          username={current.username}
-          initialPublished={current.is_published}
-          initialHasUnpublished={hasUnpublished}
-        />
       </section>
 
       <div className="mt-5 sm:mt-6">
         <Editor
           key={current.id}
           isPublished={current.is_published}
+          publishControls={
+            <PublishControls
+              key={current.id}
+              profileId={current.id}
+              username={current.username}
+              initialPublished={current.is_published}
+              initialHasUnpublished={hasUnpublished}
+            />
+          }
           initialProfile={{
             id: current.id,
             username: current.username,

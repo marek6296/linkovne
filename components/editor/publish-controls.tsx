@@ -204,7 +204,7 @@ export function PublishControls({
               target="_blank"
               rel="noopener noreferrer"
             >
-              {profileLabel(username)}
+              <span className="profile-address-text" title={profileLabel(username)}>{profileLabel(username)}</span>
               <svg
                 viewBox="0 0 16 16"
                 width="13"
