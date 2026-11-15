@@ -674,7 +674,9 @@ export function BlockList({
     const node = renderOne(block);
     if (!onSelect) return node;
     const inner = (
-      <div className="group relative min-w-0 max-w-full overflow-hidden rounded-xl">
+      // Keep motion and shadows outside the block visible, like the public page.
+      // Individual blocks still clip their own images and overflowing content.
+      <div className="group relative min-w-0 max-w-full rounded-xl">
         {node}
         <button
           type="button"
