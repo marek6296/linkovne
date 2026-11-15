@@ -225,7 +225,8 @@ export function PublishControls({
         </div>
         <div className="profile-publish-actions">
           <span
-            className={`profile-save-label ${saveError ? "is-error" : ""}`}
+            className={`profile-save-label ${saveError ? "is-error" : upToDate ? "is-synced" : ""}`}
+            title={upToDate ? "All changes published" : undefined}
             role="status"
           >
             {saving ? (
@@ -243,7 +244,7 @@ export function PublishControls({
             ) : (
               <>
                 <CheckIcon />
-                All changes published
+                Up to date
               </>
             )}
           </span>

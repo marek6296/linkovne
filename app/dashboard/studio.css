@@ -903,3 +903,74 @@
   .studio-toolbar .studio-tabs { width: 100%; }
   .studio-toolbar .profile-publish { flex-basis: 100%; min-width: 0; padding: 10px 0; }
 }
+
+/* One connected control for the live address, save state and page actions. */
+.studio-toolbar .profile-publish-row {
+  width: fit-content;
+  max-width: 100%;
+  margin-left: auto;
+  min-height: 42px;
+  padding: 4px;
+  gap: 12px;
+  border: 1px solid #dedee7;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 1px 3px #22223805;
+}
+.studio-toolbar .profile-page-address {
+  padding-left: 8px;
+  gap: 10px;
+  flex: 0 1 auto;
+}
+.studio-toolbar .profile-live-label {
+  padding: 5px 7px;
+  border-radius: 6px;
+  background: #f0f0f5;
+  color: #6a6878;
+  font-size: 11px;
+  font-weight: 600;
+}
+.studio-toolbar .profile-live-label.is-live {
+  background: #edf7f1;
+  color: #347255;
+}
+.studio-toolbar .profile-page-address > a,
+.studio-toolbar .profile-draft-address {
+  font-size: 13px;
+  font-weight: 550;
+  color: #363644;
+}
+.studio-toolbar .profile-page-address > a { padding-block: 5px; }
+.studio-toolbar .profile-page-address > a:hover { color: #4f46e5; }
+.studio-toolbar .profile-address-text { max-width: 225px; }
+.studio-toolbar .profile-publish-actions { gap: 6px; }
+.studio-toolbar .profile-save-label {
+  padding: 6px 8px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.studio-toolbar .profile-save-label.is-synced { color: #697580; }
+.studio-toolbar .profile-save-label.is-synced svg { color: #398261; width: 14px; height: 14px; }
+.studio-toolbar .profile-actions-menu { border-left: 1px solid #eeeef3; padding-left: 4px; }
+.studio-toolbar .profile-actions-menu > summary { color: #646474; }
+.studio-toolbar .profile-actions-menu > summary:hover { background: #f0eff8; color: #4338ca; }
+.studio-toolbar .profile-primary-action { min-height: 32px; padding: 7px 12px; }
+.studio-toolbar .profile-publish-actions:has(.profile-primary-action) .profile-save-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+@media (max-width: 900px) {
+  .studio-toolbar .profile-publish-row { width: 100%; }
+  .studio-toolbar .profile-page-address { flex: 1; }
+}
+@media (max-width: 639px) {
+  .studio-toolbar .profile-publish-row { gap: 6px; }
+  .studio-toolbar .profile-publish-actions { flex: 0 0 auto; }
+  .studio-toolbar .profile-address-text,
+  .studio-toolbar .profile-draft-address { max-width: 195px; }
+  .studio-toolbar .profile-primary-action { font-size: 12px; }
+}
