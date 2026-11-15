@@ -17,13 +17,13 @@ Prvá verzia: presné FAQ a ceny/funkcie, Organization/SoftwareApplication graph
 - Bing prihlásený; manuálne overenie cez web.
 
 ## Implementačný plán
-- [ ] Overiť, že nové verejné cesty nekolidujú s existujúcimi profilmi; rezervovať nové názvy pre budúcnosť.
-- [ ] Opraviť konkrétne nepresné texty a podstránkové Open Graph URL; pridať pravdivú identitu produktu.
-- [ ] Pridať príručky: link in bio for models, agency workflow, own domain and failure handling. Jasné limity funkcií; žiadne tvrdenia o tržbách bez integrácie.
-- [ ] Pridať sitemap odkazy, footer navigáciu, llms.txt a Bing meta overenie.
-- [ ] Overiť testami, TypeScriptom, buildom a HTTP kontrolami HTML/canonical/JSON-LD/404 na izolovanom porte.
-- [ ] Commit/push cez GitHub, overiť produkčný deploy a dokončiť Bing + odoslanie URL/sitemap.
-- [ ] Uložiť výsledky, východiskové metriky a ďalšie kroky do pamäte.
+- [x] Overiť, že nové verejné cesty nekolidujú s existujúcimi profilmi; rezervovať nové názvy pre budúcnosť.
+- [x] Opraviť konkrétne nepresné texty a podstránkové Open Graph URL; pridať pravdivú identitu produktu.
+- [x] Pridať príručky: link in bio for models, agency workflow, own domain and failure handling. Jasné limity funkcií; žiadne tvrdenia o tržbách bez integrácie.
+- [x] Pridať sitemap odkazy, footer navigáciu, llms.txt a Bing meta overenie.
+- [x] Overiť testami, TypeScriptom, buildom a HTTP kontrolami HTML/canonical/JSON-LD/404 na izolovanom porte.
+- [x] Commit/push cez GitHub, overiť produkčný deploy a dokončiť Bing + odoslanie URL/sitemap.
+- [x] Uložiť výsledky, východiskové metriky a ďalšie kroky do pamäte.
 
 ## Čo merať a čo zostáva dlhodobé
 Google/Bing impressions, nebrandové dopyty, kliky na registráciu a aktivované účty. AI citácie závisia od dostupných reportov; manuálne otázky sú iba orientačná vzorka, nie spoľahlivý ranking.
@@ -43,3 +43,13 @@ Oficiálne podklady:
 - Pridaný IndexNow proof a scripts/submit-indexnow.mjs. Spustiť po overenom produkčnom deployi; odosiela iba produktové/marketingové URL, nie používateľské profily. HTTP 200/202 znamená prijatie, nie potvrdenú indexáciu.
 - Ceny a počty profilov pre schema, About a príručky vychádzajú z PLANS. Dátumy príručiek sú dátumy skutočného publikovania/úpravy, nie každého buildu.
 - Linktree číslo ceny sa z aktuálneho oficiálneho HTML nepodarilo overiť, verejné porovnanie preto neuvádza starých $6. Beacons údaje overené z oficiálneho plánu.
+
+
+## Produkčný výsledok
+- Funkčné zmeny nasadené commitom `2ff7211`; Vercel deploy `3sYAC4fScJg8reVmBiuec5s3bPGn` úspešný.
+- Produkčný smoke check prešiel. Aktuálna sitemap má 28 URL.
+- Google prijal samostatné žiadosti o nové indexovanie homepage a /guides; sitemap znovu odoslaná aj po deployi. Žiadosti sú prijaté, nie dôkaz už dokončenej indexácie nových stránok.
+- Bing doména úspešne overená meta tagom; sitemap prijatá, Processing.
+- IndexNow prijal 8 marketingových URL s HTTP 202 (key validation pending).
+- PageSpeed API vrátilo 429, performance skóre preto nezmerané.
+- Externý listing: pripravený podklad, AlternativeTo čaká na Marekovo prihlásenie a overený email. Nič na AlternativeTo neodoslané ani schválené.
