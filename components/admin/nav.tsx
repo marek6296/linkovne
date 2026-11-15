@@ -19,6 +19,17 @@ const ITEMS = [
   { key: "platform", label: "Platform", href: "/admin/platform" },
 ] as const;
 
+const ICONS = [
+  "M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z",
+  "M3 5h18v14H3z M3 9h18 M7 7h.01 M10 7h.01",
+  "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8 M17 4a4 4 0 0 1 0 8 M22 21v-2a4 4 0 0 0-3-4",
+  "M3 17l6-6 4 4 8-10 M15 5h6v6",
+  "M3 3h8l10 10-8 8L3 11z M7 7h.01",
+  "M3 12h4l3-8 4 16 3-8h4",
+  "M12 3l9 4v5c0 5-9 9-9 9s-9-4-9-9V7z M8 12l3 3 5-6",
+  "M3 4h18v6H3z M3 14h18v6H3z M7 7h.01 M7 17h.01",
+];
+
 export function AdminNav() {
   const pathname = usePathname();
 
@@ -28,19 +39,16 @@ export function AdminNav() {
       ?.key ?? "overview";
 
   return (
-    <nav className="flex items-center gap-1 overflow-x-auto md:justify-center [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <nav className="admin-nav" aria-label="Administration">
       {ITEMS.map((i) => (
         <Link
           key={i.key}
           href={i.href}
           prefetch
-          className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium whitespace-nowrap transition ${
-            i.key === active
-              ? "bg-ink text-white"
-              : "text-soft hover:bg-black/[0.04] hover:text-ink"
-          }`}
+          aria-current={i.key === active ? "page" : undefined}
+          className={`admin-nav-link ${i.key === active ? "is-active" : ""}`}
         >
-          {i.label}
+          <svg className="admin-nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d={ICONS[ITEMS.indexOf(i)]} /></svg>{i.label}
         </Link>
       ))}
     </nav>

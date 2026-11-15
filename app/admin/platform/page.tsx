@@ -54,7 +54,7 @@ export default async function AdminPlatformPage() {
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8"><div className="admin-page-heading"><h1>Platform</h1><p>Monitor custom domains and link health.</p></div>
       <section className="grid grid-cols-3 gap-4">
         {stats.map((s) => (
           <div key={s.label} className="card p-5">

@@ -134,7 +134,7 @@ export default async function AdminOverviewPage() {
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8"><div className="admin-page-heading"><h1>Overview</h1><p>Revenue, customers and activity across Linkovne.</p></div>
       {/* Biznis KPI */}
       <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {hero.map((s) => (

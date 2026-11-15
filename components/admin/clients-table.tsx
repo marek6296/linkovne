@@ -99,6 +99,7 @@ export function ClientsTable({ accounts }: { accounts: ClientRow[] }) {
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
+          aria-label="Search clients by email or page"
           placeholder="Search email or page…"
           className="field max-w-xs py-2 text-sm"
         />

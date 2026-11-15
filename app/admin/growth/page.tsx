@@ -70,7 +70,7 @@ export default async function AdminGrowthPage() {
     ?.referrals ?? []) as Referral[];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8"><div className="admin-page-heading"><h1>Growth</h1><p>Manage promotions, codes and referral rewards.</p></div>
       {/* Promo lista */}
       <section className="card p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
