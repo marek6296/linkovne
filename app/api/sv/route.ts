@@ -7,6 +7,7 @@ import {
   cleanCampaign,
   deviceOf,
   isBotUserAgent,
+  isInternalReferrer,
   isTrackedSitePath,
   normaliseSitePath,
   PRICING_SECTION_PATH,
@@ -65,7 +66,10 @@ export async function POST(request: NextRequest) {
     return skip();
   }
 
-  const entry = body.e === true && !isSection;
+  const rawReferrer = typeof body.r === "string" ? body.r : null;
+  // Prichod zvonku nesie zdroj; nova karta / reload z nasej stranky nie.
+  const entry =
+    body.e === true && !isSection && !isInternalReferrer(rawReferrer);
   const rawCountry = request.headers.get("x-vercel-ip-country") ?? "";
 
   const db = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceKey, {
@@ -79,9 +83,7 @@ export async function POST(request: NextRequest) {
     p_path: path,
     p_kind: isSection ? "section" : "page",
     p_entry: entry,
-    p_referrer: entry
-      ? referrerHost(typeof body.r === "string" ? body.r : null)
-      : null,
+    p_referrer: entry ? referrerHost(rawReferrer) : null,
     p_utm_source: entry ? cleanCampaign(body.us) : null,
     p_utm_medium: entry ? cleanCampaign(body.um) : null,
     p_utm_campaign: entry ? cleanCampaign(body.uc) : null,

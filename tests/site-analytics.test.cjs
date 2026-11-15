@@ -99,3 +99,23 @@ test("site analytics keeps only the referrer host and spots creator pages", () =
   assert.equal(sa.cleanCampaign("Instagram"), "instagram");
   assert.equal(sa.cleanCampaign("<script>"), null);
 });
+
+test("site analytics treats our own marketing pages as internal, not a new visit", () => {
+  assert.equal(sa.isInternalReferrer("https://linkovne.com/vs/linktree"), true);
+  assert.equal(sa.isInternalReferrer("https://www.linkovne.com/"), true);
+  assert.equal(sa.isInternalReferrer("https://linkovne.com/mia"), false);
+  assert.equal(sa.isInternalReferrer("https://www.google.com/"), false);
+  assert.equal(sa.isInternalReferrer(""), false);
+  assert.equal(sa.isInternalReferrer(null), false);
+});
+
+test("site analytics compares signups only with days that were tracked", () => {
+  const byDay = [
+    { d: "2026-11-13", signups: 2 },
+    { d: "2026-11-14", signups: 3 },
+    { d: "2026-11-15", signups: 1 },
+  ];
+  assert.equal(sa.signupsSinceTracking(byDay, "2026-11-15"), 1);
+  assert.equal(sa.signupsSinceTracking(byDay, "2026-11-01"), 6);
+  assert.equal(sa.signupsSinceTracking(byDay, null), 0);
+});

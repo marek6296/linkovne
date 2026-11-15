@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { siteChannel } from "@/lib/site-analytics";
+import { signupsSinceTracking, siteChannel } from "@/lib/site-analytics";
 import { SITE_DOMAIN } from "@/lib/site";
 
 /**
@@ -41,6 +41,8 @@ type SiteTraffic = {
   devices: Row[];
   browsers: Row[];
 };
+
+export const metadata = { title: "Website traffic" };
 
 const RANGES = [7, 30, 90] as const;
 
@@ -131,12 +133,14 @@ function Stat({
 /** Horizontalne pruhy s podielom — zdroje, krajiny, zariadenia… */
 function ShareList({
   title,
+  note,
   rows,
   total,
   empty = "No data yet.",
   label = (k: string) => k,
 }: {
   title: string;
+  note?: string;
   rows: Row[];
   total: number;
   empty?: string;
@@ -146,6 +150,7 @@ function ShareList({
   return (
     <div className="card p-5">
       <p className="text-sm font-semibold">{title}</p>
+      {note && <p className="mt-1 text-xs text-soft">{note}</p>}
       <div className="mt-3 space-y-2">
         {rows.length === 0 && <p className="text-sm text-faint">{empty}</p>}
         {rows.map((r) => (
@@ -273,11 +278,21 @@ export default async function AdminWebsitePage({
   ).slice(0, 12);
   const entryTotal = t.sources.reduce((n, s) => n + s.visitors, 0);
 
+  // Konverzia len z dni, ked sa uz meralo (inak registracie za 30 dni / par hodin navstev).
+  const trackedSignups = signupsSinceTracking(t.by_day, t.since);
+  const partialRange = t.since !== null && t.since > t.from;
+
   const funnel = [
     { label: "Landing page", hint: "visited /", value: t.funnel.landing },
     { label: "Saw pricing", hint: "scrolled to pricing on /", value: t.funnel.pricing },
     { label: "Sign-up page", hint: "visited /register", value: t.funnel.register },
-    { label: "New accounts", hint: "signed up (any method)", value: t.signups },
+    {
+      label: "New accounts",
+      hint: partialRange
+        ? `signed up since ${fmtDay(t.since as string)} (any method)`
+        : "signed up (any method)",
+      value: trackedSignups,
+    },
   ];
   const funnelTop = Math.max(1, funnel[0].value);
 
@@ -341,8 +356,12 @@ export default async function AdminWebsitePage({
         />
         <Stat
           label="Visitor → signup"
-          value={pct(t.signups, t.visitors)}
-          sub="new accounts / visitors"
+          value={pct(trackedSignups, t.visitors)}
+          sub={
+            partialRange
+              ? `${trackedSignups} new since ${fmtDay(t.since as string)} / visitors`
+              : "new accounts / visitors"
+          }
         />
       </section>
 
@@ -453,7 +472,8 @@ export default async function AdminWebsitePage({
         </div>
 
         <ShareList
-          title={`Where visitors come from · ${days}d`}
+          title={`Where visits come from · ${days}d`}
+          note="A visit = arriving from outside the site. One visitor can come several times a day."
           rows={channels}
           total={entryTotal}
           empty="No visits yet."
@@ -510,6 +530,7 @@ export default async function AdminWebsitePage({
 
         <ShareList
           title={`Referring websites · ${days}d`}
+          note="Visits by referring site (host only, never the full URL)."
           rows={referrers}
           total={entryTotal}
           empty="No external referrers yet — visits are direct or from apps that hide the referrer."

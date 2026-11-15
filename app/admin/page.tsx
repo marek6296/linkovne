@@ -8,6 +8,7 @@ import {
   type Tone,
 } from "@/lib/crm";
 import { SITE_DOMAIN } from "@/lib/site";
+import { signupsSinceTracking } from "@/lib/site-analytics";
 
 /**
  * Admin → Overview. Biznis metriky (MRR, konverzia, rast), kratky suhrn
@@ -57,7 +58,8 @@ type SiteSummary = {
   signups: number;
   today: number;
   week: number;
-  prev: { visitors: number };
+  since: string | null;
+  by_day: { d: string; signups: number }[];
 };
 
 export default async function AdminOverviewPage() {
@@ -71,6 +73,8 @@ export default async function AdminOverviewPage() {
   const m = (metricsData ?? {}) as Partial<AdminMetrics>;
   const x = (extraData ?? {}) as Partial<OverviewExtra>;
   const site = siteData as SiteSummary | null;
+  // Konverzia len z dni, ked sa navstevy uz merali.
+  const siteSignups = site ? signupsSinceTracking(site.by_day, site.since) : 0;
 
   const total = m.total_accounts ?? 0;
   const paid = m.paid ?? 0;
@@ -166,7 +170,7 @@ export default async function AdminOverviewPage() {
                 label: "Visitor → signup",
                 value:
                   site.visitors > 0
-                    ? `${Math.round((site.signups / site.visitors) * 1000) / 10}%`
+                    ? `${Math.round((siteSignups / site.visitors) * 1000) / 10}%`
                     : "—",
               },
             ].map((s) => (

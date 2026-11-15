@@ -100,6 +100,35 @@ export function referrerHost(raw: string | null | undefined): string | null {
   return host.slice(0, 120);
 }
 
+/**
+ * Prisiel z inej NASEJ marketingovej stranky (nova karta, reload, presmerovanie)?
+ * Taka navsteva nie je novy prichod zvonku — nema niest zdroj ani sa ratat
+ * ako „Direct".
+ */
+export function isInternalReferrer(raw: string | null | undefined): boolean {
+  if (!raw) return false;
+  try {
+    const url = new URL(raw);
+    const host = url.hostname.toLowerCase().replace(/^www\./, "");
+    return host === SITE_DOMAIN && isTrackedSitePath(url.pathname);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Registracie, ktore mozno porovnat s navstevami: len dni od zaciatku merania.
+ * Inak by konverzia v prvom mesiaci delila registracie za 30 dni navstevami
+ * za par hodin (napr. 600 %).
+ */
+export function signupsSinceTracking(
+  byDay: { d: string; signups: number }[],
+  since: string | null,
+): number {
+  if (!since) return 0;
+  return byDay.reduce((n, day) => (day.d >= since ? n + day.signups : n), 0);
+}
+
 /** UTM / kampan: len bezpecne znaky, malymi pismenami. */
 export function cleanCampaign(raw: unknown): string | null {
   if (typeof raw !== "string") return null;
