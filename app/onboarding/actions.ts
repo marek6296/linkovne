@@ -44,6 +44,7 @@ export async function claimPendingInvite(): Promise<RedeemGrant | null> {
 const USERNAME_RE = /^[a-z0-9_.]{3,30}$/;
 
 const RESERVED = new Set([
+  "guides", "about", "robots.txt", "sitemap.xml", "llms.txt",
   "login", "register", "dashboard", "onboarding", "auth", "api",
   "admin", "settings", "support", "linkove", "linkovne", "www",
   "forgot", "reset",

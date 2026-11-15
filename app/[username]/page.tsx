@@ -120,6 +120,7 @@ export async function generateMetadata({
           : undefined,
     // OG obrazok dodava app/[username]/opengraph-image.tsx (brandovana karta).
     openGraph: {
+      url: `${SITE_URL}/${profile.username}`,
       title,
       description,
       type: "profile",

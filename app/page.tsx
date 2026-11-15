@@ -1,3 +1,5 @@
+import { productGraph, jsonLd } from "@/lib/seo";
+import { GUIDES } from "@/lib/guides";
 import { HeroShowcase } from "@/components/hero-showcase";
 import Link from "next/link";
 import { Wordmark } from "@/components/wordmark";
@@ -16,42 +18,18 @@ export const revalidate = 30;
 // Canonical len pre landing — NIE v layoute, kde by ho zdedili vsetky stranky.
 export const metadata = {
   alternates: { canonical: "/" },
+  verification: { other: { "msvalidate.01": "EDC69C2FB8CE5751F512F4EDE6BC13F1" } },
 };
 
 /**
- * Strukturovane data pre Google (rich results). FAQPage sa MUSI zhodovat
+ * Strukturovane data pre vyhladavace. FAQPage sa MUSI zhodovat
  * s viditelnym obsahom LandingFaq — preto zdielaju FAQ_ITEMS.
  * Ziadne vymyslene ratingy — Google penalizuje fake review markup.
  */
 const JSON_LD = {
-  "@context": "https://schema.org",
+  ...productGraph,
   "@graph": [
-    {
-      "@type": "WebSite",
-      "@id": `${SITE_URL}/#website`,
-      url: SITE_URL,
-      name: BRAND_TITLE,
-    },
-    {
-      "@type": "SoftwareApplication",
-      "@id": `${SITE_URL}/#app`,
-      name: BRAND_TITLE,
-      applicationCategory: "WebApplication",
-      operatingSystem: "Web",
-      url: SITE_URL,
-      description:
-        "Link-in-bio pages on your own domain with private analytics, link protection and an AI builder.",
-      offers: [
-        { "@type": "Offer", name: "Free", price: "0", priceCurrency: "EUR" },
-        { "@type": "Offer", name: "Pro", price: "4.99", priceCurrency: "EUR" },
-        {
-          "@type": "Offer",
-          name: "Business",
-          price: "14.99",
-          priceCurrency: "EUR",
-        },
-      ],
-    },
+    ...productGraph["@graph"],
     {
       "@type": "FAQPage",
       "@id": `${SITE_URL}/#faq`,
@@ -73,7 +51,7 @@ export default async function Home() {
       <script
         type="application/ld+json"
         // Staticky objekt z nasho kodu (ziadne user data) — bezpecne.
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}
+        dangerouslySetInnerHTML={{ __html: jsonLd(JSON_LD) }}
       />
       {/* First screen — promo + header + hero vyplnia presne jeden viewport */}
       <div className="flex min-h-svh flex-col">
@@ -113,18 +91,18 @@ export default async function Home() {
               className="reveal font-grotesk text-[clamp(1.95rem,6vw,4.8rem)] leading-[1.02] font-extrabold tracking-tight"
               style={{ animationDelay: "60ms" }}
             >
-              Everything you need,
+              Your link in bio,
               <br />
-              <span className="text-pink-500">one link.</span>
+              <span className="text-pink-500">fully yours.</span>
             </h1>
 
             {/* Popis ucelu appky — ZAMERNE bez `reveal` (fade), nech je vzdy
                 plne viditelny aj pre Google OAuth verifikacny crawler, ktory
                 moze robit screenshot pred dobehnutim animacie. */}
             <p className="mt-3 max-w-md text-[15px] leading-snug text-soft text-pretty sm:mt-4 sm:text-lg sm:leading-relaxed">
-              linkovne is a link-in-bio page builder — put all your links on
-              one page, on your own domain. Fast to set up, fully yours, with
-              private analytics.
+              linkovne is a link-in-bio page builder for models and creator
+              agencies. Put your links on one page, track your traffic sources,
+              and connect your own domain on Business.
             </p>
 
             <div
@@ -211,8 +189,9 @@ export default async function Home() {
                   Out of the app browser
                 </h3>
                 <p className="mt-2 text-[15px] leading-relaxed text-white/85">
-                  Opens in real Safari or Chrome — where logins and payments
-                  actually work, so visitors don&apos;t drop off.
+                  Help visitors continue in Safari or Chrome when an in-app
+                  browser gets in the way. Availability depends on their device
+                  and app settings.
                 </p>
               </div>
               <span className="relative z-10 mt-6 text-3xl">↗</span>
@@ -286,8 +265,22 @@ export default async function Home() {
           <Pricing proPromoPrice={promoOn ? promo!.price : null} />
         </section>
 
-        {/* ---------- FAQ (SEO obsah + rich results) ---------- */}
+        {/* ---------- FAQ (viditelne odpovede + zhodne strukturovane data) ---------- */}
         <LandingFaq />
+
+        <section className="mx-auto max-w-6xl px-6 py-16" aria-labelledby="guides-title">
+          <p className="font-mono text-sm font-bold tracking-wide text-pink-500 uppercase">For creators &amp; agencies</p>
+          <h2 id="guides-title" className="mt-3 font-grotesk text-3xl font-extrabold">Build a better link-in-bio workflow</h2>
+          <div className="mt-8 grid gap-4 md:grid-cols-3">
+            {GUIDES.map((guide) => (
+              <Link key={guide.slug} href={`/guides/${guide.slug}`} className="card p-6 transition hover:border-pink-400">
+                <h3 className="text-lg font-bold text-ink">{guide.title}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-soft">{guide.description}</p>
+                <span className="mt-5 inline-block text-sm font-medium text-pink-600">Read the guide →</span>
+              </Link>
+            ))}
+          </div>
+        </section>
 
         {/* ---------- CTA ---------- */}
         <section className="mx-auto flex min-h-svh max-w-6xl items-center px-6 py-16">
@@ -327,6 +320,8 @@ export default async function Home() {
               vs {COMPETITORS[slug].name}
             </Link>
           ))}
+          <Link href="/guides" className="transition hover:text-ink">Creator guides</Link>
+          <Link href="/about" className="transition hover:text-ink">About</Link>
           <Link href="/privacy" className="transition hover:text-ink">
             Privacy
           </Link>

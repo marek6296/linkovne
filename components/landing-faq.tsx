@@ -1,3 +1,4 @@
+import { productFacts } from "@/lib/seo";
 import { BRAND_TITLE, SITE_DOMAIN } from "@/lib/site";
 
 /**
@@ -15,15 +16,23 @@ export const FAQ_ITEMS: { q: string; a: string }[] = [
   },
   {
     q: `Is ${BRAND_TITLE} a good Linktree alternative?`,
-    a: `Yes — ${BRAND_TITLE} covers what you'd expect from Linktree (links, themes, analytics, QR codes) and adds what creators usually upgrade for: your own custom domain, link protection for sensitive links, escaping the in-app browser, and privacy-friendly analytics with no cookies or tracking pixels.`,
+    a: `Yes — ${BRAND_TITLE} covers what you'd expect from Linktree (links, themes, analytics, QR codes) and adds what creators usually upgrade for: your own custom domain, link protection for sensitive links, help opening links outside in-app browsers, and privacy-friendly analytics with no cookies or tracking pixels.`,
   },
   {
     q: "Can I use my own domain?",
-    a: `Yes. Instead of sharing ${SITE_DOMAIN}/you, you can connect a domain you own — like yourname.com — so your page is truly yours. If a shared platform domain ever gets blocked somewhere, your own domain isn't affected. Multiple backup domains with automatic failover are supported too.`,
+    a: `Yes, on the ${productFacts.domainPlan} plan (${productFacts.businessPrice}). Instead of sharing ${SITE_DOMAIN}/you, you can connect a domain you own — like yourname.com — so your page is truly yours. You are responsible for buying and renewing your domain. Multiple domains and automatic failover can help when a domain becomes unreachable; this does not detect social-platform blocks or guarantee that a platform will accept your link.`,
   },
   {
     q: `Is ${BRAND_TITLE} free?`,
-    a: "The Free plan gives you a page with up to 8 blocks, themes and 7-day analytics — no card required. Pro (€4.99/mo) unlocks unlimited blocks, every block type, custom design, lead forms and the AI builder. Business (€14.99/mo) adds up to 10 profiles under one login for agencies.",
+    a: `Free includes ${productFacts.freeProfiles} page with up to ${productFacts.freeBlocks} blocks, themes and 7-day analytics — no card required. Pro (${productFacts.proPrice}) includes up to ${productFacts.proProfiles} pages, unlimited blocks, custom design, lead forms and the AI builder. Business (${productFacts.businessPrice}) includes up to ${productFacts.businessProfiles} profiles under one login and custom domains.`,
+  },
+  {
+    q: "Can an agency manage several creators?",
+    a: `Yes. Pro supports up to ${productFacts.proProfiles} pages and Business supports up to ${productFacts.businessProfiles} profiles under one login. Each profile can have its own links and design. These are profile limits, not separate team seats or client permission roles.`,
+  },
+  {
+    q: "Does Linkovne guarantee that Instagram will not block a link?",
+    a: "No. Custom domains, confirmation gates and browser-opening tools do not override a social platform's rules or guarantee protection from restrictions. Follow each platform's content and linking policies. Domain health monitoring checks reachability, not whether Instagram or TikTok has blocked a domain.",
   },
   {
     q: "Do you track my visitors?",
@@ -31,7 +40,7 @@ export const FAQ_ITEMS: { q: string; a: string }[] = [
   },
   {
     q: "Why do my links open in Safari or Chrome instead of the Instagram browser?",
-    a: "In-app browsers break logins and payments, so visitors give up. When someone taps your link inside Instagram or TikTok, we move them to their real browser where everything works — which means fewer lost visitors for you.",
+    a: "Some in-app browsers can interfere with logins or payments. On Pro and Business, Linkovne can help visitors continue in their system browser. Automatic opening depends on the app, operating system and visitor settings; some visitors need to open the browser manually. It is not guaranteed on every device.",
   },
 ];
 

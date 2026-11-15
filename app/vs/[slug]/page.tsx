@@ -26,7 +26,7 @@ export async function generateMetadata({
     title: { absolute: title },
     description,
     alternates: { canonical: `/vs/${slug}` },
-    openGraph: { title, description, type: "website" },
+    openGraph: { title, description, type: "website", url: `${SITE_URL}/vs/${slug}` },
     twitter: { card: "summary_large_image", title, description },
   };
 }
@@ -133,6 +133,9 @@ export default async function ComparePage({
           current details on their site before deciding.
         </p>
 
+        {c.additionalSources?.map(source => <p key={source.url} className="mt-3 text-xs text-faint">Additional official source: <a href={source.url} className="underline">{source.label}</a></p>)}
+        <p className="mt-4 text-sm text-soft">This comparison is published by Linkovne. Profile counts are not team seats. Prices use each provider’s listed currency; domain registration and plan inclusions differ.</p>
+
         <section className="mt-16 text-center">
           <h2 className="font-grotesk text-2xl font-bold tracking-tight sm:text-3xl">
             Try {BRAND_TITLE} free — see for yourself
@@ -169,6 +172,8 @@ export default async function ComparePage({
       <footer className="mx-auto flex max-w-4xl flex-wrap items-center gap-x-5 gap-y-3 px-6 py-8 text-sm text-faint">
         <Wordmark />
         <nav className="ml-auto flex flex-wrap items-center gap-x-5 gap-y-2">
+          <Link href="/guides" className="transition hover:text-ink">Creator guides</Link>
+          <Link href="/about" className="transition hover:text-ink">About</Link>
           <Link href="/privacy" className="transition hover:text-ink">
             Privacy
           </Link>

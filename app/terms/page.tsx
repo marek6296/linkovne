@@ -1,11 +1,8 @@
-import type { Metadata } from "next";
+import { marketingMetadata } from "@/lib/seo";
 import { LegalShell } from "@/components/legal-shell";
 import { BRAND_TITLE, SITE_DOMAIN } from "@/lib/site";
 
-export const metadata: Metadata = {
-  title: "Terms of Service",
-  description: `The terms that govern your use of ${BRAND_TITLE}.`,
-};
+export const metadata = marketingMetadata("/terms", "Terms of Service", `The terms that govern your use of ${BRAND_TITLE}.`);
 
 export default function TermsPage() {
   return (

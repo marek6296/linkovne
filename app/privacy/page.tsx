@@ -1,11 +1,8 @@
-import type { Metadata } from "next";
+import { marketingMetadata } from "@/lib/seo";
 import { LegalShell } from "@/components/legal-shell";
 import { BRAND_TITLE, SITE_DOMAIN } from "@/lib/site";
 
-export const metadata: Metadata = {
-  title: "Privacy Policy",
-  description: `How ${BRAND_TITLE} collects, uses and protects your data.`,
-};
+export const metadata = marketingMetadata("/privacy", "Privacy Policy", `How ${BRAND_TITLE} collects, uses and protects your data.`);
 
 export default function PrivacyPage() {
   return (

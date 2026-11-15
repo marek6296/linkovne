@@ -94,9 +94,9 @@ const syne = Syne({
   preload: false,
 });
 
-const TITLE = `${BRAND_TITLE} — link in bio on your own domain`;
+const TITLE = `${BRAND_TITLE} — Link in Bio for Models & Creator Agencies`;
 const DESCRIPTION =
-  "All your links on one page, on a domain that's yours. Clean link-in-bio pages, private analytics, link protection and an AI builder. Free to start in two minutes.";
+  "Create link-in-bio pages for models and creator agencies. Track clicks, gate private links, and use your own domain on Business. Start free.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
