@@ -55,6 +55,7 @@ import { Preview } from "@/components/editor/preview";
 import { Collapse, Chevron } from "@/components/editor/collapse";
 import { ContentPicker } from "./content-picker";
 import { ShareCard } from "./share-card";
+import { DeleteProfileButton } from "./delete-profile-button";
 import { reorderBlocks } from "@/lib/reorder-blocks";
 import { createDraftSaveQueue } from "@/lib/draft-save-queue";
 
@@ -1101,6 +1102,17 @@ export function Editor({
                   </div>
                 )}
               </Section>
+              <section className="card mt-4 p-5" aria-labelledby="profile-deletion-heading">
+                <h2 id="profile-deletion-heading" className="text-sm font-semibold">Delete this profile</h2>
+                <p className="mt-2 mb-3 text-sm text-soft">
+                  Permanently remove @{profile.username} and its content. Your other profiles stay.
+                </p>
+                <DeleteProfileButton
+                  profileId={profile.id}
+                  username={profile.username}
+                  disabled={hasPendingSave || shieldBusy || escapeBusy || creatorBusy}
+                />
+              </section>
             </div>
             <div className="studio-pane" hidden={workspace !== "content"}>
               {/* 4 — Blocks (otvorene) */}
