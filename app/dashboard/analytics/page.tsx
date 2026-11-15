@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { PROFILE_ORDER_KEY, orderProfiles } from "@/lib/profile-order";
 import { createClient } from "@/lib/supabase/server";
 import { planOf } from "@/lib/plans";
-import { buildTrafficRows, trafficInsight, trafficLabel } from "@/lib/traffic";
+import { buildTrafficRows, trafficLabel } from "@/lib/traffic";
 import { cleanTrackedLinks } from "@/lib/channels";
 import { profileLabel } from "@/lib/site";
 import type { BlockConfig } from "@/lib/blocks";
@@ -537,7 +537,7 @@ export default async function AnalyticsPage({
     clickList as { referrer?: string | null; source?: string | null }[],
     trackedLinks,
   );
-  const fanInsight = trafficInsight(fanRows);
+  const sourceViews = fanRows.reduce((sum, row) => sum + row.views, 0);
 
   const devCounts = new Map<string, number>();
   for (const v of viewList) {
@@ -695,11 +695,6 @@ export default async function AnalyticsPage({
             <p className="text-xs text-faint">Auto-detected — no setup needed</p>
           }
         >
-          {fanInsight && (
-            <p className="mb-5 rounded-xl border border-pink-500/20 bg-pink-500/5 px-4 py-3 text-sm text-ink">
-              {fanInsight}
-            </p>
-          )}
           {fanRows.length === 0 ? (
             <p className="py-8 text-center text-sm text-soft">
               No visits recorded yet.
@@ -715,9 +710,16 @@ export default async function AnalyticsPage({
                 </tr>
               </thead>
               <tbody>
-                {fanRows.map((r) => (
+                {fanRows.map((r, index) => (
                   <tr key={r.label} className="border-t border-line">
-                    <td className="py-2.5 font-medium">{r.label}</td>
+                    <td className="py-3.5 font-medium">
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                        <span>{r.label}</span>
+                        {index === 0 && r.views > 0 && r.views > (fanRows[1]?.views ?? 0) && (
+                          <span className="text-xs font-normal text-soft">Top source · {Math.round(r.views / sourceViews * 100)}% of visits</span>
+                        )}
+                      </div>
+                    </td>
                     <td className="py-2.5 text-right tabular-nums">{r.views}</td>
                     <td className="py-2.5 text-right tabular-nums">
                       {r.clicks}
