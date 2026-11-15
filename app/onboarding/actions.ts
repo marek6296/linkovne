@@ -102,7 +102,7 @@ export async function completeOnboarding(
   const firstProfile = !countError && existingProfiles === 0;
   // Existing users predate acquisition measurement. Never label their recreated page a signup.
   const eligibleForSignup = firstProfile && !user.user_metadata?.linkovne_ads_onboarded
-    && Date.parse(user.created_at) >= Date.parse("2026-11-16T00:00:00Z");
+    && Date.parse(user.created_at) >= Date.parse("2026-11-15T23:00:00Z");
 
   // Ucet musi existovat skor ako profil
   const { error: accErr } = await supabase

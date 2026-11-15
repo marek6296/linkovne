@@ -23,6 +23,7 @@ export function GoogleAdsMeasurement() {
   const ready = useRef(false);
   const [available, setAvailable] = useState(false);
   const [granted, setGranted] = useState(false);
+  const [frameState, setFrameState] = useState("waiting");
   const [open, setOpen] = useState(false);
   const allowedPath = adsPageAllowed("linkovne.com", pathname);
 
@@ -30,6 +31,7 @@ export function GoogleAdsMeasurement() {
     const allowed = process.env.NEXT_PUBLIC_VERCEL_ENV !== "preview" && process.env.NODE_ENV === "production" && adsPageAllowed(location.hostname, pathname);
     setAvailable(allowed);
     ready.current = false;
+    setFrameState("waiting");
     if (!allowed) return;
     function sync() {
       try {
@@ -54,7 +56,7 @@ export function GoogleAdsMeasurement() {
     }
     function onMessage(event: MessageEvent) {
       if (event.origin !== location.origin || event.source !== frame.current?.contentWindow) return;
-      if (event.data?.type === "linkovne:ads-ready") { ready.current = true; flush(); }
+      if (event.data?.type === "linkovne:ads-ready") { ready.current = true; setFrameState("ready"); flush(); }
       if (event.data?.type === "linkovne:ads-sent") {
         try {
           const id = pendingConversion(sessionStorage);
@@ -84,8 +86,9 @@ export function GoogleAdsMeasurement() {
   }
   if (!available || !allowedPath) return null;
   return <>
-    {granted && <iframe key={pathname} ref={frame} title="Optional advertising measurement" src={`/api/ads-frame${new URL(adsPageLocation(location.href)).search}`} referrerPolicy="no-referrer" hidden onLoad={() => {
+    {granted && <iframe key={pathname} ref={frame} title="Optional advertising measurement" data-measurement-state={frameState} src={`/api/ads-frame${new URL(adsPageLocation(location.href)).search}`} referrerPolicy="no-referrer" hidden onLoad={() => {
       ready.current = false;
+      setFrameState("loaded");
       frame.current?.contentWindow?.postMessage({ type: "linkovne:ads-start", location: adsPageLocation(location.href) }, location.origin);
     }} />}
     {!open && <button type="button" onClick={() => setOpen(true)} className="fixed bottom-3 left-3 z-40 rounded-full border border-neutral-300 bg-white px-3 py-2 text-xs text-neutral-700 shadow-sm">Privacy choices</button>}
