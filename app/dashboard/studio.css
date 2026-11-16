@@ -974,3 +974,8 @@
   .studio-toolbar .profile-draft-address { max-width: 195px; }
   .studio-toolbar .profile-primary-action { font-size: 12px; }
 }
+
+.profile-add-slot{display:flex;align-items:center;margin-left:auto;min-height:64px}
+.profile-add-slot .profile-add-action{min-height:44px;padding:10px 14px;border-radius:12px}
+.profile-add-slot .profile-add-action:hover{background:#ededf1}
+@media(max-width:639px){.profile-add-slot{margin-left:0;justify-content:center}.profile-add-slot .profile-add-action{width:100%}}

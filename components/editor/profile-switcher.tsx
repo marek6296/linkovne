@@ -269,7 +269,6 @@ export function ProfileSwitcher({
   profiles,
   currentId,
   canAddMore,
-  limit,
 }: {
   profiles: Item[];
   currentId: string;
@@ -354,30 +353,6 @@ export function ProfileSwitcher({
 
   return (
     <div className="profile-switcher" aria-busy={savingOrder || navigating}>
-      <div className="profile-switcher-heading">
-        <div>
-          <h2>Your profiles</h2>
-          <span>
-            {profiles.length}
-            {!canAddMore ? ` / ${limit}` : ""}
-          </span>
-          <span className="profile-order-hint">
-            {profiles.length > 1
-              ? "Drag to arrange. First opens by default."
-              : "Your corner of the internet."}
-          </span>
-        </div>
-        {canAddMore && (
-          <button
-            type="button"
-            className="profile-add-action"
-            onClick={() => setAdding(true)}
-            disabled={disabled}
-          >
-            <span aria-hidden>+</span> New profile
-          </button>
-        )}
-      </div>
       <DndContext
         id={dndId}
         sensors={sensors}
@@ -413,6 +388,13 @@ export function ProfileSwitcher({
                 }}
               />
             ))}
+            {canAddMore && (
+              <li className="profile-add-slot">
+                <button type="button" className="profile-add-action" onClick={() => setAdding(true)} disabled={disabled}>
+                  <span aria-hidden>+</span> New profile
+                </button>
+              </li>
+            )}
           </ul>
         </SortableContext>
       </DndContext>
