@@ -14,3 +14,5 @@ Verification: entitlement regression tests, actual header/block render tests, lo
 Implementation: nine premium presets under Templates; composable controls in Customise → Layout; Socials → Presentation. A dev-only `/design-lab/studio` uses the actual renderer and controls with local state. It cannot save client data. Cover upload is disabled there; use the authenticated editor for actual uploads.
 
 Verified locally: 46 automated tests, TypeScript, all nine looks at 390px, long names in Cover/Editorial/Spotlight, reveal origin compared to the actual image centre, flip keyboard activation with links remaining outside, all 12 supported social destinations, contained mobile menu, Escape and desktop portal. No live profile writes or uploads performed. Additional rail blocks fall back to Dock to prevent floating controls colliding.
+
+Rail visibility follow-up: desktop editor previews now display the actual sliding icon rail rather than forcing the collapsed mobile control. Mobile toggle includes a visible “Social links” label. Verified real localhost public profile rail, isolated desktop preview and mobile open/Escape.

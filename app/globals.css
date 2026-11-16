@@ -1098,3 +1098,8 @@ html.lk-escaping main > :not(.lk-gate):not(script) {
 .premium-social-rail[data-wide="false"] .premium-social-rail-links a{opacity:0;transform:translateY(8px);transition:opacity .25s,transform .35s}
 .premium-social-rail[data-wide="false"][data-open="true"] .premium-social-rail-links a{opacity:1;transform:none;transition-delay:var(--social-delay)}
 @media(prefers-reduced-motion:reduce){.premium-social-rail[data-wide="false"] .premium-social-rail-links a{transition:none!important}}
+
+/* The editor follows the device interaction mode instead of always hiding the rail. */
+.premium-social-rail[data-preview="true"][data-wide="true"]{position:absolute;left:0;right:auto;top:32%;bottom:auto;max-height:60%;transform:scale(.8);transform-origin:left top}
+.premium-social-toggle[aria-expanded="false"]{width:auto;gap:8px;padding:0 15px}
+.premium-social-toggle .premium-social-toggle-label{font-size:12px;font-weight:600;white-space:nowrap}

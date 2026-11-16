@@ -46,13 +46,12 @@ export function PremiumSocials({
     return () => window.removeEventListener("keydown", close);
   }, [open]);
   useEffect(() => {
-    if (preview) return;
     const query = window.matchMedia("(min-width: 1024px) and (hover: hover)");
     const update = () => setWide(query.matches);
     update();
     query.addEventListener("change", update);
     return () => query.removeEventListener("change", update);
-  }, [preview]);
+  }, []);
   const expanded = wide || open;
   const items = (config.items ?? []).filter((item) => item.url?.trim());
   if (!items.length) return null;
@@ -129,7 +128,7 @@ export function PremiumSocials({
       >
         <div
           ref={menu}
-        id={id}
+          id={id}
           className="premium-social-rail-links"
           aria-hidden={!expanded}
         >
@@ -147,6 +146,7 @@ export function PremiumSocials({
           {open ? (
             <span aria-hidden>×</span>
           ) : (
+            <>
             <svg
               aria-hidden
               width="22"
@@ -161,6 +161,8 @@ export function PremiumSocials({
               <circle cx="18" cy="19" r="3" />
               <path d="m9 10 6-4m-6 8 6 4" />
             </svg>
+            <span className="premium-social-toggle-label">Social links</span>
+            </>
           )}
         </button>
       </div>
