@@ -587,6 +587,7 @@ export function DesignPanel({
             <div className="grid gap-5 border-t border-line pt-4 sm:grid-cols-2">
               <div>
                 <GroupLabel>Page width</GroupLabel>
+                <p className="mt-1 text-xs text-soft">Narrow, standard or wide card. On phones, it fits the screen.</p>
                 <div className="mt-2 flex rounded-xl bg-black/[0.035] p-1">
                   {(Object.keys(CONTENT_WIDTHS) as ContentWidth[]).map(
                     (key) => (
@@ -608,7 +609,8 @@ export function DesignPanel({
               </div>
 
               <div>
-                <GroupLabel>Vertical rhythm</GroupLabel>
+                <GroupLabel>Content spacing</GroupLabel>
+                <p className="mt-1 text-xs text-soft">Space below your profile and between content blocks.</p>
                 <div className="mt-2 flex rounded-xl bg-black/[0.035] p-1">
                   {(Object.keys(BTN_SPACING) as BtnSpacing[]).map((key) => (
                     <button

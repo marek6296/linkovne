@@ -177,7 +177,7 @@ export const BTN_BORDERS: Record<BtnBorder, { label: string; width: string }> = 
 export const BTN_SPACING: Record<BtnSpacing, { label: string; gap: string }> = {
   compact: { label: "Compact", gap: "0.5rem" },
   normal: { label: "Balanced", gap: "0.75rem" },
-  relaxed: { label: "Airy", gap: "1.125rem" },
+  relaxed: { label: "Airy", gap: "1.5rem" },
 };
 
 export const PROFILE_LAYOUTS: Record<
@@ -204,9 +204,9 @@ export const CONTENT_WIDTHS: Record<
   ContentWidth,
   { label: string; content: number; card: number }
 > = {
-  focused: { label: "Focused", content: 368, card: 424 },
-  balanced: { label: "Balanced", content: 424, card: 480 },
-  wide: { label: "Wide", content: 480, card: 536 },
+  focused: { label: "Focused", content: 304, card: 340 },
+  balanced: { label: "Balanced", content: 354, card: 390 },
+  wide: { label: "Wide", content: 444, card: 480 },
 };
 
 export const BTN_WEIGHTS: Record<BtnWeight, { label: string; value: number }> = {
@@ -411,6 +411,7 @@ export function resolveTheme(
   }
   if (design.btnSpacing && design.btnSpacing in BTN_SPACING) {
     t.blockGap = BTN_SPACING[design.btnSpacing].gap;
+    t.headerGap = { compact: "1rem", normal: "1.5rem", relaxed: "2.25rem" }[design.btnSpacing];
   }
 
   if (design.profileLayout && Object.hasOwn(PROFILE_LAYOUTS, design.profileLayout)) {

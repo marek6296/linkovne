@@ -14,8 +14,9 @@ function surfaceStyle(theme: Theme): CSSProperties {
     color: theme.text,
     fontFamily: theme.font,
     "--profile-glass": readableText(theme.text) === "#0b0b0b" ? "#222135" : "#ffffff",
-    "--profile-card-width": `${theme.cardWidthPx ?? 480}px`,
+    "--profile-card-width": `${theme.cardWidthPx ?? 390}px`,
     "--profile-content-width": `${theme.contentWidthPx ?? 424}px`,
+    "--profile-header-gap": theme.headerGap ?? "1.5rem",
     "--profile-block-gap": theme.blockGap ?? "0.75rem",
   } as CSSProperties;
 }
@@ -53,7 +54,7 @@ export function ProfileShell({
   );
 
   return (
-    <div key={`${theme.profileEntrance ?? "none"}-${replay}`} className="profile-arrival" data-entrance={theme.profileEntrance ?? "none"}>
+    <div key={`${theme.profileEntrance ?? "none"}-${replay}`} className="profile-arrival" style={{ "--profile-card-width": `${theme.cardWidthPx ?? 390}px` } as CSSProperties} data-entrance={theme.profileEntrance ?? "none"}>
     <ProfileEffects theme={theme} scope="card">
     <main className="profile-card" data-surface={theme.profileSurface} data-hover={theme.profileHover} data-entrance={theme.profileEntrance} style={surfaceStyle(theme)}>
       {theme.bgVideo && <ProfileVideo src={theme.bgVideo} poster={theme.bgVideoPoster} className="pointer-events-none absolute inset-0 -z-10 h-full w-full object-cover" />}

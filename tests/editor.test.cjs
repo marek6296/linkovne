@@ -516,3 +516,10 @@ test("photo crop preserves ratio, covers the frame and clamps dragging", () => {
   assert.equal(zoom.x+zoom.width<=1600,true);
   assert.equal(zoom.y+zoom.height<=900,true);
 });
+test('page width and spacing resolve into distinct responsive layout metrics', () => {
+  const widths = ['focused', 'balanced', 'wide'].map(contentWidth => resolveTheme('classic', {contentWidth}).cardWidthPx);
+  assert.deepEqual(widths, [340, 390, 480]);
+  const gaps = ['compact', 'normal', 'relaxed'].map(btnSpacing => resolveTheme('classic', {btnSpacing}));
+  assert.deepEqual(gaps.map(t => t.headerGap), ['1rem', '1.5rem', '2.25rem']);
+  assert.deepEqual(gaps.map(t => t.blockGap), ['0.5rem', '0.75rem', '1.5rem']);
+});

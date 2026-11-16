@@ -77,6 +77,7 @@ export type Theme = Pick<import("./design").Design, typeof import("./design").PR
   btnFontSize?: string;
   /** Vertical rhythm between blocks. */
   blockGap?: string;
+  headerGap?: string;
   /** Overall profile composition selected in Design Studio. */
   profileLayout?: import("./design").ProfileLayout;
   /** Maximum width of the profile content and its desktop card. */

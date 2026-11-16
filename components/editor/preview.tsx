@@ -43,6 +43,7 @@ export function Preview({
   /** Drag-to-reorder priamo na preview — presunie blok `activeId` na `overId`. */
   onReorder?: (activeId: string, overId: string) => void;
 }) {
+  const canvasWidth = theme.cardWidthPx ?? 390;
   const host = useRef<HTMLDivElement>(null);
   const surface = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ scale: 1, height: 720 });
@@ -56,7 +57,7 @@ export function Preview({
       const height = content.offsetHeight;
       if (!width || !height) return; // Hidden mobile tab: measure when shown.
       const availableHeight = Math.max(240, window.innerHeight - 100);
-      const scale = Math.min(1, width / 390, availableHeight / height);
+      const scale = Math.min(1, width / Math.max(390, canvasWidth), availableHeight / height);
       setSize((previous) =>
         previous.scale === scale && previous.height === height
           ? previous
@@ -72,7 +73,7 @@ export function Preview({
       observer.disconnect();
       window.removeEventListener("resize", measure);
     };
-  }, []);
+  }, [canvasWidth]);
 
   return (
     <div ref={host} className="profile-preview mx-auto w-full">
@@ -89,6 +90,8 @@ export function Preview({
           className="profile-preview-canvas"
           style={{
             transform: `scale(${size.scale})`,
+            width: canvasWidth,
+            marginLeft: -canvasWidth / 2,
           }}
         >
           <div className="profile-preview-viewport">
