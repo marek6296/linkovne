@@ -259,3 +259,60 @@ test("reordering sections keeps their contents together in either direction", ()
   assert.equal(reorderBlocks(blocks, "a", "a1"), blocks);
   assert.equal(reorderBlocks(blocks, "missing", "a"), blocks);
 });
+
+test("profile typography uses bounded presets and keeps alignment specific to Spotlight", () => {
+  const hero = resolveTheme("classic", { profileLayout: "hero", nameSize: "xl", handleSize: "lg", bioSize: "sm", profileTextAlign: "right" });
+  assert.equal(hero.profileNameSize, "3.055rem");
+  assert.equal(hero.profileHandleSize, "0.95rem");
+  assert.equal(hero.profileBioSize, "0.85rem");
+  assert.equal(hero.profileTextAlign, "right");
+  for (const layout of ["centered", "compact"]) {
+    assert.equal(resolveTheme("classic", { profileLayout: layout, profileTextAlign: "right" }).profileTextAlign, undefined);
+  }
+  const invalid = resolveTheme("classic", { nameSize: "999", handleSize: "constructor", bioSize: "toString", profileTextAlign: "justify" });
+  assert.equal(invalid.profileNameSize, undefined);
+  assert.equal(invalid.profileHandleSize, undefined);
+  assert.equal(invalid.profileBioSize, undefined);
+  assert.equal(invalid.profileTextAlign, undefined);
+});
+
+test("Spotlight uses safe cover corners while Portrait retains its chosen shape", () => {
+  for (const shape of ["circle", "organic", "rounded"]) {
+    assert.equal(resolveTheme("classic", { profileLayout: "hero", avatarShape: shape }).heroRadius, "24px");
+  }
+  assert.equal(resolveTheme("classic", { profileLayout: "hero", avatarShape: "square" }).heroRadius, "8px");
+  assert.equal(resolveTheme("classic", { profileLayout: "centered", avatarShape: "circle" }).avatarRadius, "999px");
+});
+
+test("Free can publish explicit Off controls and retains basic profile typography", () => {
+  const { designForPlan, lockedDesignFeatures } = load("lib/design-tiers.ts");
+  const { PLANS } = load("lib/plans.ts");
+  const design = { profileLayout: "hero", nameSize: "lg", handleSize: "sm", bioSize: "lg", profileTextAlign: "center", btnAnimation: "none", avatarFrame: "none", deskBg: "auto", bg: "solid", bgImage: "https://example.com/unused.jpg", avatarRingColor: "#ffffff" };
+  assert.deepEqual(lockedDesignFeatures(design, PLANS.free), []);
+  const clean = designForPlan(design, PLANS.free);
+  assert.equal(clean.nameSize, "lg");
+  assert.equal(clean.profileTextAlign, "center");
+  assert.equal(clean.avatarFrame, "none");
+  assert.equal(clean.btnAnimation, "none");
+  assert.equal(clean.bgImage, undefined);
+  assert.ok(lockedDesignFeatures({ btnAnimation: "glow", avatarFrame: "double", deskBg: "solid", bg: "image" }, PLANS.free).length === 4);
+});
+
+test("shared profile header renders saved typography for every layout", () => {
+  const React = require("react");
+  const { renderToStaticMarkup } = require("react-dom/server");
+  const { ProfileHeader } = load("components/blocks/render.tsx");
+  for (const profileLayout of ["hero", "centered", "compact"]) {
+    const theme = resolveTheme("classic", {
+      profileLayout, nameSize: "lg", handleSize: "xl", bioSize: "sm", profileTextAlign: "right",
+    });
+    const html = renderToStaticMarkup(React.createElement(ProfileHeader, {
+      displayName: "Alex Morgan", username: "alex", bio: "Independent creator",
+      avatarUrl: null, theme,
+    }));
+    assert.ok(html.includes(`font-size:${theme.profileNameSize}`));
+    assert.ok(html.includes("font-size:1.1rem"));
+    assert.ok(html.includes("font-size:0.85rem"));
+    assert.equal(html.includes("text-align:right"), profileLayout === "hero");
+  }
+});

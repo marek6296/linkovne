@@ -92,6 +92,11 @@ export type Theme = {
   avatarHeightPx?: number;
   /** Hero layout maps photo size + format to a visible cover height. */
   heroHeightPx?: number;
+  heroRadius?: string;
+  profileNameSize?: string;
+  profileHandleSize?: string;
+  profileBioSize?: string;
+  profileTextAlign?: "left" | "center" | "right";
   avatarRing?: string;
   avatarBorder?: string;
   avatarShadow?: string;

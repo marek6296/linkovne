@@ -832,17 +832,20 @@ export function ProfileHeader({
         <>
           <h1
             className="profile-name"
-            style={{ fontFamily: theme.fontHeading ?? theme.font }}
+            style={{
+                  fontFamily: theme.fontHeading ?? theme.font,
+                  fontSize: theme.profileNameSize,
+                }}
           >
             {displayName}
           </h1>
-          <p className="profile-handle" style={{ color: theme.muted }}>
+          <p className="profile-handle" style={{ color: theme.muted, fontSize: theme.profileHandleSize }}>
             @{username}
           </p>
         </>
       )}
       {bio && (
-        <p className="profile-bio" style={{ color: theme.muted }}>
+        <p className="profile-bio" style={{ color: theme.muted, fontSize: theme.profileBioSize }}>
           {bio}
         </p>
       )}
@@ -856,7 +859,7 @@ export function ProfileHeader({
         className="profile-header-hero"
         style={{
           minHeight: theme.heroHeightPx,
-          borderRadius: avatarRadius === "999px" ? "24px" : avatarRadius,
+          borderRadius: theme.heroRadius ?? "24px",
           border: theme.avatarBorder,
           boxShadow: avatarShadow,
         }}
@@ -870,19 +873,33 @@ export function ProfileHeader({
           background: theme.avatarBg,
         })}
         <span aria-hidden className="profile-hero-scrim" />
-        <div className="profile-hero-identity">
+        <div className="profile-hero-identity" style={{ textAlign: theme.profileTextAlign }}>
           {hasName && (
             <>
               <h1
                 className="profile-name"
-                style={{ fontFamily: theme.fontHeading ?? theme.font }}
+                style={{
+                  fontFamily: theme.fontHeading ?? theme.font,
+                  fontSize: theme.profileNameSize,
+                }}
               >
                 {displayName}
               </h1>
-              <p className="profile-handle">@{username}</p>
+              <p className="profile-handle" style={{ fontSize: theme.profileHandleSize }}>@{username}</p>
             </>
           )}
-          {bio && <p className="profile-bio">{bio}</p>}
+          {bio && (
+            <p
+              className="profile-bio"
+              style={{
+                fontSize: theme.profileBioSize,
+                marginInline: theme.profileTextAlign === "center" ? "auto" : undefined,
+                marginLeft: theme.profileTextAlign === "right" ? "auto" : undefined,
+              }}
+            >
+              {bio}
+            </p>
+          )}
         </div>
       </div>
     );

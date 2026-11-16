@@ -17,6 +17,8 @@ import {
   FONT_KEYS,
   FONTS,
   PROFILE_LAYOUTS,
+  PROFILE_TEXT_SIZES,
+  type ProfileTextSize,
   resolveTheme,
   readableText,
   safeColor,
@@ -97,7 +99,7 @@ const TABS: { key: DesignTab; label: string }[] = [
   { key: "bg", label: "Background" },
   { key: "avatar", label: "Photo" },
   { key: "buttons", label: "Buttons" },
-  { key: "font", label: "Font" },
+  { key: "font", label: "Text" },
 ];
 
 export type ThemeOption = {
@@ -260,6 +262,7 @@ function StepSlider<T extends string>({
         value={idx}
         onChange={(e) => onChange(keys[Number(e.target.value)])}
         aria-label={label}
+        aria-valuetext={labelOf(keys[idx])}
         className="mt-2.5 w-full cursor-pointer accent-ink"
       />
       <div className="mt-1 flex justify-between px-1">
@@ -422,6 +425,11 @@ export function DesignPanel({
   const [buttonBusy, setButtonBusy] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [buttonError, setButtonError] = useState<string | null>(null);
+  const resolved = resolveTheme(activeTheme, design);
+  const isSpotlight = resolved.profileLayout === "hero";
+  const photoShape = isSpotlight
+    ? design.avatarShape === "square" ? "square" : "rounded"
+    : design.avatarShape ?? "circle";
   const bg = design.bg ?? "theme";
   const deskBg = design.deskBg ?? "auto";
   const selectedButton = linkBlocks.find((block) => block.id === buttonTarget);
@@ -987,10 +995,11 @@ export function DesignPanel({
         {tab === "avatar" && (
           <div className="space-y-5">
             <div>
-              <GroupLabel>Format</GroupLabel>
+              <GroupLabel>{isSpotlight ? "Cover proportions" : "Format"}</GroupLabel>
               <p className="mt-1 text-xs text-soft">
-                Choose a square, portrait or landscape crop for your profile
-                image.
+                {isSpotlight
+                  ? "Choose your cover proportions, then adjust its height below. The cover grows with your text."
+                  : "Choose a square, portrait or landscape crop for your profile image."}
               </p>
               <div className="mt-2 grid grid-cols-4 gap-1.5">
                 {(Object.keys(AVATAR_ASPECTS) as AvatarAspect[]).map((k) => {
@@ -1015,7 +1024,7 @@ export function DesignPanel({
                           borderRadius: 5,
                         }}
                       />
-                      {AVATAR_ASPECTS[k].label}
+                      {isSpotlight ? ({ square: "Classic", portrait: "Tall", landscape: "Wide", wide: "Panoramic" })[k] : AVATAR_ASPECTS[k].label}
                     </button>
                   );
                 })}
@@ -1023,12 +1032,12 @@ export function DesignPanel({
             </div>
 
             <div>
-              <GroupLabel>Shape</GroupLabel>
+              <GroupLabel>{isSpotlight ? "Cover corners" : "Shape"}</GroupLabel>
               <div className="mt-2 flex flex-wrap gap-1.5">
-                {(Object.keys(AVATAR_SHAPES) as AvatarShape[]).map((k) => (
+                {(isSpotlight ? ["rounded", "square"] as AvatarShape[] : Object.keys(AVATAR_SHAPES) as AvatarShape[]).map((k) => (
                   <VisualChip
                     key={k}
-                    active={(design.avatarShape ?? "circle") === k}
+                    active={photoShape === k}
                     onClick={() => onChange({ avatarShape: k })}
                     label={AVATAR_SHAPES[k].label}
                     glyph={
@@ -1052,7 +1061,7 @@ export function DesignPanel({
             </div>
 
             <StepSlider
-              label={design.profileLayout === "hero" ? "Cover height" : "Size"}
+              label={isSpotlight ? "Cover height" : "Size"}
               keys={Object.keys(AVATAR_SIZES) as AvatarSize[]}
               value={design.avatarSize ?? "md"}
               labelOf={(k) => AVATAR_SIZES[k].label}
@@ -1656,38 +1665,69 @@ export function DesignPanel({
           </div>
         )}
 
-        {/* ---------- Fonts ---------- */}
+        {/* ---------- Profile text ---------- */}
         {tab === "font" && (
-          <div className="space-y-5">
-            <div className="rounded-xl border border-line bg-paper px-4 py-3">
-              <p
-                className="text-2xl font-semibold tracking-tight"
-                style={{ fontFamily: FONTS[design.fontHeading ?? "sans"].css }}
-              >
-                Your name
-              </p>
-              <p
-                className="mt-1 text-sm text-soft"
-                style={{ fontFamily: FONTS[design.font ?? "sans"].css }}
-              >
-                A live typography pairing preview
-              </p>
+          <div className="space-y-6">
+            <p className="text-sm leading-relaxed text-soft">
+              Adjust each part of your profile heading. Your preview updates as you go.
+            </p>
+            <div className="space-y-5">
+              {([
+                ["nameSize", "Name size"],
+                ["handleSize", "Username size"],
+                ["bioSize", "Bio size"],
+              ] as const).map(([key, label]) => (
+                <StepSlider
+                  key={key}
+                  label={label}
+                  keys={Object.keys(PROFILE_TEXT_SIZES) as ProfileTextSize[]}
+                  value={design[key] ?? "md"}
+                  labelOf={(size) => PROFILE_TEXT_SIZES[size]}
+                  onChange={(size) => onChange({ [key]: size })}
+                />
+              ))}
             </div>
-            <div>
-              <GroupLabel>Name font</GroupLabel>
-              <FontGrid
-                value={design.fontHeading}
-                onPick={(fontHeading) => onChange({ fontHeading })}
-              />
+            <div className="border-t border-line pt-5">
+              {isSpotlight ? (
+                <>
+                  <GroupLabel>Text alignment</GroupLabel>
+                  <div className="mt-2 grid grid-cols-3 gap-2">
+                    {(["left", "center", "right"] as const).map((align) => (
+                      <button key={align} type="button"
+                        aria-pressed={(design.profileTextAlign ?? "left") === align}
+                        onClick={() => onChange({ profileTextAlign: align })}
+                        className={`rounded-xl border px-3 py-2.5 text-sm capitalize transition ${
+                          (design.profileTextAlign ?? "left") === align
+                            ? "border-ink bg-ink/[0.04] font-medium"
+                            : "border-line hover:border-soft"
+                        }`}
+                      >{align === "center" ? "Centre" : align}</button>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <p className="text-xs leading-relaxed text-soft">
+                  {resolved.profileLayout === "compact"
+                    ? "Compact keeps your text beside the photo."
+                    : "Portrait keeps your text centred below the photo."}
+                  {" "}Choose Spotlight in Layout for left, centre or right alignment.
+                </p>
+              )}
             </div>
-
-            <div className="border-t border-line pt-4">
-              <GroupLabel>Buttons &amp; text</GroupLabel>
-              <FontGrid
-                value={design.font}
-                onPick={(font) => onChange({ font })}
-              />
-            </div>
+            <details className="group border-t border-line pt-4">
+              <summary className="cursor-pointer text-sm font-medium">Name font</summary>
+              <div className="pt-3">
+                <FontGrid value={design.fontHeading}
+                  onPick={(fontHeading) => onChange({ fontHeading })} />
+              </div>
+            </details>
+            <details className="group border-t border-line pt-4">
+              <summary className="cursor-pointer text-sm font-medium">Body &amp; button font</summary>
+              <div className="pt-3">
+                <FontGrid value={design.font}
+                  onPick={(font) => onChange({ font })} />
+              </div>
+            </details>
           </div>
         )}
       </div>

@@ -18,6 +18,14 @@ export type BtnSpacing = "compact" | "normal" | "relaxed";
 export type BtnWeight = "regular" | "medium" | "bold";
 export type BtnAnimation = LinkAnim;
 export type ProfileLayout = "centered" | "compact" | "hero";
+export type ProfileTextSize = "sm" | "md" | "lg" | "xl";
+export type ProfileTextAlign = "left" | "center" | "right";
+export const PROFILE_TEXT_SIZES: Record<ProfileTextSize, string> = {
+  sm: "Small",
+  md: "Medium",
+  lg: "Large",
+  xl: "Extra large",
+};
 export type ContentWidth = "focused" | "balanced" | "wide";
 export type AvatarShape = "circle" | "rounded" | "square" | "organic";
 export type AvatarSize = "xs" | "sm" | "md" | "lg" | "xl";
@@ -45,6 +53,11 @@ export type Design = {
   /** Overall page composition, independent from colors and typography. */
   profileLayout?: ProfileLayout;
   contentWidth?: ContentWidth;
+  nameSize?: ProfileTextSize;
+  handleSize?: ProfileTextSize;
+  bioSize?: ProfileTextSize;
+  /** Alignment applies to Spotlight; other layouts retain their composition. */
+  profileTextAlign?: ProfileTextAlign;
   bg?: BgMode;
   bgColor?: string;
   bgColor2?: string;
@@ -380,6 +393,32 @@ export function resolveTheme(
 
   if (design.profileLayout && design.profileLayout in PROFILE_LAYOUTS) {
     t.profileLayout = design.profileLayout;
+  }
+  const layout = t.profileLayout ?? "centered";
+  const nameScale = { sm: 0.85, md: 1, lg: 1.15, xl: 1.3 };
+  const handleSizes = { sm: 0.75, md: 0.82, lg: 0.95, xl: 1.1 };
+  const bioSizes = {
+    sm: 0.85,
+    md: layout === "compact" ? 0.9 : 0.95,
+    lg: 1.0625,
+    xl: 1.1875,
+  };
+  if (design.nameSize && Object.hasOwn(nameScale, design.nameSize)) {
+    const base = layout === "hero" ? 2.35 : layout === "compact" ? 1.65 : 1.85;
+    t.profileNameSize = `${Number((base * nameScale[design.nameSize]).toFixed(3))}rem`;
+  }
+  if (design.handleSize && Object.hasOwn(handleSizes, design.handleSize)) {
+    t.profileHandleSize = `${handleSizes[design.handleSize]}rem`;
+  }
+  if (design.bioSize && Object.hasOwn(bioSizes, design.bioSize)) {
+    t.profileBioSize = `${bioSizes[design.bioSize]}rem`;
+  }
+  if (layout === "hero") {
+    if (["left", "center", "right"].includes(design.profileTextAlign ?? "")) {
+      t.profileTextAlign = design.profileTextAlign;
+    }
+    // Text-bearing covers must never inherit circular or organic avatar crops.
+    t.heroRadius = design.avatarShape === "square" ? "8px" : "24px";
   }
   if (design.contentWidth && design.contentWidth in CONTENT_WIDTHS) {
     t.contentWidthPx = CONTENT_WIDTHS[design.contentWidth].content;

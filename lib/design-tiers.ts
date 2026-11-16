@@ -83,11 +83,11 @@ export function designForPlan(
     delete d.btnGradientColor;
     delete d.btnGradientColor2;
   }
-  if (!caps.btnAnimation) delete d.btnAnimation;
+  if (!caps.btnAnimation && d.btnAnimation !== "none") delete d.btnAnimation;
 
   // ---- Avatar ----
   if (!caps.avatarFrames) {
-    delete d.avatarFrame;
+    if (d.avatarFrame !== "none") delete d.avatarFrame;
     delete d.avatarRing;
     delete d.avatarRingColor;
   }
@@ -117,7 +117,7 @@ export function lockedDesignFeatures(
   if (caps.full) return [];
 
   const locked: string[] = [];
-  if (!caps.bgImage && (design.bg === "image" || design.bgImage)) {
+  if (!caps.bgImage && design.bg === "image") {
     locked.push("Image background");
   }
   if (
@@ -130,22 +130,17 @@ export function lockedDesignFeatures(
         : "Gradient button style",
     );
   }
-  if (!caps.btnAnimation && design.btnAnimation) {
+  if (!caps.btnAnimation && design.btnAnimation && design.btnAnimation !== "none") {
     locked.push("Button animation");
   }
   if (
     !caps.avatarFrames &&
-    (design.avatarFrame || design.avatarRing || design.avatarRingColor)
+    ((design.avatarFrame && design.avatarFrame !== "none") ||
+      (!design.avatarFrame && design.avatarRing))
   ) {
     locked.push("Avatar frame or glow");
   }
-  if (
-    !caps.deskBackdrop &&
-    (design.deskBg ||
-      design.deskBgColor ||
-      design.deskBgColor2 ||
-      design.deskBgImage)
-  ) {
+  if (!caps.deskBackdrop && design.deskBg && design.deskBg !== "auto") {
     locked.push("Custom desktop background");
   }
 
