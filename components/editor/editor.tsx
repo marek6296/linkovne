@@ -1045,14 +1045,6 @@ export function Editor({
                             onToggle={toggleCreator}
                           />
                         </div>
-                        {profile.creator_mode && (
-                          <p className="mt-3 rounded-lg bg-amber-500/10 px-3 py-2 text-xs leading-relaxed text-amber-700">
-                            ⚠️ This lowers the chance your link gets flagged —
-                            it is <strong>not</strong> a guarantee against a
-                            ban. Platforms adapt, and your own content &amp;
-                            behaviour on Instagram/TikTok still matter most.
-                          </p>
-                        )}
                       </div>
                     )}
 
