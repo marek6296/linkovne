@@ -386,15 +386,27 @@ test("premium social icon styles render every platform and a custom name", () =>
  }
 });
 
-test("protected profile starts busy and inert while ordinary profiles remain available", () => {
+test("all public profiles wait for their first complete frame, independently of paid effects", () => {
   const React = require("react");
   const { renderToStaticMarkup } = require("react-dom/server");
   const { ProfileLoadBoundary } = load("components/profile/profile-load-boundary.tsx");
   for (const pending of [true, false]) {
     const html = renderToStaticMarkup(React.createElement(ProfileLoadBoundary, { pending }, React.createElement("a", {href:"#"}, "Profile")));
-    assert.equal(html.includes('aria-busy="true"'), pending);
-    assert.equal(html.includes('inert=""'), pending);
-    assert.equal(html.includes('role="status"'), pending);
-    assert.ok(html.includes(`data-ready="${!pending}"`));
+    assert.equal(html.includes('aria-busy="true"'), true);
+    assert.equal(html.includes('inert=""'), true);
+    assert.equal(html.includes('role="status"'), true);
+    assert.ok(html.includes('data-ready="false"'));
   }
+});
+
+
+test("every new profile effect resolves for Pro and stays excluded from Free", () => {
+ const {PROFILE_HOVERS,PROFILE_MOTIONS,PROFILE_ENTRANCES}=load("lib/design.ts");
+ const {designForPlan}=load("lib/design-tiers.ts");const {PLANS}=load("lib/plans.ts");
+ for(const [key,options] of [["profileHover",PROFILE_HOVERS],["profileMotion",PROFILE_MOTIONS],["profileEntrance",PROFILE_ENTRANCES]]) {
+  for(const value of Object.keys(options)) {
+   assert.equal(resolveTheme("classic",designForPlan({[key]:value},PLANS.pro))[key],value);
+   assert.equal(designForPlan({[key]:value},PLANS.free)[key],undefined);
+  }
+ }
 });

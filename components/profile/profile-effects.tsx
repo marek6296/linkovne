@@ -20,6 +20,13 @@ export function ProfileEffects({
   const root = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(false);
   const effect = theme.profileHover ?? "none";
+  const pointerFrame = useRef(0);
+  useEffect(() => () => cancelAnimationFrame(pointerFrame.current), []);
+  const resetPointer = () => {
+    cancelAnimationFrame(pointerFrame.current);
+    root.current?.style.setProperty("--tilt-x", "0deg");
+    root.current?.style.setProperty("--tilt-y", "0deg");
+  };
   useEffect(() => {
     setActive(false);
     const node = root.current;
@@ -81,7 +88,22 @@ export function ProfileEffects({
         onPointerEnter={(e) => {
           if (e.pointerType === "mouse" && interactive) setActive(true);
         }}
+        onPointerMove={(e) => {
+          if (e.pointerType !== "mouse" || !["tilt", "spotlight"].includes(effect) || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+          const box = e.currentTarget.getBoundingClientRect();
+          const x = Math.max(0, Math.min(1, (e.clientX - box.left) / box.width));
+          const y = Math.max(0, Math.min(1, (e.clientY - box.top) / box.height));
+          cancelAnimationFrame(pointerFrame.current);
+          pointerFrame.current = requestAnimationFrame(() => {
+            const node = root.current; if (!node) return;
+            node.style.setProperty("--tilt-x", `${(0.5-y)*12}deg`);
+            node.style.setProperty("--tilt-y", `${(x-0.5)*14}deg`);
+            node.style.setProperty("--pointer-x", `${x*100}%`);
+            node.style.setProperty("--pointer-y", `${y*100}%`);
+          });
+        }}
         onPointerLeave={(e) => {
+          resetPointer();
           if (e.pointerType === "mouse" && interactive) setActive(false);
         }}
         onKeyDown={(e) => {

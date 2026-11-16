@@ -48,9 +48,9 @@ export type FontKey =
   | "syne";
 
 export const PROFILE_SURFACES = { default: "Original", soft: "Soft depth", glass: "Glass", contact: "After hours" } as const;
-export const PROFILE_HOVERS = { none: "Off", lift: "Lift", tilt: "Tilt", reveal: "Colour reveal", flip: "Half-turn" } as const;
-export const PROFILE_MOTIONS = { none: "Off", float: "Float", breathe: "Breathe" } as const;
-export const PROFILE_ENTRANCES = { none: "Off", rise: "Rise", fade: "Fade" } as const;
+export const PROFILE_HOVERS = { none: "Off", lift: "Lift", tilt: "3D tilt · follows cursor", spotlight: "Spotlight · follows cursor", sheen: "Light sweep", zoom: "Soft zoom", reveal: "Colour reveal", flip: "Half-turn" } as const;
+export const PROFILE_MOTIONS = { none: "Off", float: "Float · 8 seconds", breathe: "Breathe · 10 seconds", sway: "Pendulum · 10 seconds", orbit: "3D orbit · 12 seconds", levitate: "3D levitation · 9 seconds" } as const;
+export const PROFILE_ENTRANCES = { none: "Classic arrival", rise: "Soft rise", fade: "Slow dissolve", zoom: "Focus in", unfold: "3D unfold", slide: "Side glide", curtain: "Curtain reveal" } as const;
 export const PREMIUM_DESIGN_KEYS = ["profileSurface", "profileHover", "profileMotion", "profileEntrance", "profileCaption", "profileBackTitle", "profileBackText", "profileAccent", "coverImage", "linkArrangement", "buttonTreatment"] as const;
 export type Design = {
   profileSurface?: keyof typeof PROFILE_SURFACES;

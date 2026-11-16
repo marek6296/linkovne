@@ -1,3 +1,5 @@
+"use client";
+import { useEffect, useState } from "react";
 import { readableText } from "@/lib/design";
 import { ProfileVideo } from "@/components/profile/profile-video";
 import type { CSSProperties, ReactNode } from "react";
@@ -32,6 +34,8 @@ export function ProfileShell({
   leading?: ReactNode;
   children: ReactNode;
 }) {
+  const [replay, setReplay] = useState(0);
+  useEffect(() => { const run = () => setReplay(n => n + 1); window.addEventListener("profile-replay-entrance", run); return () => window.removeEventListener("profile-replay-entrance", run); }, []);
   const branding = (
     <span
       className="profile-branding"
@@ -48,7 +52,7 @@ export function ProfileShell({
   );
 
   return (
-    <main className="profile-card" data-surface={theme.profileSurface} data-hover={theme.profileHover} data-entrance={theme.profileEntrance} style={surfaceStyle(theme)}>
+    <main key={`${theme.profileEntrance ?? "none"}-${replay}`} className="profile-card" data-surface={theme.profileSurface} data-hover={theme.profileHover} data-entrance={theme.profileEntrance} style={surfaceStyle(theme)}>
       {theme.bgVideo && <ProfileVideo src={theme.bgVideo} poster={theme.bgVideoPoster} className="pointer-events-none absolute inset-0 -z-10 h-full w-full object-cover" />}
       {theme.bgVideo && <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 opacity-60" style={{ background: theme.page }} />}
       {leading}

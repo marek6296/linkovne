@@ -68,6 +68,7 @@ export function PremiumProfileControls({
         {choice("On hover", "profileHover", PROFILE_HOVERS, "none")}
         {choice("Continuous motion", "profileMotion", PROFILE_MOTIONS, "none")}
       </div>
+      <div className="flex flex-wrap items-center justify-between gap-3"><p className="text-xs text-soft">Every profile arrives smoothly. Pro adds your chosen entrance and motion.</p><button type="button" className="rounded-full border border-line px-4 py-2 text-xs font-medium" onClick={() => window.dispatchEvent(new Event("profile-replay-entrance"))}>Replay entrance</button></div>
       {design.linkArrangement === "grid" && (
         <p className="text-xs text-soft">
           Text links are paired. Featured links and image cards stay full width.
