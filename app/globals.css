@@ -1049,7 +1049,7 @@ html.lk-escaping main > :not(.lk-gate):not(script) {
 .profile-effects[data-effect="reveal"] .profile-effects-front{position:relative;isolation:isolate;padding:16px;border-radius:24px;overflow:hidden}
 .profile-effects[data-effect="reveal"] .profile-effects-front:before{content:"";position:absolute;inset:0;z-index:-1;background:var(--profile-accent);clip-path:circle(0 at var(--reveal-x,50%) var(--reveal-y,30%));transition:clip-path 1.2s cubic-bezier(.22,.75,.24,1)}
 .profile-effects[data-effect="reveal"][data-active="true"] .profile-effects-front:before{clip-path:circle(150% at var(--reveal-x,50%) var(--reveal-y,30%))}
-.profile-effects[data-effect="reveal"][data-active="true"] .profile-effects-front,.profile-effects[data-effect="reveal"][data-active="true"] :is(.profile-name,.profile-handle,.profile-bio){color:var(--profile-accent-text)!important}
+.profile-effects:not([data-scope="card"])[data-effect="reveal"][data-active="true"] .profile-effects-front,.profile-effects:not([data-scope="card"])[data-effect="reveal"][data-active="true"] :is(.profile-name,.profile-handle,.profile-bio){color:var(--profile-accent-text)!important}
 @keyframes premium-fade{from{opacity:0}to{opacity:1}}
 .premium-social-marker{display:none}
 .premium-socials{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;padding:14px 4px}
@@ -1063,7 +1063,7 @@ html.lk-escaping main > :not(.lk-gate):not(script) {
 .premium-socials-dock a:is(:hover,:focus-visible) .premium-social-glyph{transform:translateY(-5px) scale(1.12)}
 .premium-socials-pop a{padding:0 8px;gap:4px}
 .premium-socials-pop a:is(:hover,:focus-visible) .premium-social-glyph{transform:translateY(-9px) rotate(-8deg) scale(1.15)}
-@media(prefers-reduced-motion:reduce){.profile-motion,.profile-card[data-entrance] .profile-content{animation:none!important}.profile-effects,.profile-effects-turn,.profile-effects-front:before,.premium-social-glyph{transition:none!important}}
+@media(prefers-reduced-motion:reduce){.profile-motion,.profile-arrival[data-entrance]{animation:none!important}.profile-effects,.profile-effects-turn,.profile-effects-front:before,.premium-social-glyph{transition:none!important}}
 
 .profile-card[data-surface="soft"] .profile-content,.profile-card[data-surface="glass"] .profile-content,.profile-card[data-surface="contact"] .profile-content{margin-top:5.25rem}
 
@@ -1089,20 +1089,19 @@ html.lk-escaping main > :not(.lk-gate):not(script) {
 .profile-load-boundary[data-ready="false"]{display:grid;place-items:center;min-height:80svh}
 .profile-load-boundary[data-ready="false"] .profile-load-content{position:absolute;visibility:hidden;pointer-events:none}
 .profile-load-boundary[data-ready="true"] .profile-load-content{display:contents}
-.profile-load-boundary[data-ready="true"] .profile-card{animation:profile-load-arrive 1.1s cubic-bezier(.2,.8,.2,1) both}
 .profile-load-status{display:flex;flex-direction:column;align-items:center;gap:14px;font-size:13px;color:inherit}
 .profile-load-spinner{width:24px;height:24px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:action-spin .8s linear infinite;opacity:.5}
 @keyframes profile-load-arrive{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){.profile-load-boundary[data-ready="true"] .profile-card,.profile-load-spinner{animation:none}}
 
 /* Arrival, continuous motion and hover each own a separate transform layer. */
-.profile-card .profile-content{animation:premium-classic 1.15s cubic-bezier(.16,1,.3,1) .12s both;perspective:1400px}
-.profile-card[data-entrance="fade"] .profile-content{animation-name:premium-fade;animation-duration:1.5s}
-.profile-card[data-entrance="zoom"] .profile-content{animation-name:premium-focus;animation-duration:1.35s}
-.profile-card[data-entrance="unfold"] .profile-content{animation-name:premium-unfold;animation-duration:1.45s;transform-origin:50% 20%}
-.profile-card[data-entrance="slide"] .profile-content{animation-name:premium-slide;animation-duration:1.3s}
-.profile-card[data-entrance="curtain"] .profile-content{animation-name:premium-curtain;animation-duration:1.45s}
-.profile-load-boundary[data-ready="false"] .profile-content{animation-play-state:paused!important}
+.profile-arrival{animation:premium-classic 1.15s cubic-bezier(.16,1,.3,1) .12s both;perspective:1400px}
+.profile-arrival[data-entrance="fade"]{animation-name:premium-fade;animation-duration:1.5s}
+.profile-arrival[data-entrance="zoom"]{animation-name:premium-focus;animation-duration:1.35s}
+.profile-arrival[data-entrance="unfold"]{animation-name:premium-unfold;animation-duration:1.45s;transform-origin:50% 20%}
+.profile-arrival[data-entrance="slide"]{animation-name:premium-slide;animation-duration:1.3s}
+.profile-arrival[data-entrance="curtain"]{animation-name:premium-curtain;animation-duration:1.45s}
+.profile-load-boundary[data-ready="false"] .profile-arrival{animation-play-state:paused!important}
 .profile-motion{perspective:1200px;transform-origin:50% 50%}
 .profile-motion[data-motion="float"]{animation:premium-float 8s ease-in-out infinite}
 .profile-motion[data-motion="breathe"]{animation:premium-breathe 10s ease-in-out infinite}
@@ -1134,13 +1133,30 @@ html.lk-escaping main > :not(.lk-gate):not(script) {
 @keyframes premium-slide{from{opacity:0;transform:translateX(-24px)}to{opacity:1;transform:none}}
 @keyframes premium-curtain{from{opacity:0;clip-path:inset(0 0 100% 0 round 24px)}to{opacity:1;clip-path:inset(-32px -32px -32px -32px round 24px)}}
 @media(prefers-reduced-motion:reduce){
- .profile-card .profile-content,.profile-motion{animation:none!important}
+ .profile-arrival,.profile-motion{animation:none!important}
  .profile-effects,.profile-effects-turn,.profile-effects-front:after{transition:none!important}
  .profile-effects:is(:hover,:focus-within){transform:none!important;filter:none!important}
 }
 
 .profile-load-boundary[data-ready="false"] .profile-motion{animation-play-state:paused!important}
 
-.profile-card[data-entrance="rise"] .profile-content{animation-name:premium-rise;animation-duration:1.35s}
+.profile-arrival[data-entrance="rise"]{animation-name:premium-rise;animation-duration:1.35s}
 @keyframes premium-classic{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 @keyframes premium-rise{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:none}}
+
+/* The motion rig owns the complete profile surface, never just the identity. */
+.profile-arrival{position:relative;z-index:10;width:100%;min-width:0;align-self:flex-start}
+.profile-arrival>.profile-motion>.profile-effects{border-radius:0}
+.profile-effects[data-scope="card"]>.profile-effects-turn>.profile-effects-front{border-radius:inherit}
+.profile-effects[data-scope="card"] .profile-card{width:100%;margin:0}
+.profile-effects[data-scope="card"][data-effect="reveal"] .profile-effects-front{padding:0;isolation:isolate}
+.profile-effects[data-scope="card"][data-effect="reveal"] .profile-effects-front:before{z-index:30;opacity:.18;pointer-events:none}
+.profile-effects[data-scope="card"]>.profile-effects-turn>.profile-effects-back{border-radius:inherit;min-height:100%;padding:32px 28px 80px}
+.profile-effects[data-scope="card"]>.profile-effect-toggle{position:absolute;right:16px;bottom:12px;z-index:40;margin:0;opacity:1;background:var(--profile-accent);color:var(--profile-accent-text);box-shadow:0 3px 14px #0002}
+.profile-effects[data-scope="card"]:has(>.profile-effect-toggle) .profile-card{padding-bottom:4rem}
+@media(min-width:640px){.profile-arrival{width:min(100%,390px)}.profile-arrival>.profile-motion>.profile-effects{border-radius:2.25rem}}
+.profile-preview .profile-arrival{width:100%}
+.profile-preview .profile-arrival>.profile-motion>.profile-effects{border-radius:0}
+
+.profile-preview-canvas{overflow:visible}
+.profile-preview .profile-card,.profile-preview .profile-arrival>.profile-motion>.profile-effects{border-radius:2.25rem}

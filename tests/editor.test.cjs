@@ -288,7 +288,7 @@ test("Free can publish explicit Off controls and retains basic profile typograph
   const { designForPlan, lockedDesignFeatures } = load("lib/design-tiers.ts");
   const { PLANS } = load("lib/plans.ts");
   const design = { profileLayout: "hero", nameSize: "lg", handleSize: "sm", bioSize: "lg", profileTextAlign: "center", btnAnimation: "none", avatarFrame: "none", deskBg: "auto", bg: "solid", bgImage: "https://example.com/unused.jpg", avatarRingColor: "#ffffff" };
-  assert.deepEqual(lockedDesignFeatures(design, PLANS.free), []);
+  assert.deepEqual(lockedDesignFeatures(design, PLANS.free, {profileLayout:"hero"}), []);
   const clean = designForPlan(design, PLANS.free);
   assert.equal(clean.nameSize, "lg");
   assert.equal(clean.profileTextAlign, "center");
@@ -369,9 +369,11 @@ test("premium social gates retain classic Free social blocks and reject every ne
 test("premium layouts and long flip content render without replacing links", () => {
   const React = require("react"); const {renderToStaticMarkup}=require("react-dom/server");
   const {ProfileHeader,BlockList}=load("components/blocks/render.tsx");
+  const {ProfileShell}=load("components/profile/profile-shell.tsx");
   for(const profileLayout of ["centered","cover","editorial","hero","compact"]){
     const theme=resolveTheme("classic",{profileLayout,profileHover:"flip",profileBackTitle:"About the creator",profileBackText:"Long story ".repeat(30),coverImage:"https://example.com/cover.jpg"});
-    const html=renderToStaticMarkup(React.createElement(ProfileHeader,{displayName:"Long name ".repeat(8),username:"creator",bio:"Bio ".repeat(40),avatarUrl:"https://example.com/avatar.jpg",theme}));
+    const html=renderToStaticMarkup(React.createElement(ProfileShell,{theme,showBranding:true},React.createElement(ProfileHeader,{displayName:"Long name ".repeat(8),username:"creator",bio:"Bio ".repeat(40),avatarUrl:"https://example.com/avatar.jpg",theme}),React.createElement("a",{href:"/kept-link"},"My link")));
+    assert.ok(html.includes('href="/kept-link"')); assert.equal((html.match(/class="profile-motion"/g)||[]).length,1); assert.ok(html.indexOf('class="profile-effects-front"') < html.indexOf('class="profile-card"'));
     assert.ok(html.includes("About the creator"));assert.ok(html.includes("Long story"));assert.ok(html.includes("Turn profile card"));
     if(profileLayout==="cover") assert.ok(html.includes("https://example.com/cover.jpg"));
   }
@@ -409,4 +411,17 @@ test("every new profile effect resolves for Pro and stays excluded from Free", (
    assert.equal(designForPlan({[key]:value},PLANS.free)[key],undefined);
   }
  }
+});
+
+
+test("Free layouts come first and saved Spotlight is grandfathered", () => {
+ const {PROFILE_LAYOUTS}=load("lib/design.ts");
+ const {hasNewPremiumLayout,lockedDesignFeatures,designForPlan}=load("lib/design-tiers.ts");const {PLANS}=load("lib/plans.ts");
+ assert.deepEqual(Object.keys(PROFILE_LAYOUTS),["centered","compact","cover","editorial","hero"]);
+ for(const layout of ["hero","cover","editorial"]) assert.equal(hasNewPremiumLayout({profileLayout:layout},{profileLayout:"centered"}),true);
+ for(const layout of ["centered","compact"]) assert.equal(hasNewPremiumLayout({profileLayout:layout},{profileLayout:"hero"}),false);
+ assert.equal(hasNewPremiumLayout({profileLayout:"hero"},{profileLayout:"hero"}),false);
+ assert.deepEqual(lockedDesignFeatures({profileLayout:"hero"},PLANS.free,{profileLayout:"hero"}),[]);
+ assert.ok(lockedDesignFeatures({profileLayout:"hero"},PLANS.free,{profileLayout:"centered"}).includes("Spotlight layout"));
+ assert.equal(designForPlan({profileLayout:"hero"},PLANS.free).profileLayout,"hero");
 });

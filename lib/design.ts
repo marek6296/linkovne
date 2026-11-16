@@ -184,8 +184,6 @@ export const PROFILE_LAYOUTS: Record<
   ProfileLayout,
   { label: string; hint: string }
 > = {
-  cover: { label: "Cover", hint: "Separate cover photograph and overlapping avatar." },
-  editorial: { label: "Editorial", hint: "Large introduction above an arched portrait." },
   centered: {
     label: "Portrait",
     hint: "A polished, centered profile that keeps every link in focus.",
@@ -194,6 +192,8 @@ export const PROFILE_LAYOUTS: Record<
     label: "Compact",
     hint: "Photo and introduction sit side by side for a tighter first view.",
   },
+  cover: { label: "Cover", hint: "Separate cover photograph and overlapping avatar." },
+  editorial: { label: "Editorial", hint: "Large introduction above an arched portrait." },
   hero: {
     label: "Spotlight",
     hint: "Turns the profile photo into a cinematic cover with text on top.",

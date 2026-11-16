@@ -117,12 +117,14 @@ export function designForPlan(
 export function lockedDesignFeatures(
   design: Design | null | undefined,
   plan: PlanFeatures,
+  existingDesign?: Design | null,
 ): string[] {
   if (!design) return [];
   const caps = designCaps(plan);
   if (caps.full) return [];
 
   const locked: string[] = [];
+  if (design.profileLayout === "hero" && existingDesign?.profileLayout !== "hero") locked.push("Spotlight layout");
   if (PREMIUM_DESIGN_KEYS.some(key => design[key] && !["default", "none", "stack"].includes(String(design[key]))) || design.profileLayout === "cover" || design.profileLayout === "editorial") locked.push("Premium profile composition");
   if (design.avatarVideo || (design.bg === "image" && design.bgVideo)) locked.push("Profile video");
   if (!caps.bgImage && design.bg === "image") {
@@ -167,4 +169,10 @@ export function hasNewButtonAnimation(
 /** New social presentations are paid; classic blocks and existing Free content stay intact. */
 export function hasPremiumSocials(blocks: {config: {socialPresentation?: string; items?: {platform: string}[]}}[]): boolean {
   return blocks.some(b => (!!b.config.socialPresentation && b.config.socialPresentation !== "classic") || !!b.config.items?.some(item => item.platform === "custom"));
+}
+
+
+/** Saved Spotlight profiles keep working; only selecting a new paid layout is gated. */
+export function hasNewPremiumLayout(design: Design, existing?: Design | null): boolean {
+  return ["hero", "cover", "editorial"].includes(design.profileLayout ?? "") && design.profileLayout !== existing?.profileLayout;
 }

@@ -12,9 +12,11 @@ import { readableText } from "@/lib/design";
 export function ProfileEffects({
   theme,
   children,
+  scope = "header",
 }: {
   theme: Theme;
   children: ReactNode;
+  scope?: "header" | "card";
 }) {
   const motionRoot = useRef<HTMLDivElement>(null);
   const root = useRef<HTMLDivElement>(null);
@@ -32,7 +34,7 @@ export function ProfileEffects({
     const node = root.current;
     if (!node || effect !== "reveal") return;
     const measure = () => {
-      const avatar = node.querySelector("img,video");
+      const avatar = node.querySelector(".profile-header-main img,.profile-header-main video,img,video");
       if (!avatar) return;
       const r = node.getBoundingClientRect(),
         a = avatar.getBoundingClientRect();
@@ -48,7 +50,7 @@ export function ProfileEffects({
     };
     const observer = new ResizeObserver(measure);
     observer.observe(node);
-    const avatar = node.querySelector("img,video");
+    const avatar = node.querySelector(".profile-header-main img,.profile-header-main video,img,video");
     if (avatar) observer.observe(avatar);
     measure();
     return () => observer.disconnect();
@@ -84,6 +86,7 @@ export function ProfileEffects({
         ref={root}
         className="profile-effects"
         data-effect={effect}
+        data-scope={scope}
         data-active={active}
         onPointerEnter={(e) => {
           if (e.pointerType === "mouse" && interactive) setActive(true);

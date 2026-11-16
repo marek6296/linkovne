@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { readableText } from "@/lib/design";
+import { ProfileEffects } from "@/components/profile/profile-effects";
 import { ProfileVideo } from "@/components/profile/profile-video";
 import type { CSSProperties, ReactNode } from "react";
 import type { Theme } from "@/lib/themes";
@@ -52,7 +53,9 @@ export function ProfileShell({
   );
 
   return (
-    <main key={`${theme.profileEntrance ?? "none"}-${replay}`} className="profile-card" data-surface={theme.profileSurface} data-hover={theme.profileHover} data-entrance={theme.profileEntrance} style={surfaceStyle(theme)}>
+    <div key={`${theme.profileEntrance ?? "none"}-${replay}`} className="profile-arrival" data-entrance={theme.profileEntrance ?? "none"}>
+    <ProfileEffects theme={theme} scope="card">
+    <main className="profile-card" data-surface={theme.profileSurface} data-hover={theme.profileHover} data-entrance={theme.profileEntrance} style={surfaceStyle(theme)}>
       {theme.bgVideo && <ProfileVideo src={theme.bgVideo} poster={theme.bgVideoPoster} className="pointer-events-none absolute inset-0 -z-10 h-full w-full object-cover" />}
       {theme.bgVideo && <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 opacity-60" style={{ background: theme.page }} />}
       {leading}
@@ -84,5 +87,7 @@ export function ProfileShell({
         </footer>
       )}
     </main>
+    </ProfileEffects>
+    </div>
   );
 }

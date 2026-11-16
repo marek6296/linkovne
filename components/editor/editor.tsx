@@ -260,7 +260,7 @@ export function Editor({
     index: number;
   } | null>(null);
 
-  const publishBlockers = lockedDesignFeatures(profile.design, plan);
+  const publishBlockers = lockedDesignFeatures(profile.design, plan, initialProfile.design);
   const hasPendingSave =
     profileDirty.current || blocksDirty.current || status === "saving";
 
@@ -308,7 +308,7 @@ export function Editor({
         try {
           if (profileDirty.current) {
             const locked =
-              lockedDesignFeatures(profile.design, plan).length > 0;
+              lockedDesignFeatures(profile.design, plan, initialProfile.design).length > 0;
             const result = await saveProfile(profile.id, {
               display_name: profile.display_name,
               bio: profile.bio,

@@ -26,3 +26,9 @@ Latest follow-up: Side rail now occupies a dedicated, always-visible right-hand 
 - Hover uses a separate header layer: lift, cursor-following 3D tilt, cursor spotlight, light sweep, soft zoom, colour reveal, half-turn. Flip now 1.15s and reveal 1.2s. Mouse tracking is rAF-limited and skipped for reduced motion/touch; flip/reveal retain tap/keyboard controls.
 - Continuous motion uses a separate outer header layer: float 8s, breathe 10s, pendulum 10s, orbit 12s, levitation 9s. Existing intersection/visibility pause retained. Tilt/lift no longer compete with the entrance transform on profile-content.
 - Verified each entrance CSS identity/timing, replay mid-animation state, all continuous durations/running state, pointer-dependent tilt matrix, mobile horizontal bounds, Free fallback and Pro allowlists. No client profile writes during verification.
+
+
+## Whole-card scope correction
+User clarified that motion means the entire outer profile card. ProfileEffects now wraps ProfileShell's main surface (background, controls, header, social rail, links and footer). Header no longer owns a second motion rig. Entrance is on a separate outer arrival wrapper; continuous on motion, hover on effects, and half-turn on turn. Flip hides the entire front accessibly and has a persistent return control. Preview permits the complete card to move without clipping. Verified one rig, whole-card/links/footer ancestry, 180° keyboard toggle/inert sides, mouse tilt, 390px desktop card and mobile bounds.
+
+Layout catalogue order: Portrait, Compact (Free), then Cover, Editorial, Spotlight (Pro). New paid-layout changes are rejected server-side for Free. Existing saved Free Spotlight remains renderable and editable; no profile migration or overwrite. UI publish blocker receives the existing profile layout to preserve grandfathered users.

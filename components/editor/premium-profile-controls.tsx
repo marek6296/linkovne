@@ -45,7 +45,7 @@ export function PremiumProfileControls({
   return (
     <section className="space-y-4 border-t border-line pt-5">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold">Profile details & motion</h3>
+        <h3 className="text-sm font-semibold">Profile details & card motion</h3>
         <span className="rounded bg-ink px-2 py-0.5 text-[10px] font-semibold text-white">
           PRO
         </span>
@@ -68,7 +68,7 @@ export function PremiumProfileControls({
         {choice("On hover", "profileHover", PROFILE_HOVERS, "none")}
         {choice("Continuous motion", "profileMotion", PROFILE_MOTIONS, "none")}
       </div>
-      <div className="flex flex-wrap items-center justify-between gap-3"><p className="text-xs text-soft">Every profile arrives smoothly. Pro adds your chosen entrance and motion.</p><button type="button" className="rounded-full border border-line px-4 py-2 text-xs font-medium" onClick={() => window.dispatchEvent(new Event("profile-replay-entrance"))}>Replay entrance</button></div>
+      <div className="flex flex-wrap items-center justify-between gap-3"><p className="text-xs text-soft">Entrance, hover and continuous motion apply to the entire card, including your links and social icons.</p><button type="button" className="rounded-full border border-line px-4 py-2 text-xs font-medium" onClick={() => window.dispatchEvent(new Event("profile-replay-entrance"))}>Replay entrance</button></div>
       {design.linkArrangement === "grid" && (
         <p className="text-xs text-soft">
           Text links are paired. Featured links and image cards stay full width.
@@ -127,8 +127,7 @@ export function PremiumProfileControls({
             />
           </label>
           <p className="text-xs text-soft">
-            Hover to turn on desktop, tap on mobile. Your links remain below
-            both sides.
+            Hover to turn on desktop, tap on mobile. The entire card turns. Use “Back to profile” to return to your links.
           </p>
         </div>
       )}

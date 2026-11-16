@@ -1,6 +1,5 @@
 "use client";
 import { PremiumSocials } from "./premium-socials";
-import { ProfileEffects } from "@/components/profile/profile-effects";
 import { ProfileVideo } from "@/components/profile/profile-video";
 
 import {
@@ -944,9 +943,7 @@ export function ProfileHeader({
   return <div className={className}>
     <div className="profile-header-composition">
     <div className="profile-header-main">
-    <ProfileEffects theme={theme}>
       {onSelect ? <button type="button" onClick={onSelect} className="w-full text-inherit" aria-label="Edit profile">{content}</button> : content}
-    </ProfileEffects>
     </div>
     <div className="profile-header-social-slot" />
     </div>

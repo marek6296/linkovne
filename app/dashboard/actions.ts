@@ -12,7 +12,7 @@ import {
   validProfileOrder,
 } from "@/lib/profile-order";
 import { cleanTrackedLinks } from "@/lib/channels";
-import { designForPlan, hasNewButtonAnimation, hasPremiumSocials } from "@/lib/design-tiers";
+import { designForPlan, hasNewPremiumLayout, hasNewButtonAnimation, hasPremiumSocials } from "@/lib/design-tiers";
 import { createSubscriptionCheckout, findPromotionCode } from "@/lib/checkout";
 
 export type ActionState = { error?: string } | undefined;
@@ -377,6 +377,7 @@ export async function saveProfile(
   }
 
   if (patch.design !== undefined) {
+    if (!plan.customDesign && hasNewPremiumLayout(patch.design, profile.design as Design)) return { error: "Cover, Editorial and Spotlight layouts require Pro. Your existing layout is kept." };
     // Premium polia (obrazkove pozadie, animacie, glass/gradient buttony,
     // avatar ramy, desktop backdrop) sa pre free ocistia uz pri zapise —
     // nedaju sa podstrcit upravenym klientskym requestom.

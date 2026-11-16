@@ -88,7 +88,6 @@ export function Preview({
           ref={surface}
           className="profile-preview-canvas"
           style={{
-            background: theme.deskBg ?? theme.page,
             transform: `scale(${size.scale})`,
           }}
         >

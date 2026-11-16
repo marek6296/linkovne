@@ -548,7 +548,7 @@ export function DesignPanel({
                         key={key}
                         type="button"
                         aria-pressed={active}
-                        onClick={() => !caps.full && ["cover", "editorial"].includes(key) ? onUpsell() : onChange({ profileLayout: key })}
+                        onClick={() => !caps.full && ["cover", "editorial", "hero"].includes(key) ? onUpsell() : onChange({ profileLayout: key })}
                         className={`rounded-2xl border p-2.5 text-left transition ${
                           active
                             ? "border-ink bg-ink/[0.035] ring-1 ring-ink"
@@ -586,7 +586,7 @@ export function DesignPanel({
                           )}
                         </span>
                         <span className="mt-2 block text-xs font-semibold">
-                          {PROFILE_LAYOUTS[key].label}{["cover", "editorial"].includes(key) && " · Pro"}
+                          {PROFILE_LAYOUTS[key].label}{["cover", "editorial", "hero"].includes(key) && " · Pro"}
                         </span>
                         <span className="mt-0.5 hidden text-[11px] leading-snug text-soft sm:block">
                           {PROFILE_LAYOUTS[key].hint}
