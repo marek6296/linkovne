@@ -1,4 +1,5 @@
 "use client";
+import { RecropButton } from "./recrop-button";
 import { useEffect, useRef, useState } from "react";
 import { uploadImage } from "@/lib/upload";
 
@@ -19,12 +20,13 @@ export function CoverPhotoPicker({ value, userId, allowed, onChange, onUpsell }:
       const file = e.target.files?.[0]; e.target.value = "";
       if (!file || !allowed || !userId || busy) return;
       setBusy(true); setError("");
-      try { const url = await uploadImage(file, userId); if (mounted.current) onChange(url); }
-      catch (err) { if (mounted.current) setError(err instanceof Error ? err.message : "Upload failed. Please try again."); }
+      try { const url = await uploadImage(file, userId, {aspect:2}); if (mounted.current) onChange(url); }
+      catch (err) { if (err instanceof Error && err.name === "AbortError") return; if (mounted.current) setError(err instanceof Error ? err.message : "Upload failed. Please try again."); }
       finally { if (mounted.current) setBusy(false); }
     }} />
     <div className="mt-3 flex flex-wrap items-center gap-3">
       <button type="button" className="rounded-full bg-ink px-4 py-2 text-sm font-medium text-white disabled:opacity-50" disabled={busy || !allowed || !userId} onClick={() => allowed ? input.current?.click() : onUpsell()}>{busy ? "Uploading…" : value ? "Change cover photo" : "Upload cover photo"}</button>
+      {value && <RecropButton url={value} userId={userId} aspect={2} disabled={!allowed || busy} onChange={onChange} />}
       {value && <button type="button" className="text-sm text-danger" disabled={busy || !allowed} onClick={() => {setError("");onChange(undefined);}}>Remove cover photo</button>}
     </div>
     {error && <p role="alert" className="mt-2 text-sm text-danger">{error}</p>}

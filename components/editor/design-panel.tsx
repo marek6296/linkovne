@@ -1,4 +1,5 @@
 "use client";
+import { RecropButton } from "./recrop-button";
 import { AnimatedSettings } from "./animated-settings";
 import { CoverPhotoPicker } from "./cover-photo-picker";
 import { PremiumProfileControls } from "./premium-profile-controls";
@@ -773,6 +774,7 @@ export function DesignPanel({
 
             {bg === "image" && (
               <div className="flex items-center gap-3 border-t border-line pt-4">
+                {design.bgImage && <RecropButton url={design.bgImage} userId={userId} disabled={!caps.bgImage || busy} onChange={bgImage=>onChange({bgImage})}/>}
                 {design.bgImage ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -796,6 +798,7 @@ export function DesignPanel({
                     try {
                       onChange({ bgImage: await uploadImage(file, userId), bgVideo: undefined, bgVideoPoster: undefined });
                     } catch (error) {
+            if (error instanceof Error && error.name === "AbortError") return;
                       setUploadError(
                         error instanceof Error
                           ? error.message
@@ -934,6 +937,7 @@ export function DesignPanel({
 
               {deskBg === "image" && (
                 <div className="mt-3 flex items-center gap-3">
+                  {design.deskBgImage && <RecropButton url={design.deskBgImage} userId={userId} disabled={!caps.deskBackdrop || deskBusy} onChange={deskBgImage=>onChange({deskBgImage})}/>}
                   {design.deskBgImage ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -959,6 +963,7 @@ export function DesignPanel({
                           deskBgImage: await uploadImage(file, userId),
                         });
                       } catch (error) {
+            if (error instanceof Error && error.name === "AbortError") return;
                         setUploadError(
                           error instanceof Error
                             ? error.message
@@ -1271,6 +1276,7 @@ export function DesignPanel({
                           icon: undefined,
                         });
                       } catch (error) {
+            if (error instanceof Error && error.name === "AbortError") return;
                         setButtonError(
                           error instanceof Error
                             ? error.message
@@ -1290,6 +1296,7 @@ export function DesignPanel({
                         alt=""
                         className="h-14 w-14 rounded-xl border border-line object-cover"
                       />
+                      <RecropButton url={selectedConfig.thumb} userId={userId} disabled={buttonBusy} onChange={thumb=>patchSelected({thumb})}/>
                       <button
                         type="button"
                         onClick={() => {

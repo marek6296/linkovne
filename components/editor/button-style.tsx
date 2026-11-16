@@ -1,4 +1,5 @@
 "use client";
+import { RecropButton } from "./recrop-button";
 
 import { useRef, useState } from "react";
 import {
@@ -195,6 +196,7 @@ export function ButtonStyle({
               const thumb = await uploadImage(file, userId);
               onPatch({ thumb, thumbBytes: file.size, icon: undefined });
             } catch (error) {
+            if (error instanceof Error && error.name === "AbortError") return;
               setErr(error instanceof Error ? error.message : "Upload failed.");
             } finally {
               setBusy(false);
@@ -211,6 +213,7 @@ export function ButtonStyle({
                 alt=""
                 className="h-10 w-10 rounded-lg border border-line object-cover"
               />
+              <RecropButton url={config.thumb} userId={userId} disabled={busy} onChange={thumb=>onPatch({thumb})}/>
               <button
                 type="button"
                 onClick={() => onPatch({ thumb: undefined, thumbBytes: undefined })}

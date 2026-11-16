@@ -915,7 +915,7 @@ export function ProfileHeader({
     );
   } else if (layout === "cover") {
     content = <div className="profile-header-cover">
-      <div className="profile-cover-photo" style={{ background: theme.profileAccent }}>{theme.coverImage && <img src={theme.coverImage} alt="" />}</div>
+      <div className="profile-cover-photo" style={{ background: theme.profileAccent, ...(theme.coverImage?.includes("?original=") ? {aspectRatio:"2 / 1",height:"auto"} : {}) }}>{theme.coverImage && <img src={theme.coverImage} alt="" />}</div>
       <div className="profile-cover-body">{avatar("profile-cover-avatar", { ...avatarStyle, width: Math.min(avatarWidth, 180), border: `5px solid ${theme.page.startsWith("#") ? theme.page : "#fff"}` })}{identity}</div>
     </div>;
   } else if (layout === "editorial") {

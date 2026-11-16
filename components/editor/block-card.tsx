@@ -1,4 +1,5 @@
 "use client";
+import { RecropButton } from "./recrop-button";
 
 import { ContentStyle } from "./content-style";
 import { ICON_KEYS } from "@/components/blocks/icon";
@@ -106,6 +107,7 @@ function MediaPicker({
         mediaBytes: file.size,
       });
     } catch (e) {
+      if (e instanceof Error && e.name === "AbortError") return;
       setError(e instanceof Error ? e.message : "Upload failed.");
     } finally {
       setBusy(false);
@@ -156,7 +158,7 @@ function MediaPicker({
           type="file"
           accept={mediaType === "video" ? "video/*" : "image/*"}
           hidden
-          onChange={(e) => handle(e.target.files?.[0])}
+          onChange={(e) => { const file = e.target.files?.[0]; e.target.value = ""; void handle(file); }}
         />
         <button
           type="button"
@@ -170,6 +172,7 @@ function MediaPicker({
               ? "Replace"
               : `Upload ${mediaType === "video" ? "video" : "image"}`}
         </button>
+        {value && mediaType === "image" && <RecropButton url={value} userId={userId} disabled={busy} onChange={src=>onChange({src,mediaType:"image"})}/>}
         {value && (
           <button
             type="button"

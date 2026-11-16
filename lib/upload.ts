@@ -32,19 +32,30 @@ async function compress(file: File): Promise<Blob> {
   );
 }
 
-export async function uploadImage(file: File, userId: string): Promise<string> {
+export async function uploadImage(file: File, userId: string, options: { aspect?: number; originalUrl?: string } = {}): Promise<string> {
   if (!file.type.startsWith("image/")) {
     throw new Error("Only image files are allowed.");
   }
 
   if (file.size > 15 * 1024 * 1024)
     throw new Error("Image is too big — keep it under 15 MB.");
-  let blob: Blob;
-  try {
-    blob = await compress(file);
-  } catch {
-    throw new Error("Couldn't read this image. Try a JPG, PNG or WebP file.");
-  }
+  const { cropImage } = await import("@/components/editor/image-crop-dialog");
+  const cropped = await cropImage(file, options.aspect);
+  const originalUrl = options.originalUrl ?? await storeImage(await compress(file), userId);
+  const url = await storeImage(await compress(cropped), userId);
+  return `${url}?original=${encodeURIComponent(originalUrl)}`;
+}
+
+export async function recropImage(url: string, userId: string, aspect?: number): Promise<string> {
+  const parsed = new URL(url, window.location.origin);
+  const original = parsed.searchParams.get("original") || parsed.href;
+  const response = await fetch(original);
+  if (!response.ok) throw new Error("Couldn't load the original photo. Please upload it again.");
+  const blob = await response.blob();
+  return uploadImage(new File([blob], "original", { type: blob.type }), userId, {aspect, originalUrl: original});
+}
+
+async function storeImage(blob: Blob, userId: string): Promise<string> {
   const extension =
     blob.type === "image/webp"
       ? "webp"
@@ -112,7 +123,7 @@ export async function uploadProfileVideo(file: File, userId: string) {
     const ctx = canvas.getContext("2d"); if(!ctx) throw new Error("Video preview unavailable.");
     ctx.drawImage(video,0,0,canvas.width,canvas.height);
     const blob = await new Promise<Blob>((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error("Video preview unavailable.")),"image/jpeg",0.85));
-    const poster = await uploadImage(new File([blob],"poster.jpg",{type:"image/jpeg"}),userId);
+    const poster = await storeImage(blob, userId);
     const url = await uploadVideo(new File([file],file.type === "video/mp4" ? "profile.mp4" : "profile.webm",{type:file.type}),userId);
     return {url,poster};
   } finally { video.removeAttribute("src"); video.load(); URL.revokeObjectURL(objectUrl); }

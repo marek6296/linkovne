@@ -1,4 +1,5 @@
 "use client";
+import { RecropButton } from "./recrop-button";
 
 import { CoverPhotoPicker } from "./cover-photo-picker";
 import { useEffect, useRef, useState, type ReactNode } from "react";
@@ -27,7 +28,7 @@ import {
   isVisibleNow,
 } from "@/lib/blocks";
 import { THEMES, THEME_KEYS } from "@/lib/themes";
-import { resolveTheme, PREMIUM_DESIGN_KEYS, type Design } from "@/lib/design";
+import { resolveTheme, AVATAR_ASPECTS, PREMIUM_DESIGN_KEYS, type Design } from "@/lib/design";
 import { allowsBlock, allowsTheme, type PlanFeatures } from "@/lib/plans";
 import {
   designCaps,
@@ -863,6 +864,7 @@ export function Editor({
               >
                 <div id="editor-profile" className="scroll-mt-24 space-y-4">
                   <AvatarRow
+                    aspect={AVATAR_ASPECTS[profile.design.avatarAspect ?? "square"]?.ratio ?? 1}
                     url={profile.avatar_url}
                     userId={userId}
                     onChange={(avatar_url) => {
@@ -1373,10 +1375,12 @@ export function Editor({
 
 function AvatarRow({
   url,
+  aspect,
   userId,
   onChange,
 }: {
   url: string | null;
+  aspect: number;
   userId: string;
   onChange: (url: string | null) => void;
 }) {
@@ -1407,8 +1411,9 @@ function AvatarRow({
           setBusy(true);
           setUploadError(null);
           try {
-            onChange(await uploadImage(file, userId));
+            onChange(await uploadImage(file, userId, {aspect}));
           } catch (error) {
+            if (error instanceof Error && error.name === "AbortError") return;
             setUploadError(
               error instanceof Error
                 ? error.message
@@ -1428,6 +1433,7 @@ function AvatarRow({
       >
         {busy ? "Uploading…" : url ? "Change photo" : "Upload photo"}
       </button>
+      {url && <RecropButton url={url} userId={userId} aspect={aspect} disabled={busy} onChange={onChange} />}
       {uploadError && (
         <p role="alert" className="w-full text-sm text-danger">
           {uploadError}

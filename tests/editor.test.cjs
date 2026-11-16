@@ -504,3 +504,15 @@ test("per-link paid button styles cannot bypass Free plan", () => {
   assert.equal(hasNewPaidButtonStyle(paid, paid), false);
   assert.equal(hasNewPaidButtonStyle([{id:"a",config:{buttonStyle:"fill"}}], []), false);
 });
+
+test("photo crop preserves ratio, covers the frame and clamps dragging", () => {
+  const {cropRect}=load("lib/image-crop.ts");
+  assert.deepEqual(cropRect(1000,1500,2,1,.5,.5),{x:0,y:500,width:1000,height:500});
+  assert.deepEqual(cropRect(1000,1500,2,2,1,1),{x:500,y:1250,width:500,height:250});
+  const edge=cropRect(1600,900,1,1,-5,5);
+  assert.deepEqual(edge,{x:0,y:0,width:900,height:900});
+  const zoom=cropRect(1600,900,1,99,.5,.5);
+  assert.equal(zoom.width,225);
+  assert.equal(zoom.x+zoom.width<=1600,true);
+  assert.equal(zoom.y+zoom.height<=900,true);
+});
