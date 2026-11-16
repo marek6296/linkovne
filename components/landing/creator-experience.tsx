@@ -7,26 +7,37 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useInView, useReducedMotion } from "motion/react";
 
-const STORIES = [
-  {image:"/landing/taylor-portrait.png",title:"Make it your own.",text:"Your colours, your photos, your links. Build a page that feels like you, right down to the details.",name:"Taylor",role:"Independent creator",href:"/register",cta:"Create your page"},
-  {image:"/landing/alex-portrait.png",title:"Bring your work together.",text:"Give your portfolio, latest projects and contact details one home. Share it everywhere you show up.",name:"Alex",role:"Design & photography",href:"/register",cta:"Build your portfolio"},
-  {image:"/landing/jordan-portrait.png",title:"Room for every profile.",text:"Manage up to ten creator profiles from one account with Business. Keep each page’s content and style its own.",name:"Jordan",role:"Creator management",href:"#pricing",cta:"Explore the plans"},
+const FEATURES = [
+ {image:"/landing/feature-profile.webp",title:"Your profile.\nYour style.",text:"Choose your colours, photos and layout. Bring your links and content together on a page that feels like you.",alt:"Sculptural profile page with colourful link blocks and design swatches",cta:"Create your profile"},
+ {image:"/landing/feature-privacy.webp",title:"Your links.\nMore privacy.",text:"Keep sensitive destinations behind a Link Shield confirmation screen. Add an optional 18+ check and choose how visitors open your links.",alt:"A cobalt link passing through an ivory arch with a privacy screen and shield",cta:"Build your page"},
+ {image:"/landing/feature-social.webp",title:"Every channel.\nConnected.",text:"Add your social accounts to one profile. Help people find your videos, posts and latest updates from a single link.",alt:"Camera, music and video tiles connected to one central profile",cta:"Bring it together"},
 ];
-export function CreatorSpotlight() {
+export function FeatureSpotlight() {
  const [index,setIndex]=useState(0);
+ const [paused,setPaused]=useState(false);
  const ref=useRef<HTMLElement>(null);
  const visible=useInView(ref,{amount:.35});
  const reduced=useReducedMotion();
  useEffect(()=>{
-  if(!visible || reduced) return;
-  const timer=setInterval(()=>{if(!document.hidden)setIndex(i=>(i+1)%STORIES.length);},6500);
+  if(!visible || reduced || paused) return;
+  const timer=setInterval(()=>{if(!document.hidden)setIndex(i=>(i+1)%FEATURES.length);},8000);
   return()=>clearInterval(timer);
- },[visible,reduced]);
- const story=STORIES[index];
- return <section ref={ref} id="features" className="creator-spotlight" aria-label="Ways to use Linkovne">
+ },[visible,reduced,paused]);
+ const feature=FEATURES[index];
+ return <section ref={ref} id="features" className="creator-spotlight" aria-label="Linkovne features"
+  onMouseEnter={()=>setPaused(true)} onMouseLeave={()=>setPaused(false)}
+  onFocusCapture={()=>setPaused(true)} onBlurCapture={event=>{if(!event.currentTarget.contains(event.relatedTarget))setPaused(false);}}>
   <div className="spotlight-layout landing-width">
-   <div className="spotlight-photo"><AnimatePresence initial={false} mode="sync"><motion.div key={story.image} className="spotlight-photo-layer" initial={{opacity:0,scale:1.04}} animate={{opacity:1,scale:1}} exit={{opacity:0}} transition={{duration:reduced?0:.7}}><Image src={story.image} alt={`${story.name}, illustrative creator portrait`} fill quality={90} sizes="(max-width:760px) 90vw, 620px" className="spotlight-image" /></motion.div></AnimatePresence><div className="spotlight-person"><strong>{story.name}</strong><span>{story.role}</span></div></div>
-   <div className="spotlight-copy"><AnimatePresence initial={false} mode="wait"><motion.div key={index} initial={{opacity:0,y:12}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-8}} transition={{duration:reduced?0:.25}}><h2>{story.title}</h2><p>{story.text}</p></motion.div></AnimatePresence><Link href={story.href} className="landing-button landing-button-blue">{story.cta}<span aria-hidden>↗</span></Link><div className="spotlight-progress" aria-hidden="true">{STORIES.map((_,i)=><span key={i} className={i===index?"active":""}/>)}</div></div>
+   <div className="spotlight-photo">
+    {FEATURES.map((item,i)=><div key={item.image} className={`spotlight-photo-layer${i===index?" is-active":""}`} aria-hidden={i!==index}>
+     <Image src={item.image} alt={item.alt} fill sizes="(max-width:760px) 90vw, 620px" className="spotlight-image" />
+    </div>)}
+   </div>
+   <div className="spotlight-copy">
+    <AnimatePresence initial={false} mode="wait"><motion.div key={index} initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-6}} transition={{duration:reduced?0:.3}}><h2>{feature.title}</h2><p>{feature.text}</p></motion.div></AnimatePresence>
+    <Link href="/register" className="landing-button landing-button-blue">{feature.cta}</Link>
+    <div className="spotlight-progress" aria-hidden="true">{FEATURES.map((_,i)=><span key={i} className={i===index?"active":""}/>)}</div>
+   </div>
   </div>
  </section>;
 }

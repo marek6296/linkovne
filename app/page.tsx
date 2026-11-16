@@ -1,6 +1,6 @@
 import { LandingScrollReveal } from "@/components/landing/scroll-reveal";
 import { HeroStage } from "@/components/landing/hero-stage";
-import { CreatorSpotlight, CreatorGallery } from "@/components/landing/creator-experience";
+import { FeatureSpotlight, CreatorGallery } from "@/components/landing/creator-experience";
 import { AudienceGlobe } from "@/components/landing/audience-globe";
 import "@/components/landing/landing.css";
 import { LandingNav } from "@/components/landing/landing-interactive";
@@ -63,14 +63,14 @@ export default async function Home() {
           <div className="landing-hero-copy">
             <h1><span className="hero-line">One profile.</span><span className="hero-line">One link.</span><span className="hero-line hero-line-accent">All your sites.</span></h1>
             <p>Your links, your content, your style.<br className="landing-desktop-break" /> Bring it all together on a page that’s yours.</p>
-            <Link href="/register" className="landing-button landing-button-blue">Create your free page <span aria-hidden>↗</span></Link>
+            <Link href="/register" className="landing-button landing-button-blue">Create your free page</Link>
           </div>
           <HeroStage />
         </section>
       </div>
       <main>
         <CreatorGallery />
-        <CreatorSpotlight />
+        <FeatureSpotlight />
         <section id="analytics" className="landing-feature landing-width">
           <div><h2>See what<br />gets the clicks.</h2><p>Find out where people discover you and what they open next. Views, clicks and traffic sources, together in one dashboard.</p><Link href="/register" className="landing-button landing-button-blue">Explore Linkovne <span aria-hidden>↗</span></Link></div>
           <AudienceGlobe />

@@ -195,16 +195,12 @@ to{opacity:1;translate:0 0}
 /* Reference-based portrait, overlapping feature story, team gallery and COBE globe. */
 .creator-spotlight { background:#3449df; padding:95px 0; }
 .spotlight-layout { display:flex; align-items:center; }
-.spotlight-photo { position:relative; width:55%; height:570px; flex-shrink:0; border-radius:25px; overflow:hidden; background:#2536ba; }
-.spotlight-photo-layer { position:absolute; inset:0; }
-.spotlight-image { object-fit:cover; object-position:center 35%; }
-.spotlight-person { position:absolute; left:28px; bottom:28px; color:#fff; text-shadow:0 2px 10px #0008; display:flex; flex-direction:column; gap:5px; }
-.spotlight-person strong { font-size:28px; font-family:var(--font-bricolage); }
-.spotlight-person span { font-size:15px; }
-.spotlight-photo::after { content:''; position:absolute; inset:65% 0 0; background:linear-gradient(transparent,#0005); pointer-events:none; }
-.spotlight-person { z-index:2; }
-.spotlight-copy { position:relative; width:53%; margin-left:-8%; z-index:3; background:#fffaf5; padding:44px; border-radius:24px; box-shadow:0 24px 60px #131f7d40; }
-.landing .spotlight-copy h2 { font-size:clamp(36px,4.3vw,58px); min-height:2.12em; }
+.spotlight-photo { position:relative; width:55%; aspect-ratio:1; flex-shrink:0; border-radius:25px; overflow:hidden; background:#f5cee3; }
+.spotlight-photo-layer { position:absolute; inset:0; opacity:0; transform:scale(1.035); transition:opacity .8s ease,transform 1.2s cubic-bezier(.16,1,.3,1); }
+.spotlight-photo-layer.is-active { opacity:1; transform:scale(1); }
+.spotlight-image { object-fit:contain; object-position:center; }
+.spotlight-copy { position:relative; width:47%; margin-left:-2%; z-index:3; background:#fffaf5; padding:44px; border-radius:24px; box-shadow:0 24px 60px #131f7d40; }
+.landing .spotlight-copy h2 { font-size:clamp(36px,4.3vw,58px); min-height:2.12em; white-space:pre-line; }
 .spotlight-copy p { font-size:18px; line-height:1.65; margin:25px 0 28px; min-height:5em; }
 .spotlight-progress { display:flex; gap:7px; margin-top:30px; }
 .spotlight-progress span { height:4px; width:24px; background:#ddd5df; border-radius:4px; transition:background .4s,width .4s; }
@@ -225,15 +221,14 @@ to{opacity:1;translate:0 0}
 .audience-globe-fallback.is-ready { display:none; }
 @media(max-width:1050px) and (min-width:761px) {
  .spotlight-copy { padding:32px; }
- .spotlight-photo { height:530px; }
+ .spotlight-photo { aspect-ratio:1; }
  .creator-gallery-grid { gap:20px; }
  .creator-gallery-image { height:210px; }
 }
 @media(max-width:760px) {
  .creator-spotlight { padding:60px 0; }
  .spotlight-layout { flex-direction:column; }
- .spotlight-photo { width:100%; height:420px; }
- .spotlight-person { bottom:65px; }
+ .spotlight-photo { width:100%; aspect-ratio:1; }
  .spotlight-copy { width:calc(100% - 28px); margin:-40px 0 0; padding:28px; }
  .landing .spotlight-copy h2 { font-size:38px; min-height:2.1em; }
  .spotlight-copy p { font-size:17px; min-height:6.6em; margin-top:18px; }
@@ -244,12 +239,16 @@ to{opacity:1;translate:0 0}
  .creator-gallery-person h3 { font-size:19px; margin-top:14px; }
  .audience-globe { max-width:430px; }
 }
+@media(max-width:440px) {
+ .spotlight-copy p { min-height:9.9em; }
+}
 @media(max-width:390px) {
  .creator-gallery-image { height:175px; }
  .spotlight-copy { padding:24px; }
  .landing .spotlight-copy h2 { font-size:34px; }
 }
 @media(prefers-reduced-motion:reduce) {
+ .spotlight-photo-layer { transition:none; transform:none; }
 }
 
 /* One WebGL depth buffer for the entire rotating assembly. */
