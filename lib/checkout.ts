@@ -31,7 +31,8 @@ export async function findPromotionCode(raw: string): Promise<string | null> {
 
 /**
  * Vytvorí Stripe Checkout session pre predplatné. Ak je zadaný promotion code,
- * predvyplní zľavu (100% = €0 → nepýta kartu). `requirePromo` = zlyhaj, ak kód
+ * predvyplní zľavu a vždy vyžiada platobnú metódu na ďalšie obnovenia.
+ * `requirePromo` = zlyhaj, ak kód
  * nesedí (pre redeem toky, kde je kód povinný).
  */
 export async function createSubscriptionCheckout(opts: {
@@ -55,8 +56,13 @@ export async function createSubscriptionCheckout(opts: {
     mode: "subscription",
     line_items: [{ price, quantity: 1 }],
     client_reference_id: opts.userId,
-    // 100% zľava = €0 → Stripe vtedy nepýta kartu (inak by ju vyžadoval).
-    payment_method_collection: "if_required",
+    // Aj pri €0 faktúre uloží platobnú metódu na platené obnovenia po zľave.
+    payment_method_collection: "always",
+    custom_text: {
+      submit: {
+        message: "Subscriptions renew automatically until canceled. When a temporary discount ends, the regular plan price applies.",
+      },
+    },
     success_url: `${SITE_URL}/dashboard?upgraded=1`,
     cancel_url: `${SITE_URL}/#pricing`,
     subscription_data: { metadata: { user_id: opts.userId, plan: opts.plan } },

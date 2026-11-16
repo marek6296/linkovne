@@ -92,6 +92,11 @@ export function DiscountForm() {
         )}
       </div>
 
+      <p className="text-xs leading-relaxed text-soft">
+        Checkout requires a payment method even with 100% off. After a temporary
+        discount ends, the subscription renews at the regular price unless canceled.
+      </p>
+
       {/* Kód + limity */}
       <div className="grid gap-3 sm:grid-cols-3">
         <label className="text-xs text-soft">

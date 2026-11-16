@@ -182,7 +182,7 @@ export type PromoRedeemState = { error?: string; url?: string } | undefined;
 /**
  * Uplatnenie promo kódu — VŠETKO cez Stripe. Overí, že kód je aktívny Stripe
  * promotion code, a spustí Stripe Checkout na Pro s predvyplnenou zľavou:
- *  • 100% kód → €0 → nepýta kartu → vznikne aktívne Pro predplatné,
+ *  • 100% kód → €0 → uloží platobnú metódu → vznikne aktívne Pro predplatné,
  *  • %/€ kód → zľavnená platba.
  * Klient presmeruje na vrátené `url`. Plán sa aktivuje až po Stripe (webhook),
  * takže nikdy nevznikne „Pro bez Stripe".
