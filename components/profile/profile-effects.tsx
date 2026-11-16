@@ -39,6 +39,7 @@ export function ProfileEffects({
       const r = node.getBoundingClientRect(),
         a = avatar.getBoundingClientRect();
       if (!r.width || !r.height) return;
+      node.style.setProperty("--reveal-size", `${Math.hypot(r.width, r.height)}px`);
       node.style.setProperty(
         "--reveal-x",
         `${((a.left + a.width / 2 - r.left) / r.width) * 100}%`,
@@ -88,7 +89,23 @@ export function ProfileEffects({
         data-effect={effect}
         data-scope={scope}
         data-active={active}
+        tabIndex={interactive ? 0 : undefined}
+        aria-label={interactive ? "Profile card" : undefined}
+        onFocus={() => { if (interactive) setActive(effect !== "flip"); }}
+        onBlur={(e) => { if (interactive && !e.currentTarget.contains(e.relatedTarget)) setActive(effect === "flip"); }}
+        onPointerDown={(e) => {
+          if (e.pointerType !== "mouse" && interactive) setActive(effect !== "flip");
+        }}
         onPointerEnter={(e) => {
+          if (effect === "reveal") {
+            const node = e.currentTarget;
+            const avatar = node.querySelector(".profile-header-main img,.profile-header-main video,img,video");
+            if (avatar) {
+              const r = node.getBoundingClientRect(), a = avatar.getBoundingClientRect();
+              node.style.setProperty("--reveal-x", `${(a.left + a.width / 2 - r.left) / r.width * 100}%`);
+              node.style.setProperty("--reveal-y", `${(a.top + a.height / 2 - r.top) / r.height * 100}%`);
+            }
+          }
           if (e.pointerType === "mouse" && interactive) setActive(effect !== "flip");
         }}
         onPointerMove={(e) => {
@@ -138,23 +155,7 @@ export function ProfileEffects({
             </div>
           )}
         </div>
-        {interactive && (
-          <button
-            type="button"
-            className="profile-effect-toggle"
-            aria-pressed={active}
-            aria-label={
-              effect === "flip" ? "Turn profile card" : "Reveal profile colours"
-            }
-            onClick={() => setActive((v) => !v)}
-          >
-            {effect === "flip"
-              ? active
-                ? "Back to profile ↶"
-                : "About me ↗"
-              : "Reveal colours ◉"}
-          </button>
-        )}
+
       </div>
     </div>
   );

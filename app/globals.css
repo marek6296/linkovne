@@ -1044,8 +1044,6 @@ html.lk-escaping main > :not(.lk-gate):not(script) {
 .profile-effects-back h2{font-size:1.8rem;font-weight:700;line-height:1.15}
 .profile-effects-back p{white-space:pre-wrap;font-size:.95rem;line-height:1.7}
 .profile-effects[data-effect="flip"][data-active="true"] .profile-effects-turn{transform:rotateY(180deg)}
-.profile-effect-toggle{display:block;margin:12px auto 0;padding:8px 12px;font-size:.75rem;opacity:.75;border-radius:10px}
-.profile-effect-toggle:focus-visible{outline:2px solid currentColor;outline-offset:3px}
 .profile-effects[data-effect="reveal"] .profile-effects-front{position:relative;isolation:isolate;padding:16px;border-radius:24px;overflow:hidden}
 .profile-effects[data-effect="reveal"] .profile-effects-front:before{content:"";position:absolute;inset:0;z-index:-1;background:var(--profile-accent);clip-path:circle(0 at var(--reveal-x,50%) var(--reveal-y,30%));transition:clip-path 1.2s cubic-bezier(.22,.75,.24,1)}
 .profile-effects[data-effect="reveal"][data-active="true"] .profile-effects-front:before{clip-path:circle(150% at var(--reveal-x,50%) var(--reveal-y,30%))}
@@ -1150,12 +1148,10 @@ html.lk-escaping main > :not(.lk-gate):not(script) {
 .profile-effects[data-scope="card"]>.profile-effects-turn>.profile-effects-front{border-radius:inherit}
 .profile-effects[data-scope="card"] .profile-card{width:100%;margin:0}
 .profile-effects[data-scope="card"][data-effect="reveal"] .profile-effects-front{padding:0;isolation:isolate}
-.profile-effects[data-scope="card"][data-effect="reveal"] .profile-effects-front:before{content:none}
-.profile-effects[data-scope="card"][data-effect="reveal"] .profile-card{filter:grayscale(1);transition:filter 1.1s cubic-bezier(.22,.75,.24,1)}
-.profile-effects[data-scope="card"][data-effect="reveal"][data-active="true"] .profile-card{filter:grayscale(0)}
+@property --reveal-radius{syntax:"<length>";inherits:false;initial-value:0px}
+.profile-effects[data-scope="card"][data-effect="reveal"] .profile-effects-front:before{content:"";position:absolute;inset:0;z-index:30;pointer-events:none;border-radius:inherit;background:transparent;clip-path:none;-webkit-backdrop-filter:grayscale(1);backdrop-filter:grayscale(1);--reveal-radius:0px;mask-image:radial-gradient(circle at var(--reveal-x,50%) var(--reveal-y,30%),transparent var(--reveal-radius),#000 calc(var(--reveal-radius) + 2px));transition:--reveal-radius 1.6s cubic-bezier(.22,.75,.24,1)}
+.profile-effects[data-scope="card"][data-effect="reveal"][data-active="true"] .profile-effects-front:before{clip-path:none;--reveal-radius:var(--reveal-size,1400px)}
 .profile-effects[data-scope="card"]>.profile-effects-turn>.profile-effects-back{border-radius:inherit;min-height:100%;padding:32px 28px 80px}
-.profile-effects[data-scope="card"]>.profile-effect-toggle{position:absolute;right:16px;bottom:12px;z-index:40;margin:0;opacity:1;background:var(--profile-accent);color:var(--profile-accent-text);box-shadow:0 3px 14px #0002}
-.profile-effects[data-scope="card"]:has(>.profile-effect-toggle) .profile-card{padding-bottom:4rem}
 @media(min-width:640px){.profile-arrival{width:min(100%,390px)}.profile-arrival>.profile-motion>.profile-effects{border-radius:2.25rem}}
 .profile-preview .profile-arrival{width:100%}
 .profile-preview .profile-arrival>.profile-motion>.profile-effects{border-radius:0}
@@ -1163,4 +1159,4 @@ html.lk-escaping main > :not(.lk-gate):not(script) {
 .profile-preview-canvas{overflow:visible}
 .profile-preview .profile-card,.profile-preview .profile-arrival>.profile-motion>.profile-effects{border-radius:2.25rem}
 
-@media(prefers-reduced-motion:reduce){.profile-effects[data-scope="card"][data-effect="reveal"] .profile-card{transition:none}}
+@media(prefers-reduced-motion:reduce){.profile-effects[data-scope="card"][data-effect="reveal"] .profile-effects-front:before{transition:none}}

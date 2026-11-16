@@ -374,7 +374,7 @@ test("premium layouts and long flip content render without replacing links", () 
     const theme=resolveTheme("classic",{profileLayout,profileHover:"flip",profileBackTitle:"About the creator",profileBackText:"Long story ".repeat(30),coverImage:"https://example.com/cover.jpg"});
     const html=renderToStaticMarkup(React.createElement(ProfileShell,{theme,showBranding:true},React.createElement(ProfileHeader,{displayName:"Long name ".repeat(8),username:"creator",bio:"Bio ".repeat(40),avatarUrl:"https://example.com/avatar.jpg",theme}),React.createElement("a",{href:"/kept-link"},"My link")));
     assert.ok(html.includes('href="/kept-link"')); assert.equal((html.match(/class="profile-motion"/g)||[]).length,1); assert.ok(html.indexOf('class="profile-effects-front"') < html.indexOf('class="profile-card"'));
-    assert.ok(html.includes("About the creator"));assert.ok(html.includes("Long story"));assert.ok(html.includes("Turn profile card")); assert.ok(html.includes('class="profile-effects-front" inert=""')); assert.ok(html.includes("Back to profile"));
+    assert.ok(html.includes("About the creator"));assert.ok(html.includes("Long story"));assert.ok(!html.includes("profile-effect-toggle")); assert.ok(html.includes('class="profile-effects-front" inert=""'));
     if(profileLayout==="cover") assert.ok(html.includes("https://example.com/cover.jpg"));
   }
 });
