@@ -36,6 +36,11 @@ export function RedeemForm() {
         />
         <Submit />
       </div>
+      <p className="text-xs leading-relaxed text-soft">
+        A payment method is required, even for a free offer. Subscriptions renew
+        automatically at the regular plan price after a temporary discount ends,
+        unless you cancel.
+      </p>
       {state?.url && (
         <p className="rounded-lg border border-ok/25 bg-ok/5 px-3 py-2 text-sm text-ok">
           Code accepted — taking you to secure checkout…
