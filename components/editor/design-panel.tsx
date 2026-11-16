@@ -533,7 +533,7 @@ export function DesignPanel({
                         aria-pressed={active}
                         disabled={!caps.full && ["cover", "editorial", "hero"].includes(key)}
                         onClick={() => !caps.full && ["cover", "editorial", "hero"].includes(key) ? onUpsell() : onChange({ profileLayout: key })}
-                        className={`rounded-2xl border p-2.5 text-left transition ${
+                        className={`disabled:opacity-50 disabled:cursor-not-allowed rounded-2xl border p-2.5 text-left transition ${
                           active
                             ? "border-ink bg-ink/[0.035] ring-1 ring-ink"
                             : "border-line hover:border-soft"

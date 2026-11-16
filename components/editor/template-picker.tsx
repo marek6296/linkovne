@@ -67,7 +67,7 @@ function TemplateCard({
       }}
       aria-pressed={selected}
       aria-label={locked ? `${t.label} · Pro template` : undefined}
-      className={`group relative overflow-hidden rounded-2xl border bg-surface text-left transition duration-200 hover:-translate-y-1 hover:shadow-[0_14px_34px_rgba(25,24,19,0.13)] ${
+      className={`group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 relative overflow-hidden rounded-2xl border bg-surface text-left transition duration-200 hover:-translate-y-1 hover:shadow-[0_14px_34px_rgba(25,24,19,0.13)] ${
         selected
           ? "border-ink ring-2 ring-inset ring-ink shadow-[0_14px_34px_rgba(25,24,19,0.16)]"
           : "border-line hover:border-ink"
