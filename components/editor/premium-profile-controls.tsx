@@ -1,5 +1,4 @@
 "use client";
-import { useState } from "react";
 import {
   PROFILE_SURFACES,
   PROFILE_HOVERS,
@@ -7,7 +6,6 @@ import {
   PROFILE_ENTRANCES,
   type Design,
 } from "@/lib/design";
-import { uploadImage } from "@/lib/upload";
 export function PremiumProfileControls({
   design,
   allowed,
@@ -21,8 +19,6 @@ export function PremiumProfileControls({
   onChange: (patch: Partial<Design>) => void;
   onUpsell: () => void;
 }) {
-  const [busy, setBusy] = useState(false),
-    [error, setError] = useState("");
   const choice = (
     label: string,
     key: keyof Design,
@@ -135,51 +131,7 @@ export function PremiumProfileControls({
           </p>
         </div>
       )}
-      {design.profileLayout === "cover" && (
-        <div className="space-y-2">
-          <label className="block text-xs font-medium">
-            Cover image
-            <input
-              className="mt-2 block w-full text-sm"
-              type="file"
-              accept="image/*"
-              disabled={busy || !userId}
-              onChange={async (e) => {
-                const file = e.target.files?.[0];
-                e.target.value = "";
-                if (!file) return;
-                if (!allowed) return onUpsell();
-                setBusy(true);
-                setError("");
-                try {
-                  onChange({ coverImage: await uploadImage(file, userId) });
-                } catch (err) {
-                  setError(
-                    err instanceof Error ? err.message : "Upload failed",
-                  );
-                } finally {
-                  setBusy(false);
-                }
-              }}
-            />
-          </label>
-          {busy && <p role="status">Uploading…</p>}
-          {design.coverImage && (
-            <button
-              type="button"
-              className="text-xs underline"
-              onClick={() => onChange({ coverImage: undefined })}
-            >
-              Remove cover
-            </button>
-          )}
-          {error && (
-            <p role="alert" className="text-xs text-danger">
-              {error}
-            </p>
-          )}
-        </div>
-      )}
+
     </section>
   );
 }

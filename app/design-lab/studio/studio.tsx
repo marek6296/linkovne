@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { CoverPhotoPicker } from "@/components/editor/cover-photo-picker";
 import { PremiumProfileControls } from "@/components/editor/premium-profile-controls";
 import { SocialsEditor } from "@/components/editor/block-card";
 import { Preview } from "@/components/editor/preview";
@@ -119,6 +120,7 @@ export default function Studio() {
             />
             Simulate Free plan
           </label>
+          {design.profileLayout === "cover" && <CoverPhotoPicker value={design.coverImage} userId="" allowed={!free} onChange={coverImage => setDesign(d => ({...d, coverImage}))} onUpsell={() => {}} />}
           <PremiumProfileControls
             design={design}
             allowed={!free}

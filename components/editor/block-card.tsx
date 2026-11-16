@@ -345,7 +345,7 @@ export function SocialsEditor({
           <option value="classic">Classic</option><option value="dock" disabled={!premium}>Dock · Pro</option><option value="pop" disabled={!premium}>Pop · Pro</option><option value="rail" disabled={!premium}>Side rail · Pro</option>
         </select>
       </label>
-      {config.socialPresentation === "rail" && <p className="text-xs text-soft">Sliding labels on desktop and in the desktop preview. On mobile, tap Social links to open the menu.</p>}
+      {config.socialPresentation === "rail" && <p className="text-xs text-soft">Always visible beside your profile. A dedicated column keeps icons clear of your photo, text and buttons.</p>}
       {/* ---------- Vzhlad ikon (vsetky naraz) ---------- */}
       <div className="space-y-3 rounded-xl border border-line p-3.5">
         <SocialChips

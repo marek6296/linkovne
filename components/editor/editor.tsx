@@ -1,5 +1,6 @@
 "use client";
 
+import { CoverPhotoPicker } from "./cover-photo-picker";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import {
@@ -868,6 +869,7 @@ export function Editor({
                       patchDesign({ avatarVideo: undefined, avatarVideoPoster: undefined });
                     }}
                   />
+                  {profile.design.profileLayout === "cover" && <CoverPhotoPicker key={profile.id} value={profile.design.coverImage} userId={userId} allowed={plan.customDesign} onChange={coverImage => patchDesign({coverImage})} onUpsell={() => setNotice("Cover photos require Pro.")} />}
                   <label className="block">
                     <span className="mb-1 block text-xs font-medium text-soft">
                       Display name
@@ -935,6 +937,7 @@ export function Editor({
                 <p className="mb-4 text-sm text-soft">
                   A complete look in one click. Your content stays in place.
                 </p>
+                <div className="mb-4">{profile.design.profileLayout === "cover" && <CoverPhotoPicker key={profile.id} value={profile.design.coverImage} userId={userId} allowed={plan.customDesign} onChange={coverImage => patchDesign({coverImage})} onUpsell={() => setNotice("Cover photos require Pro.")} />}</div>
                 <TemplateGrid
                   onPick={(t) => applyTemplate(t)}
                   selectedKey={appliedTemplate}

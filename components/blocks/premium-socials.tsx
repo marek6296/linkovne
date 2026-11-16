@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import { Icon, ICON_KEYS, type IconKey } from "./icon";
 import { SocialIcon } from "./social-icon";
@@ -22,37 +22,14 @@ export function PremiumSocials({
   theme: Theme;
   preview?: boolean;
 }) {
-  const [wide, setWide] = useState(false);
-  const [open, setOpen] = useState(false);
   const [host, setHost] = useState<HTMLElement | null>(null);
   const marker = useRef<HTMLSpanElement>(null);
-  const menu = useRef<HTMLDivElement>(null);
-  const toggle = useRef<HTMLButtonElement>(null);
-  const id = useId();
   const mode = config.socialPresentation ?? "dock";
   useEffect(() => {
-    setHost(marker.current?.closest<HTMLElement>(".profile-card") ?? null);
-  }, []);
-  useEffect(() => {
-    if (!open) return;
-    menu.current?.querySelector("a")?.focus({ preventScroll: true });
-    const close = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setOpen(false);
-        toggle.current?.focus();
-      }
-    };
-    window.addEventListener("keydown", close);
-    return () => window.removeEventListener("keydown", close);
-  }, [open]);
-  useEffect(() => {
-    const query = window.matchMedia("(min-width: 1024px) and (hover: hover)");
-    const update = () => setWide(query.matches);
-    update();
-    query.addEventListener("change", update);
-    return () => query.removeEventListener("change", update);
-  }, []);
-  const expanded = wide || open;
+    if (mode !== "rail") return;
+    const slot = marker.current?.closest(".profile-card")?.querySelector<HTMLElement>(".profile-header-social-slot");
+    setHost(slot ?? null);
+  }, [mode]);
   const items = (config.items ?? []).filter((item) => item.url?.trim());
   if (!items.length) return null;
   const links = items.map((item, index) => {
@@ -78,7 +55,7 @@ export function PremiumSocials({
         target={preview ? undefined : "_blank"}
         rel="noopener noreferrer"
         aria-label={label}
-        tabIndex={mode === "rail" && !expanded ? -1 : undefined}
+        title={label}
         style={
           {
             "--social-accent": accent,
@@ -100,82 +77,11 @@ export function PremiumSocials({
       </a>
     );
   });
-  const rail = (
-    <>
-      {open && !wide && (
-        <button
-          type="button"
-          className="premium-social-backdrop"
-          data-preview={preview}
-          aria-label="Close social menu"
-          onClick={() => {
-            setOpen(false);
-            toggle.current?.focus();
-          }}
-        />
-      )}
-      <div
-        className="premium-social-rail"
-        data-open={expanded}
-        data-wide={wide}
-        data-preview={preview}
-        style={
-          {
-            "--rail-bg": theme.btnBg,
-            "--rail-fg": theme.btnText,
-          } as CSSProperties
-        }
-      >
-        <div
-          ref={menu}
-          id={id}
-          className="premium-social-rail-links"
-          aria-hidden={!expanded}
-        >
-          {links}
-        </div>
-        <button
-          ref={toggle}
-          type="button"
-          className="premium-social-toggle"
-          aria-label={open ? "Close social links" : "Open social links"}
-          aria-expanded={open}
-          aria-controls={id}
-          onClick={() => setOpen((v) => !v)}
-        >
-          {open ? (
-            <span aria-hidden>×</span>
-          ) : (
-            <>
-            <svg
-              aria-hidden
-              width="22"
-              height="22"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.8"
-            >
-              <circle cx="18" cy="5" r="3" />
-              <circle cx="6" cy="12" r="3" />
-              <circle cx="18" cy="19" r="3" />
-              <path d="m9 10 6-4m-6 8 6 4" />
-            </svg>
-            <span className="premium-social-toggle-label">Social links</span>
-            </>
-          )}
-        </button>
-      </div>
-    </>
-  );
-  return (
-    <>
-      <span ref={marker} className="premium-social-marker" />
-      {mode === "rail" ? (
-        host && createPortal(rail, preview ? host : document.body)
-      ) : (
-        <div className={`premium-socials premium-socials-${mode}`}>{links}</div>
-      )}
-    </>
-  );
+  const rail = <nav className="premium-profile-rail" aria-label="Social links">{links}</nav>;
+  return <>
+    <span ref={marker} className="premium-social-marker" />
+    {mode === "rail"
+      ? host ? createPortal(rail, host) : rail
+      : <div className={`premium-socials premium-socials-${mode}`}>{links}</div>}
+  </>;
 }

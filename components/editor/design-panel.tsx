@@ -1,4 +1,5 @@
 "use client";
+import { CoverPhotoPicker } from "./cover-photo-picker";
 import { PremiumProfileControls } from "./premium-profile-controls";
 import { ProfileVideoUpload } from "@/components/editor/profile-video-upload";
 
@@ -1000,6 +1001,7 @@ export function DesignPanel({
         {/* ---------- Profile photo ---------- */}
         {tab === "avatar" && (
           <div className="space-y-5">
+            {resolved.profileLayout === "cover" && <CoverPhotoPicker value={design.coverImage} userId={userId} allowed={caps.full} onChange={coverImage => onChange({coverImage})} onUpsell={onUpsell} />}
             <ProfileVideoUpload allowed={caps.full} userId={userId} value={design.avatarVideo} onUpsell={onUpsell}
               onChange={(avatarVideo, avatarVideoPoster) => onChange({ avatarVideo, avatarVideoPoster })} />
             <div>

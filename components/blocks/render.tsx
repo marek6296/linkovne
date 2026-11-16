@@ -185,7 +185,7 @@ function LinkBlock({
 
   const animation = cfg.anim ?? theme.btnAnimation ?? "none";
   const anim = ANIM_CLASS[animation] ?? "";
-  const base = `profile-link profile-button-${theme.buttonTreatment ?? "default"} block min-w-0 max-w-full w-full overflow-hidden font-medium transition duration-200 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.985] ${anim}`;
+  const base = `profile-link profile-button-${theme.buttonTreatment === "tile" && image && (layout === "card" || layout === "cover") ? "default" : theme.buttonTreatment ?? "default"} block min-w-0 max-w-full w-full overflow-hidden font-medium transition duration-200 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.985] ${anim}`;
 
   const iconKey = cfg.icon as IconKey | undefined;
   const showIcon = !image && iconKey && ICON_KEYS.includes(iconKey);
@@ -942,9 +942,14 @@ export function ProfileHeader({
   const className =
     "profile-header-selectable w-full rounded-[1.75rem] outline-none ring-offset-2 transition";
   return <div className={className}>
+    <div className="profile-header-composition">
+    <div className="profile-header-main">
     <ProfileEffects theme={theme}>
       {onSelect ? <button type="button" onClick={onSelect} className="w-full text-inherit" aria-label="Edit profile">{content}</button> : content}
     </ProfileEffects>
+    </div>
+    <div className="profile-header-social-slot" />
+    </div>
     {theme.profileCaption && <p className="profile-caption">{theme.profileCaption}</p>}
   </div>;
 }
