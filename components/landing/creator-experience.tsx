@@ -8,9 +8,9 @@ import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useInView, useReducedMotion } from "motion/react";
 
 const FEATURES = [
- {image:"/landing/feature-profile.webp",title:"Your profile.\nYour style.",text:"Choose your colours, photos and layout. Bring your links and content together on a page that feels like you.",alt:"Sculptural profile page with colourful link blocks and design swatches",cta:"Create your profile"},
- {image:"/landing/feature-privacy.webp",title:"Your links.\nMore privacy.",text:"Keep sensitive destinations behind a Link Shield confirmation screen. Add an optional 18+ check and choose how visitors open your links.",alt:"A cobalt link passing through an ivory arch with a privacy screen and shield",cta:"Build your page"},
- {image:"/landing/feature-social.webp",title:"Every channel.\nConnected.",text:"Add your social accounts to one profile. Help people find your videos, posts and latest updates from a single link.",alt:"Camera, music and video tiles connected to one central profile",cta:"Bring it together"},
+ {image:"/landing/feature-profile-dark.webp",title:"Your profile.\nYour style.",text:"Choose your colours, photos and layout. Bring your links and content together on a page that feels like you.",alt:"Sculptural profile page with colourful link blocks and design swatches",cta:"Create your profile"},
+ {image:"/landing/feature-privacy-dark.webp",title:"Your links.\nMore privacy.",text:"Keep sensitive destinations behind a Link Shield confirmation screen. Add an optional 18+ check and choose how visitors open your links.",alt:"A sculptural cobalt shield with an ivory link symbol protecting a pink link tile",cta:"Build your page"},
+ {image:"/landing/feature-social-dark.webp",title:"Every channel.\nConnected.",text:"Add your social accounts to one profile. Help people find your videos, posts and latest updates from a single link.",alt:"Camera, music and video tiles connected to one central profile",cta:"Bring it together"},
 ];
 export function FeatureSpotlight() {
  const [index,setIndex]=useState(0);

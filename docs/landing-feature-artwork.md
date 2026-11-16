@@ -2,7 +2,23 @@
 
 Three original illustrations generated with the built-in image_gen tool. Source PNGs retained in Codex generated_images; production copies are 1200px WebP (quality 88) under public/landing/feature-{profile,privacy,social}.webp. These are conceptual illustrations, not screenshots of the editor.
 
-## Prompts
+## Current dark artwork
+
+User revision: charcoal background matching the Free pricing card (neutral-800 / #262626). Security illustration replaced entirely with a shield and link tile; the other compositions retained. Built-in image_gen edit for profile/social and generation for privacy. Current assets: public/landing/feature-{profile,privacy,social}-dark.webp (1200px, quality 90).
+
+### Dark custom profile
+
+Square 1:1 premium Linkovne product illustration, background and floor precisely uniform charcoal #262626 (Tailwind neutral-800, matching the website's dark pricing card), no pink background, no grey gradient or haze. Clean dark studio cyclorama with subtle contact shadows, art-directed matte ivory, cobalt #3448ED and blush pink #F5CEE3 objects. Crisp edges, tasteful soft studio illumination, generous 12 percent margins around all objects. No text, no people, no sparkle, no floating decorative balls. Edit the supplied illustration. Preserve the exact main composition and recognizable objects: ivory sculptural profile with pink flower avatar, three colored link bars, two colored swatches and small layout tile. Change its pink background and pink floor to charcoal #262626, adjust lighting naturally for a dark studio. Keep the objects' ivory, pink and cobalt colors bright, clean and consistent. Do not add objects.
+
+### New link protection
+
+Square 1:1 premium Linkovne product illustration, background and floor precisely uniform charcoal #262626 (Tailwind neutral-800, matching the website's dark pricing card), no pink background, no grey gradient or haze. Clean dark studio cyclorama with subtle contact shadows, art-directed matte ivory, cobalt #3448ED and blush pink #F5CEE3 objects. Crisp edges, tasteful soft studio illumination, generous 12 percent margins around all objects. No text, no people, no sparkle, no floating decorative balls. Create a completely new minimal illustration of link protection. One beautiful substantial cobalt blue shield standing upright at a slight three-quarter angle, with a single large raised ivory chain-link icon centered on its face. Beside and slightly behind the shield is one horizontal blush pink rounded link tile with a small dark link symbol inset. Only these two solid physical objects, beautifully machined rounded bevels, tactile satin finish. Coherent realistic geometry. Shield subtly leaning against link tile. No architectural arch, no glass door, no chain piercing anything, no padlock, no checkmark, no cables, no extra symbols. Strong simple elegant silhouette.
+
+### Dark social networks
+
+Square 1:1 premium Linkovne product illustration, background and floor precisely uniform charcoal #262626 (Tailwind neutral-800, matching the website's dark pricing card), no pink background, no grey gradient or haze. Clean dark studio cyclorama with subtle contact shadows, art-directed matte ivory, cobalt #3448ED and blush pink #F5CEE3 objects. Crisp edges, tasteful soft studio illumination, generous 12 percent margins around all objects. No text, no people, no sparkle, no floating decorative balls. Edit the supplied illustration. Preserve the existing precise connected arrangement: ivory hub with three cobalt inset bars and three attached camera/play/music tiles, connected with cobalt cables. Change pink background and pink floor to uniform charcoal #262626 and adjust lighting for a premium dark studio. Preserve the pale pink camera tile, cobalt video tile and ivory hub. Change the dark musical-note tile to blush pink so it remains clearly visible against charcoal. No additional objects. Entire composition within generous margins.
+
+## Original pink concepts (superseded)
 
 ### Custom profile
 
