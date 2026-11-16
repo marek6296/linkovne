@@ -1140,7 +1140,7 @@ export function Editor({
                 />
               </section>
             </div>
-            <div className="studio-pane" hidden={workspace !== "content"}>
+            <div className="studio-pane space-y-3" hidden={workspace !== "content"}>
               {/* 4 — Blocks (otvorene) */}
               <Section
                 title="Page content"
@@ -1254,7 +1254,7 @@ export function Editor({
                     Nothing here yet — add your first block above.
                   </p>
                 )}
-              </Section>{" "}
+              </Section>
               {/* 1 — Quick start: AI + import (zbalene) */}
               <Section
                 title="Quick start"
