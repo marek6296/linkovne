@@ -1093,3 +1093,13 @@ html.lk-escaping main > :not(.lk-gate):not(script) {
 @media(prefers-reduced-motion:reduce){.premium-profile-rail a{transition:none}}
 
 .profile-header-composition:has(.profile-header-compact) .premium-profile-rail{max-height:188px}
+
+.profile-load-boundary{width:100%;display:contents}
+.profile-load-boundary[data-ready="false"]{display:grid;place-items:center;min-height:80svh}
+.profile-load-boundary[data-ready="false"] .profile-load-content{position:absolute;visibility:hidden;pointer-events:none}
+.profile-load-boundary[data-ready="true"] .profile-load-content{display:contents}
+.profile-load-boundary[data-ready="true"] .profile-card{animation:profile-load-arrive .55s cubic-bezier(.2,.8,.2,1) both}
+.profile-load-status{display:flex;flex-direction:column;align-items:center;gap:14px;font-size:13px;color:inherit}
+.profile-load-spinner{width:24px;height:24px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:action-spin .8s linear infinite;opacity:.5}
+@keyframes profile-load-arrive{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.profile-load-boundary[data-ready="true"] .profile-card,.profile-load-spinner{animation:none}}

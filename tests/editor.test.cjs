@@ -385,3 +385,16 @@ test("premium social icon styles render every platform and a custom name", () =>
   assert.equal((html.match(/<a /g)||[]).length,SOCIAL_PLATFORMS.length);assert.ok(html.includes("My community"));
  }
 });
+
+test("protected profile starts busy and inert while ordinary profiles remain available", () => {
+  const React = require("react");
+  const { renderToStaticMarkup } = require("react-dom/server");
+  const { ProfileLoadBoundary } = load("components/profile/profile-load-boundary.tsx");
+  for (const pending of [true, false]) {
+    const html = renderToStaticMarkup(React.createElement(ProfileLoadBoundary, { pending }, React.createElement("a", {href:"#"}, "Profile")));
+    assert.equal(html.includes('aria-busy="true"'), pending);
+    assert.equal(html.includes('inert=""'), pending);
+    assert.equal(html.includes('role="status"'), pending);
+    assert.ok(html.includes(`data-ready="${!pending}"`));
+  }
+});

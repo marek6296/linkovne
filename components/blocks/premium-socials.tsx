@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import { Icon, ICON_KEYS, type IconKey } from "./icon";
 import { SocialIcon } from "./social-icon";
@@ -25,7 +25,7 @@ export function PremiumSocials({
   const [host, setHost] = useState<HTMLElement | null>(null);
   const marker = useRef<HTMLSpanElement>(null);
   const mode = config.socialPresentation ?? "dock";
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (mode !== "rail") return;
     const slot = marker.current?.closest(".profile-card")?.querySelector<HTMLElement>(".profile-header-social-slot");
     setHost(slot ?? null);

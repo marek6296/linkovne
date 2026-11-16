@@ -1,3 +1,4 @@
+import { ProfileLoadBoundary } from "@/components/profile/profile-load-boundary";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { createPublicClient } from "@/lib/supabase/public";
@@ -199,6 +200,7 @@ export default async function PublicProfilePage({
       {/* Karta profilu. Mobile: cela obrazovka. Desktop: vysoky telefonovy tvar
           — vycentrovany, zaobleny, s tienom. In-app escape gate ide cez
           `leading`, aby bol vzdy uplne prvy v <main> a nevznikol flash. */}
+      <ProfileLoadBoundary key={profile.id} pending={stealth} foreground={theme.text}>
       <ProfileShell
         theme={theme}
         showBranding={brandingVisible}
@@ -280,6 +282,7 @@ export default async function PublicProfilePage({
       </div>
 
       </ProfileShell>
+      </ProfileLoadBoundary>
     </div>
   );
 }
