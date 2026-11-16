@@ -12,7 +12,7 @@ const sitemap = await fetch(`${origin}/sitemap.xml`);
 if (!sitemap.ok) throw new Error(`Sitemap returned ${sitemap.status}`);
 const urlList = [...(await sitemap.text()).matchAll(/<loc>([^<]+)<\/loc>/g)]
   .map(match => match[1])
-  .filter(value => { const u = new URL(value); return u.origin === origin && (u.pathname === "/" || u.pathname === "/about" || u.pathname === "/guides" || u.pathname === "/vs" || u.pathname.startsWith("/guides/") || u.pathname.startsWith("/vs/")); });
+  .filter(value => { const u = new URL(value); return u.origin === origin && (u.pathname === "/" || u.pathname === "/about" || u.pathname === "/pricing" || u.pathname === "/features" || u.pathname === "/guides" || u.pathname === "/vs" || u.pathname.startsWith("/guides/") || u.pathname.startsWith("/vs/")); });
 if (urlList.length === 0) throw new Error("No marketing URLs in production sitemap");
 for (const url of urlList) {
   const page = await fetch(url);
