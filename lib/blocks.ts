@@ -112,10 +112,13 @@ export type SocialPlatform =
   | "whatsapp"
   | "telegram"
   | "email"
-  | "phone";
+  | "phone"
+  | "custom";
 
 /* ---------- Social icons — customizacia bloku ---------- */
 
+export const SOCIAL_PRESENTATIONS = { classic: "Classic", dock: "Dock", pop: "Pop", rail: "Side rail" } as const;
+export type SocialPresentation = keyof typeof SOCIAL_PRESENTATIONS;
 export type SocialStyle = "line" | "brand";
 export type SocialShape = "bare" | "circle" | "rounded" | "square";
 export type SocialSize = "sm" | "md" | "lg";
@@ -157,6 +160,7 @@ export const SOCIAL_SHAPE_RADIUS: Record<SocialShape, string> = {
 
 /** Znackove farby pre `brand` styl. Web/email/telefon nie su znacky → neutral. */
 export const SOCIAL_BRAND: Record<SocialPlatform, string> = {
+  custom: "#3448ef",
   website: "#6B7280",
   instagram: "#E1306C",
   tiktok: "#010101",
@@ -196,6 +200,8 @@ export type BlockConfig = {
   icon?: string;
   /** Sirka — dva half buttony vedla seba tvoria riadok */
   width?: LinkWidth;
+  /** Explicit per-link override takes precedence over a paired profile grid. */
+  widthExplicit?: boolean;
   /** Vlastna animacia. Chybajuca hodnota dedi globalnu animaciu. */
   anim?: LinkAnim;
   /** VIP zamok — ked je nastaveny, odkaz sa odomkne az po zadani tohto kodu.
@@ -212,7 +218,8 @@ export type BlockConfig = {
   mediaBytes?: number;
   thumbBytes?: number;
   // socials — kazda polozka moze mat vlastnu farbu (per-icon override)
-  items?: { platform: SocialPlatform; url: string; color?: string }[];
+  items?: { platform: SocialPlatform; url: string; color?: string; label?: string; icon?: string }[];
+  socialPresentation?: SocialPresentation;
   /** Styl ikon: `line` (jednotny obrys) alebo `brand` (znackove farby). */
   socialStyle?: SocialStyle;
   /** Tvar podkladu: bez pozadia alebo farebny chip (kruh/zaobleny/stvorec). */
@@ -326,6 +333,7 @@ export function defaultConfig(type: BlockType): BlockConfig {
 }
 
 export const SOCIAL_LABELS: Record<SocialPlatform, string> = {
+  custom: "Custom link",
   website: "Website",
   instagram: "Instagram",
   tiktok: "TikTok",

@@ -13,12 +13,14 @@ type Payload = { bio: string | null; blocks: Block[]; theme: Theme };
  * si obsah po načítaní stránky doťiahne cez /api/stealth-content a vykreslí.
  */
 export function StealthContent({
+  premium = false,
   username,
   profileId,
   displayName,
   avatarUrl,
   initialTheme,
 }: {
+  premium?: boolean;
   username: string;
   profileId: string;
   displayName: string | null;
@@ -55,7 +57,7 @@ export function StealthContent({
       />
       {data && (
         <div className="profile-links">
-          <BlockList blocks={data.blocks} theme={theme} profileId={profileId} />
+          <BlockList premium={premium} blocks={data.blocks} theme={theme} profileId={profileId} />
         </div>
       )}
     </>

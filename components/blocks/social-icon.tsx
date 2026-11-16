@@ -3,6 +3,7 @@ import type { SocialPlatform } from "@/lib/blocks";
 // Geometricky kreslene ikony jednotnym strokom — nie stiahnute brand assety,
 // takze drzia jeden vizualny jazyk naprieč temami.
 const PATHS: Record<SocialPlatform, React.ReactNode> = {
+  custom: <><path d="m10 13 4-4M8 16l-1 1a3 3 0 0 1-4-4l4-4a3 3 0 0 1 4 0m2-1 1-1a3 3 0 0 1 4 4l-4 4a3 3 0 0 1-4 0" /></>,
   website: (
     <>
       <circle cx="12" cy="12" r="9" />

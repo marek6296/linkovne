@@ -60,6 +60,332 @@ const STARTER_LINKS: Template["starter"] = [
 ];
 
 const TEMPLATE_DEFINITIONS: Template[] = [
+{
+  "key": "soft-portrait",
+  "label": "Soft Portrait",
+  "tagline": "Design Lab \u00b7 editable composition",
+  "category": "Creator",
+  "featured": true,
+  "premium": true,
+  "theme": "classic",
+  "design": {
+    "bg": "solid",
+    "bgColor": "#eeedf3",
+    "textColor": "#222135",
+    "btnBg": "#eeedf3",
+    "btnText": "#222135",
+    "btnShape": "soft",
+    "font": "sans",
+    "btnSpacing": "normal",
+    "profileEntrance": "rise",
+    "profileSurface": "soft",
+    "buttonTreatment": "soft",
+    "profileHover": "lift",
+    "avatarSize": "lg"
+  },
+  "starter": [
+    {
+      "type": "link",
+      "title": "My work"
+    },
+    {
+      "type": "link",
+      "title": "Get in touch"
+    },
+    {
+      "type": "socials"
+    }
+  ]
+},
+{
+  "key": "colour-reveal",
+  "label": "Colour Reveal",
+  "tagline": "Design Lab \u00b7 editable composition",
+  "category": "Creator",
+  "featured": true,
+  "premium": true,
+  "theme": "classic",
+  "design": {
+    "bg": "solid",
+    "bgColor": "#f4f1ea",
+    "textColor": "#222135",
+    "btnBg": "#222135",
+    "btnText": "#ffffff",
+    "btnShape": "soft",
+    "font": "sans",
+    "btnSpacing": "normal",
+    "profileEntrance": "rise",
+    "profileHover": "reveal",
+    "profileAccent": "#3448ef",
+    "avatarSize": "lg"
+  },
+  "starter": [
+    {
+      "type": "link",
+      "title": "My work"
+    },
+    {
+      "type": "link",
+      "title": "Get in touch"
+    },
+    {
+      "type": "socials"
+    }
+  ]
+},
+{
+  "key": "glass-profile",
+  "label": "Glass Profile",
+  "tagline": "Design Lab \u00b7 editable composition",
+  "category": "Creator",
+  "featured": true,
+  "premium": true,
+  "theme": "classic",
+  "design": {
+    "bg": "gradient",
+    "bgColor": "#e8d7f5",
+    "textColor": "#222135",
+    "btnBg": "#222135",
+    "btnText": "#ffffff",
+    "btnShape": "soft",
+    "font": "sans",
+    "btnSpacing": "normal",
+    "profileEntrance": "rise",
+    "bgColor2": "#f8d6e6",
+    "profileSurface": "glass",
+    "profileHover": "tilt"
+  },
+  "starter": [
+    {
+      "type": "link",
+      "title": "My work"
+    },
+    {
+      "type": "link",
+      "title": "Get in touch"
+    },
+    {
+      "type": "socials"
+    }
+  ]
+},
+{
+  "key": "cover-card",
+  "label": "Cover Card",
+  "tagline": "Design Lab \u00b7 editable composition",
+  "category": "Creator",
+  "featured": true,
+  "premium": true,
+  "theme": "classic",
+  "design": {
+    "bg": "solid",
+    "bgColor": "#f4f1ea",
+    "textColor": "#222135",
+    "btnBg": "#222135",
+    "btnText": "#ffffff",
+    "btnShape": "soft",
+    "font": "sans",
+    "btnSpacing": "normal",
+    "profileEntrance": "rise",
+    "profileLayout": "cover",
+    "avatarSize": "md"
+  },
+  "starter": [
+    {
+      "type": "link",
+      "title": "My work"
+    },
+    {
+      "type": "link",
+      "title": "Get in touch"
+    },
+    {
+      "type": "socials"
+    }
+  ]
+},
+{
+  "key": "after-hours",
+  "label": "After Hours",
+  "tagline": "Design Lab \u00b7 editable composition",
+  "category": "Creator",
+  "featured": true,
+  "premium": true,
+  "theme": "classic",
+  "design": {
+    "bg": "solid",
+    "bgColor": "#171620",
+    "textColor": "#ffffff",
+    "btnBg": "#3d3c51",
+    "btnText": "#ffffff",
+    "btnShape": "soft",
+    "font": "sans",
+    "btnSpacing": "normal",
+    "profileEntrance": "rise",
+    "profileLayout": "compact",
+    "profileSurface": "contact",
+    "linkArrangement": "grid"
+  },
+  "starter": [
+    {
+      "type": "link",
+      "title": "My work"
+    },
+    {
+      "type": "link",
+      "title": "Get in touch"
+    },
+    {
+      "type": "socials"
+    }
+  ]
+},
+{
+  "key": "flip-intro",
+  "label": "Flip Intro",
+  "tagline": "Design Lab \u00b7 editable composition",
+  "category": "Creator",
+  "featured": true,
+  "premium": true,
+  "theme": "classic",
+  "design": {
+    "bg": "solid",
+    "bgColor": "#f4f1ea",
+    "textColor": "#222135",
+    "btnBg": "#222135",
+    "btnText": "#ffffff",
+    "btnShape": "soft",
+    "font": "sans",
+    "btnSpacing": "normal",
+    "profileEntrance": "rise",
+    "profileHover": "flip",
+    "profileAccent": "#3448ef",
+    "avatarSize": "lg"
+  },
+  "starter": [
+    {
+      "type": "link",
+      "title": "My work"
+    },
+    {
+      "type": "link",
+      "title": "Get in touch"
+    },
+    {
+      "type": "socials"
+    }
+  ]
+},
+{
+  "key": "editorial-profile",
+  "label": "Editorial",
+  "tagline": "Design Lab \u00b7 editable composition",
+  "category": "Creator",
+  "featured": true,
+  "premium": true,
+  "theme": "classic",
+  "design": {
+    "bg": "solid",
+    "bgColor": "#f4f1ea",
+    "textColor": "#222135",
+    "btnBg": "#eeaabe",
+    "btnText": "#38252e",
+    "btnShape": "soft",
+    "font": "sans",
+    "btnSpacing": "normal",
+    "profileEntrance": "rise",
+    "profileLayout": "editorial",
+    "fontHeading": "cormorant",
+    "nameSize": "xl"
+  },
+  "starter": [
+    {
+      "type": "link",
+      "title": "My work"
+    },
+    {
+      "type": "link",
+      "title": "Get in touch"
+    },
+    {
+      "type": "socials"
+    }
+  ]
+},
+{
+  "key": "creator-grid",
+  "label": "Creator Grid",
+  "tagline": "Design Lab \u00b7 editable composition",
+  "category": "Creator",
+  "featured": true,
+  "premium": true,
+  "theme": "classic",
+  "design": {
+    "bg": "solid",
+    "bgColor": "#f4f1ea",
+    "textColor": "#222135",
+    "btnBg": "#e0e3ff",
+    "btnText": "#222135",
+    "btnShape": "soft",
+    "font": "sans",
+    "btnSpacing": "normal",
+    "profileEntrance": "rise",
+    "profileLayout": "compact",
+    "linkArrangement": "grid",
+    "buttonTreatment": "tile"
+  },
+  "starter": [
+    {
+      "type": "link",
+      "title": "My work"
+    },
+    {
+      "type": "link",
+      "title": "Get in touch"
+    },
+    {
+      "type": "socials"
+    }
+  ]
+},
+{
+  "key": "athlete-profile",
+  "label": "Athlete",
+  "tagline": "Design Lab \u00b7 editable composition",
+  "category": "Creator",
+  "featured": true,
+  "premium": true,
+  "theme": "classic",
+  "design": {
+    "bg": "solid",
+    "bgColor": "#f4f1ea",
+    "textColor": "#222135",
+    "btnBg": "#3448ef",
+    "btnText": "#ffffff",
+    "btnShape": "square",
+    "font": "sans",
+    "btnSpacing": "normal",
+    "profileEntrance": "rise",
+    "profileLayout": "hero",
+    "avatarSize": "lg",
+    "nameSize": "xl",
+    "fontHeading": "display"
+  },
+  "starter": [
+    {
+      "type": "link",
+      "title": "My work"
+    },
+    {
+      "type": "link",
+      "title": "Get in touch"
+    },
+    {
+      "type": "socials"
+    }
+  ]
+},
+
   /* ---------- Minimal ---------- */
   {
     key: "paper",

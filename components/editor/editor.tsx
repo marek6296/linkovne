@@ -25,7 +25,7 @@ import {
   isVisibleNow,
 } from "@/lib/blocks";
 import { THEMES, THEME_KEYS } from "@/lib/themes";
-import { resolveTheme, type Design } from "@/lib/design";
+import { resolveTheme, PREMIUM_DESIGN_KEYS, type Design } from "@/lib/design";
 import { allowsBlock, allowsTheme, type PlanFeatures } from "@/lib/plans";
 import {
   designCaps,
@@ -427,6 +427,7 @@ export function Editor({
       ...p,
       theme: key,
       design: {
+        ...Object.fromEntries(PREMIUM_DESIGN_KEYS.map(key => [key, p.design[key]])),
         trackedLinks: p.design.trackedLinks,
         profileLayout: p.design.profileLayout,
         contentWidth: p.design.contentWidth,
@@ -1207,6 +1208,7 @@ export function Editor({
                           className="scroll-mt-24"
                         >
                           <BlockCard
+                            premium={plan.customDesign}
                             block={block}
                             broken={broken.has(block.id)}
                             userId={userId}
@@ -1342,6 +1344,7 @@ export function Editor({
           className={`${tab === "preview" ? "" : "hidden lg:block"} studio-preview-column`}
         >
           <Preview
+            premium={plan.customDesign}
             profileId={profile.id}
             displayName={profile.display_name}
             username={profile.username}

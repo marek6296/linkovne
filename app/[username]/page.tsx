@@ -241,6 +241,7 @@ export default async function PublicProfilePage({
             // znovu tým istým komponentom ako editor, takže bio ostane v
             // správnom template layoute namiesto pridania pod hotovú hlavičku.
             <StealthContent
+              premium={plan.customDesign}
               username={profile.username}
               profileId={profile.id}
               displayName={snap.display_name}
@@ -258,6 +259,7 @@ export default async function PublicProfilePage({
               />
               <div className="profile-links">
                 <BlockList
+                  premium={plan.customDesign}
                   blocks={blockList}
                   theme={theme}
                   profileId={profile.id}

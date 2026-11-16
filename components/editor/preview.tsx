@@ -15,6 +15,7 @@ import { profileLabel } from "@/lib/site";
  * dostane. Jedina odlisnost: tu sa nedaju kliknut (hrefFor => "#").
  */
 export function Preview({
+  premium = false,
   profileId,
   displayName,
   username,
@@ -26,6 +27,7 @@ export function Preview({
   onSelect,
   onReorder,
 }: {
+  premium?: boolean;
   profileId: string;
   displayName: string;
   username: string;
@@ -115,6 +117,7 @@ export function Preview({
                     />
                     <div className="profile-links">
                       <BlockList
+                        premium={premium}
                         blocks={blocks}
                         theme={theme}
                         profileId={profileId}

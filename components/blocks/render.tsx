@@ -1,4 +1,6 @@
 "use client";
+import { PremiumSocials } from "./premium-socials";
+import { ProfileEffects } from "@/components/profile/profile-effects";
 import { ProfileVideo } from "@/components/profile/profile-video";
 
 import {
@@ -183,7 +185,7 @@ function LinkBlock({
 
   const animation = cfg.anim ?? theme.btnAnimation ?? "none";
   const anim = ANIM_CLASS[animation] ?? "";
-  const base = `profile-link block min-w-0 max-w-full w-full overflow-hidden font-medium transition duration-200 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.985] ${anim}`;
+  const base = `profile-link profile-button-${theme.buttonTreatment ?? "default"} block min-w-0 max-w-full w-full overflow-hidden font-medium transition duration-200 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.985] ${anim}`;
 
   const iconKey = cfg.icon as IconKey | undefined;
   const showIcon = !image && iconKey && ICON_KEYS.includes(iconKey);
@@ -427,8 +429,10 @@ export function BlockList({
   onSelect,
   onReorder,
   coordinateScale = 1,
+  premium = false,
 }: {
   blocks: Block[];
+  premium?: boolean;
   theme: Theme;
   profileId: string;
   /** In the editor nothing is actually submitted. */
@@ -451,7 +455,7 @@ export function BlockList({
   const hrefFor = (block: Block) => (preview ? "#" : `/r/${block.id}`);
 
   const isHalf = (b: Block | undefined) =>
-    !!b && b.type === "link" && b.config.width === "half";
+    !!b && b.type === "link" && (b.config.width === "half" || (theme.linkArrangement === "grid" && !b.config.widthExplicit && !b.config.featured && !["card", "cover"].includes(b.config.layout ?? "")));
 
   // Section markers remain headline blocks in storage, so older databases and
   // published snapshots stay compatible. Every marker owns following blocks
@@ -564,6 +568,7 @@ export function BlockList({
               );
               if (items.length === 0) return null;
 
+              if (premium && ["dock", "pop", "rail"].includes(block.config.socialPresentation ?? "")) return <PremiumSocials key={block.id} config={block.config.socialPresentation === "rail" && active.find(b => b.type === "socials" && b.config.socialPresentation === "rail")?.id !== block.id ? {...block.config, socialPresentation: "dock"} : block.config} theme={theme} preview={preview} />;
               const style = block.config.socialStyle ?? "line";
               const shape = block.config.socialShape ?? "bare";
               const size = block.config.socialSize ?? "md";
@@ -683,8 +688,8 @@ export function BlockList({
           type="button"
           aria-label={`Edit ${block.type} block`}
           onClick={() => onSelect(block.id)}
-          className="absolute inset-0 z-10 cursor-pointer rounded-xl outline-none ring-offset-2 transition group-hover:ring-2 group-hover:ring-current/30 focus-visible:ring-2"
-        />
+          className={block.type === "socials" && premium && block.config.socialPresentation && block.config.socialPresentation !== "classic" ? "absolute -top-3 right-0 z-10 rounded-full border bg-white px-2 py-1 text-[10px] text-black shadow-sm" : "absolute inset-0 z-10 cursor-pointer rounded-xl outline-none ring-offset-2 transition group-hover:ring-2 group-hover:ring-current/30 focus-visible:ring-2"}
+        >{block.type === "socials" && premium && block.config.socialPresentation && block.config.socialPresentation !== "classic" ? "Edit" : null}</button>
       </div>
     );
     if (onReorder) {
@@ -907,6 +912,13 @@ export function ProfileHeader({
         </div>
       </div>
     );
+  } else if (layout === "cover") {
+    content = <div className="profile-header-cover">
+      <div className="profile-cover-photo" style={{ background: theme.profileAccent }}>{theme.coverImage && <img src={theme.coverImage} alt="" />}</div>
+      <div className="profile-cover-body">{avatar("profile-cover-avatar", { ...avatarStyle, width: Math.min(avatarWidth, 180), border: `5px solid ${theme.page.startsWith("#") ? theme.page : "#fff"}` })}{identity}</div>
+    </div>;
+  } else if (layout === "editorial") {
+    content = <div className="profile-header-editorial">{identity}{avatar("profile-editorial-photo", { ...avatarStyle, width: "100%", height: theme.heroHeightPx ?? 392, aspectRatio: "auto", borderRadius: "48% 48% 20px 20px" })}</div>;
   } else if (layout === "compact") {
     content = (
       <div className="profile-header-compact">
@@ -929,11 +941,10 @@ export function ProfileHeader({
 
   const className =
     "profile-header-selectable w-full rounded-[1.75rem] outline-none ring-offset-2 transition";
-  return onSelect ? (
-    <button type="button" onClick={onSelect} className={className}>
-      {content}
-    </button>
-  ) : (
-    <div className={className}>{content}</div>
-  );
+  return <div className={className}>
+    <ProfileEffects theme={theme}>
+      {onSelect ? <button type="button" onClick={onSelect} className="w-full text-inherit" aria-label="Edit profile">{content}</button> : content}
+    </ProfileEffects>
+    {theme.profileCaption && <p className="profile-caption">{theme.profileCaption}</p>}
+  </div>;
 }

@@ -52,7 +52,7 @@ export const BTN_SIZE_LABELS: Record<BtnSize, string> = {
   lg: "Large",
 };
 
-export type Theme = {
+export type Theme = Pick<import("./design").Design, typeof import("./design").PREMIUM_DESIGN_KEYS[number]> & {
   label: string;
   /** Preview swatch for the theme picker */
   swatch: string;
@@ -78,7 +78,7 @@ export type Theme = {
   /** Vertical rhythm between blocks. */
   blockGap?: string;
   /** Overall profile composition selected in Design Studio. */
-  profileLayout?: "centered" | "compact" | "hero";
+  profileLayout?: import("./design").ProfileLayout;
   /** Maximum width of the profile content and its desktop card. */
   contentWidthPx?: number;
   cardWidthPx?: number;

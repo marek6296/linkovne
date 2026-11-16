@@ -1,4 +1,5 @@
 "use client";
+import { PremiumProfileControls } from "./premium-profile-controls";
 import { ProfileVideoUpload } from "@/components/editor/profile-video-upload";
 
 import { useRef, useState } from "react";
@@ -427,6 +428,7 @@ export function DesignPanel({
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [buttonError, setButtonError] = useState<string | null>(null);
   const resolved = resolveTheme(activeTheme, design);
+  const isEditorial = resolved.profileLayout === "editorial";
   const isSpotlight = resolved.profileLayout === "hero";
   const photoShape = isSpotlight
     ? design.avatarShape === "square" ? "square" : "rounded"
@@ -545,7 +547,7 @@ export function DesignPanel({
                         key={key}
                         type="button"
                         aria-pressed={active}
-                        onClick={() => onChange({ profileLayout: key })}
+                        onClick={() => !caps.full && ["cover", "editorial"].includes(key) ? onUpsell() : onChange({ profileLayout: key })}
                         className={`rounded-2xl border p-2.5 text-left transition ${
                           active
                             ? "border-ink bg-ink/[0.035] ring-1 ring-ink"
@@ -583,7 +585,7 @@ export function DesignPanel({
                           )}
                         </span>
                         <span className="mt-2 block text-xs font-semibold">
-                          {PROFILE_LAYOUTS[key].label}
+                          {PROFILE_LAYOUTS[key].label}{["cover", "editorial"].includes(key) && " · Pro"}
                         </span>
                         <span className="mt-0.5 hidden text-[11px] leading-snug text-soft sm:block">
                           {PROFILE_LAYOUTS[key].hint}
@@ -638,6 +640,7 @@ export function DesignPanel({
                 </div>
               </div>
             </div>
+            <PremiumProfileControls design={design} allowed={caps.full} userId={userId} onChange={onChange} onUpsell={onUpsell} />
           </div>
         )}
 
@@ -1036,7 +1039,7 @@ export function DesignPanel({
               </div>
             </div>
 
-            <div>
+            {!isEditorial && <div>
               <GroupLabel>{isSpotlight ? "Cover corners" : "Shape"}</GroupLabel>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {(isSpotlight ? ["rounded", "square"] as AvatarShape[] : Object.keys(AVATAR_SHAPES) as AvatarShape[]).map((k) => (
@@ -1063,10 +1066,10 @@ export function DesignPanel({
                   />
                 ))}
               </div>
-            </div>
-
+            </div>}
+            {isEditorial && <p className="text-xs text-soft">Editorial uses an arched portrait. Adjust its height, crop and focal point below.</p>}
             <StepSlider
-              label={isSpotlight ? "Cover height" : "Size"}
+              label={isSpotlight || isEditorial ? "Cover height" : "Size"}
               keys={Object.keys(AVATAR_SIZES) as AvatarSize[]}
               value={design.avatarSize ?? "md"}
               labelOf={(k) => AVATAR_SIZES[k].label}
@@ -1714,7 +1717,7 @@ export function DesignPanel({
                 <p className="text-xs leading-relaxed text-soft">
                   {resolved.profileLayout === "compact"
                     ? "Compact keeps your text beside the photo."
-                    : "Portrait keeps your text centred below the photo."}
+                    : isEditorial ? "Editorial keeps your introduction above the photo." : resolved.profileLayout === "cover" ? "Cover keeps your introduction below the cover and avatar." : "Portrait keeps your text centred below the photo."}
                   {" "}Choose Spotlight in Layout for left, centre or right alignment.
                 </p>
               )}

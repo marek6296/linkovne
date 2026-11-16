@@ -1,5 +1,6 @@
 "use client";
 
+import { ICON_KEYS } from "@/components/blocks/icon";
 import Link from "next/link";
 import { useId, useRef, useState } from "react";
 import {
@@ -182,7 +183,7 @@ function MediaPicker({
   );
 }
 
-type SocialItem = { platform: SocialPlatform; url: string; color?: string };
+type SocialItem = NonNullable<BlockConfig["items"]>[number];
 
 /** Jeden riadok socialneho uctu s grip handlom na presuvanie (dnd-kit). */
 function SortableSocialRow({
@@ -308,11 +309,13 @@ function SocialColorRow({
   );
 }
 
-function SocialsEditor({
+export function SocialsEditor({
+  premium,
   config,
   onPatch,
 }: {
   config: BlockConfig;
+  premium: boolean;
   onPatch: (patch: Partial<BlockConfig>) => void;
 }) {
   const items = (config.items ?? []) as SocialItem[];
@@ -337,6 +340,12 @@ function SocialsEditor({
 
   return (
     <div className="space-y-4">
+      <label className="block text-sm font-medium">Presentation <span className="text-xs text-soft">Pro</span>
+        <select className="field mt-2 w-full" value={config.socialPresentation ?? "classic"} onChange={e => onPatch({ socialPresentation: e.target.value as BlockConfig["socialPresentation"] })}>
+          <option value="classic">Classic</option><option value="dock" disabled={!premium}>Dock · Pro</option><option value="pop" disabled={!premium}>Pop · Pro</option><option value="rail" disabled={!premium}>Side rail · Pro</option>
+        </select>
+      </label>
+      {config.socialPresentation === "rail" && <p className="text-xs text-soft">Sliding labels on desktop. An expandable button on mobile and in preview.</p>}
       {/* ---------- Vzhlad ikon (vsetky naraz) ---------- */}
       <div className="space-y-3 rounded-xl border border-line p-3.5">
         <SocialChips
@@ -361,6 +370,7 @@ function SocialsEditor({
           }))}
         />
 
+        {(!config.socialPresentation || config.socialPresentation === "classic") && <>
         <SocialChips
           label="Shape"
           value={shape}
@@ -393,6 +403,7 @@ function SocialsEditor({
           options={SOCIAL_SIZES.map((s) => ({ key: s.key, label: s.label }))}
         />
 
+        </>}
         {/* Farby — len pre `line` styl (brand pouziva znackove farby) */}
         {style === "line" && (
           <div className="divide-y divide-line/60 border-t border-line pt-1">
@@ -414,6 +425,10 @@ function SocialsEditor({
         )}
       </div>
 
+      {items.map((item, i) => item.platform === "custom" && <div className="grid grid-cols-2 gap-2" key={`custom-${i}`}>
+        <label className="text-xs">Custom link name<input className="field mt-1 w-full" maxLength={40} value={item.label ?? ""} placeholder="My community" onChange={e => setItems(items.map((v,j) => j === i ? {...v, label: e.target.value} : v))} /></label>
+        <label className="text-xs">Custom icon<select className="field mt-1 w-full" value={item.icon ?? "link"} onChange={e => setItems(items.map((v,j) => j === i ? {...v, icon: e.target.value} : v))}>{ICON_KEYS.map(key => <option key={key} value={key}>{key}</option>)}</select></label>
+      </div>)}
       {/* ---------- Ucty (kazdy zvlast + volitelna farba) ---------- */}
       <div className="space-y-2">
         <DndContext
@@ -443,7 +458,7 @@ function SocialsEditor({
                     className="rounded-lg border border-line bg-surface px-2 py-2 text-sm"
                   >
                     {SOCIAL_PLATFORMS.map((p) => (
-                      <option key={p} value={p}>
+                      <option key={p} value={p} disabled={p === "custom" && !premium}>
                         {SOCIAL_LABELS[p]}
                       </option>
                     ))}
@@ -538,6 +553,7 @@ export function BlockCard({
   broken = false,
   userId,
   vip = false,
+  premium = false,
   onChange,
   onDelete,
   onDuplicate,
@@ -553,6 +569,7 @@ export function BlockCard({
   userId: string;
   /** VIP zamok (kod) je platena funkcia */
   vip?: boolean;
+  premium?: boolean;
   onChange: (patch: Partial<Block>) => void;
   onDelete: () => void;
   onDuplicate: () => void;
@@ -741,7 +758,7 @@ export function BlockCard({
                             key={key}
                             type="button"
                             aria-pressed={active}
-                            onClick={() => patchConfig({ width: key })}
+                            onClick={() => patchConfig({ width: key, widthExplicit: true })}
                             className={`rounded-xl border px-3 py-2.5 text-left transition ${
                               active
                                 ? "border-ink bg-ink/[0.04] ring-1 ring-ink"
@@ -1023,7 +1040,7 @@ export function BlockCard({
           )}
 
           {block.type === "socials" && (
-            <SocialsEditor config={block.config} onPatch={patchConfig} />
+            <SocialsEditor premium={premium} config={block.config} onPatch={patchConfig} />
           )}
 
           {block.type === "faq" && (

@@ -1,4 +1,4 @@
-import type { Design } from "@/lib/design";
+import { PREMIUM_DESIGN_KEYS, type Design } from "@/lib/design";
 import type { PlanFeatures } from "@/lib/plans";
 
 /**
@@ -67,6 +67,8 @@ export function designForPlan(
   if (caps.full) return design;
 
   const d: Design = { ...design };
+  for (const key of PREMIUM_DESIGN_KEYS) delete d[key];
+  if (d.profileLayout === "cover" || d.profileLayout === "editorial") delete d.profileLayout;
   delete d.avatarVideo;
   delete d.avatarVideoPoster;
   delete d.bgVideo;
@@ -121,6 +123,7 @@ export function lockedDesignFeatures(
   if (caps.full) return [];
 
   const locked: string[] = [];
+  if (PREMIUM_DESIGN_KEYS.some(key => design[key] && !["default", "none", "stack"].includes(String(design[key]))) || design.profileLayout === "cover" || design.profileLayout === "editorial") locked.push("Premium profile composition");
   if (design.avatarVideo || (design.bg === "image" && design.bgVideo)) locked.push("Profile video");
   if (!caps.bgImage && design.bg === "image") {
     locked.push("Image background");
@@ -159,4 +162,9 @@ export function hasNewButtonAnimation(
 ): boolean {
   const animations = new Map(existing.map(b => [b.id, b.config?.anim]));
   return blocks.some(b => !!b.config?.anim && b.config.anim !== "none" && animations.get(b.id) !== b.config.anim);
+}
+
+/** New social presentations are paid; classic blocks and existing Free content stay intact. */
+export function hasPremiumSocials(blocks: {config: {socialPresentation?: string; items?: {platform: string}[]}}[]): boolean {
+  return blocks.some(b => (!!b.config.socialPresentation && b.config.socialPresentation !== "classic") || !!b.config.items?.some(item => item.platform === "custom"));
 }

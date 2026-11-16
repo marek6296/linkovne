@@ -17,7 +17,7 @@ export type BtnBorder = "none" | "thin" | "bold";
 export type BtnSpacing = "compact" | "normal" | "relaxed";
 export type BtnWeight = "regular" | "medium" | "bold";
 export type BtnAnimation = LinkAnim;
-export type ProfileLayout = "centered" | "compact" | "hero";
+export type ProfileLayout = "centered" | "compact" | "hero" | "cover" | "editorial";
 export type ProfileTextSize = "sm" | "md" | "lg" | "xl";
 export type ProfileTextAlign = "left" | "center" | "right";
 export const PROFILE_TEXT_SIZES: Record<ProfileTextSize, string> = {
@@ -47,7 +47,23 @@ export type FontKey =
   | "cormorant"
   | "syne";
 
+export const PROFILE_SURFACES = { default: "Original", soft: "Soft depth", glass: "Glass", contact: "After hours" } as const;
+export const PROFILE_HOVERS = { none: "Off", lift: "Lift", tilt: "Tilt", reveal: "Colour reveal", flip: "Half-turn" } as const;
+export const PROFILE_MOTIONS = { none: "Off", float: "Float", breathe: "Breathe" } as const;
+export const PROFILE_ENTRANCES = { none: "Off", rise: "Rise", fade: "Fade" } as const;
+export const PREMIUM_DESIGN_KEYS = ["profileSurface", "profileHover", "profileMotion", "profileEntrance", "profileCaption", "profileBackTitle", "profileBackText", "profileAccent", "coverImage", "linkArrangement", "buttonTreatment"] as const;
 export type Design = {
+  profileSurface?: keyof typeof PROFILE_SURFACES;
+  profileHover?: keyof typeof PROFILE_HOVERS;
+  profileMotion?: keyof typeof PROFILE_MOTIONS;
+  profileEntrance?: keyof typeof PROFILE_ENTRANCES;
+  profileCaption?: string;
+  profileBackTitle?: string;
+  profileBackText?: string;
+  profileAccent?: string;
+  coverImage?: string;
+  linkArrangement?: "stack" | "grid";
+  buttonTreatment?: "default" | "soft" | "tile";
   /** Sharing metadata; independent of the visual theme. */
   trackedLinks?: import("./channels").TrackedLink[];
   /** Overall page composition, independent from colors and typography. */
@@ -168,6 +184,8 @@ export const PROFILE_LAYOUTS: Record<
   ProfileLayout,
   { label: string; hint: string }
 > = {
+  cover: { label: "Cover", hint: "Separate cover photograph and overlapping avatar." },
+  editorial: { label: "Editorial", hint: "Large introduction above an arched portrait." },
   centered: {
     label: "Portrait",
     hint: "A polished, centered profile that keeps every link in focus.",
@@ -395,9 +413,20 @@ export function resolveTheme(
     t.blockGap = BTN_SPACING[design.btnSpacing].gap;
   }
 
-  if (design.profileLayout && design.profileLayout in PROFILE_LAYOUTS) {
+  if (design.profileLayout && Object.hasOwn(PROFILE_LAYOUTS, design.profileLayout)) {
     t.profileLayout = design.profileLayout;
   }
+  if (design.profileSurface && Object.hasOwn(PROFILE_SURFACES, design.profileSurface)) t.profileSurface = design.profileSurface;
+  if (design.profileHover && Object.hasOwn(PROFILE_HOVERS, design.profileHover)) t.profileHover = design.profileHover;
+  if (design.profileMotion && Object.hasOwn(PROFILE_MOTIONS, design.profileMotion)) t.profileMotion = design.profileMotion;
+  if (design.profileEntrance && Object.hasOwn(PROFILE_ENTRANCES, design.profileEntrance)) t.profileEntrance = design.profileEntrance;
+  t.profileCaption = typeof design.profileCaption === "string" ? design.profileCaption.slice(0, 180) : undefined;
+  t.profileBackTitle = typeof design.profileBackTitle === "string" ? design.profileBackTitle.slice(0, 100) : undefined;
+  t.profileBackText = typeof design.profileBackText === "string" ? design.profileBackText.slice(0, 500) : undefined;
+  t.profileAccent = safeColor(design.profileAccent) ?? t.btnBg;
+  t.coverImage = safeUrl(design.coverImage) ?? undefined;
+  if (["stack", "grid"].includes(design.linkArrangement ?? "")) t.linkArrangement = design.linkArrangement;
+  if (["default", "soft", "tile"].includes(design.buttonTreatment ?? "")) t.buttonTreatment = design.buttonTreatment;
   const layout = t.profileLayout ?? "centered";
   const nameScale = { sm: 0.85, md: 1, lg: 1.15, xl: 1.3 };
   const handleSizes = { sm: 0.75, md: 0.82, lg: 0.95, xl: 1.1 };
@@ -408,7 +437,7 @@ export function resolveTheme(
     xl: 1.1875,
   };
   if (design.nameSize && Object.hasOwn(nameScale, design.nameSize)) {
-    const base = layout === "hero" ? 2.35 : layout === "compact" ? 1.65 : 1.85;
+    const base = layout === "editorial" ? 3 : layout === "hero" ? 2.35 : layout === "compact" ? 1.65 : 1.85;
     t.profileNameSize = `${Number((base * nameScale[design.nameSize]).toFixed(3))}rem`;
   }
   if (design.handleSize && Object.hasOwn(handleSizes, design.handleSize)) {

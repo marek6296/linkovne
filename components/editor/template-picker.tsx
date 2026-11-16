@@ -49,7 +49,7 @@ function TemplateCard({
   for (let i = 0; i < previewLinks.length; i++) {
     const current = previewLinks[i];
     const next = previewLinks[i + 1];
-    if (current.width === "half" && next?.width === "half") {
+    if (next && ((current.width === "half" && next.width === "half") || theme.linkArrangement === "grid")) {
       previewRows.push([current, next]);
       i++;
     } else {
@@ -105,7 +105,9 @@ function TemplateCard({
             style={{ background: theme.glow }}
           />
         )}
-        {layout === "hero" ? (
+        {layout === "cover" ? <div className="relative z-10 w-full"><div className="h-12 rounded-lg" style={{background: theme.profileAccent ?? theme.avatarBg}} /><div className="relative -mt-4 ml-2 h-8 w-8 rounded-full border-2 border-white" style={{background:theme.avatarBg}}/><p className="mt-1 text-xs font-semibold">Your name</p></div>
+        : layout === "editorial" ? <div className="relative z-10 w-full"><p className="mb-2 text-xl" style={{fontFamily:theme.fontHeading}}>Your name</p><div className="h-14 rounded-t-[50%] rounded-b-lg" style={{background:theme.avatarBg}} /></div>
+        : layout === "hero" ? (
           <div
             className="relative z-10 flex h-[88px] w-full shrink-0 items-end overflow-hidden rounded-xl p-3"
             style={{
@@ -181,7 +183,8 @@ function TemplateCard({
                     color: theme.btnText,
                     border: theme.btnBorder,
                     borderRadius: theme.btnRadius,
-                    boxShadow: theme.btnShadow,
+                    boxShadow: theme.buttonTreatment === "soft" ? "3px 3px 8px #0002, -3px -3px 8px #fff8" : theme.btnShadow,
+                    minHeight: theme.buttonTreatment === "tile" ? 44 : undefined,
                     backdropFilter: theme.btnBackdrop,
                     WebkitBackdropFilter: theme.btnBackdrop,
                     fontWeight: theme.btnWeight ?? 500,

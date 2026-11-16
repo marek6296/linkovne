@@ -12,7 +12,7 @@ import {
   validProfileOrder,
 } from "@/lib/profile-order";
 import { cleanTrackedLinks } from "@/lib/channels";
-import { designForPlan, hasNewButtonAnimation } from "@/lib/design-tiers";
+import { designForPlan, hasNewButtonAnimation, hasPremiumSocials } from "@/lib/design-tiers";
 import { createSubscriptionCheckout, findPromotionCode } from "@/lib/checkout";
 
 export type ActionState = { error?: string } | undefined;
@@ -259,6 +259,8 @@ export async function saveBlocks(
       return { error: "New button animations require Pro. Your saved animations can stay as they are." };
     }
   }
+
+  if (!plan.customDesign && hasPremiumSocials(blocks)) return { error: "Premium social presentations require Pro." };
 
   const rows = blocks
     .filter((b) => VALID_TYPES.includes(b.type))

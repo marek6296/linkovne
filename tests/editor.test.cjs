@@ -345,3 +345,43 @@ test("Free keeps saved per-link motion but cannot add or change it", () => {
   assert.equal(hasNewButtonAnimation([{id:"owned",config:{anim:"pulse"}}],old),true);
   assert.equal(hasNewButtonAnimation([{id:"new",config:{anim:"glow"}}],old),true);
 });
+
+test("premium compositions and motion are bounded and excluded from Free", () => {
+ const { designForPlan, lockedDesignFeatures } = load("lib/design-tiers.ts");
+ const { PLANS } = load("lib/plans.ts");
+ const d={profileLayout:"cover",profileSurface:"soft",profileHover:"reveal",profileMotion:"float",profileEntrance:"rise",profileCaption:"Open for work",coverImage:"https://example.com/cover.jpg",linkArrangement:"grid",buttonTreatment:"soft"};
+ const pro=resolveTheme("classic",designForPlan(d,PLANS.pro));
+ assert.equal(pro.profileLayout,"cover"); assert.equal(pro.profileHover,"reveal");
+ const free=designForPlan(d,PLANS.free);
+ assert.equal(free.profileLayout,undefined);assert.equal(free.profileSurface,undefined);assert.equal(free.coverImage,undefined);
+ assert.ok(lockedDesignFeatures(d,PLANS.free).length>0);
+ assert.equal(resolveTheme("classic",{profileHover:"constructor",profileSurface:"toString"}).profileHover,undefined);
+});
+
+test("premium social gates retain classic Free social blocks and reject every new presentation", () => {
+  const { hasPremiumSocials } = load("lib/design-tiers.ts");
+  assert.equal(hasPremiumSocials([{config:{items:[{platform:"instagram"}]}}]), false);
+  assert.equal(hasPremiumSocials([{config:{socialPresentation:"classic"}}]), false);
+  for (const socialPresentation of ["dock","pop","rail"]) assert.equal(hasPremiumSocials([{config:{socialPresentation}}]), true);
+  assert.equal(hasPremiumSocials([{config:{items:[{platform:"custom"}]}}]), true);
+});
+
+test("premium layouts and long flip content render without replacing links", () => {
+  const React = require("react"); const {renderToStaticMarkup}=require("react-dom/server");
+  const {ProfileHeader,BlockList}=load("components/blocks/render.tsx");
+  for(const profileLayout of ["centered","cover","editorial","hero","compact"]){
+    const theme=resolveTheme("classic",{profileLayout,profileHover:"flip",profileBackTitle:"About the creator",profileBackText:"Long story ".repeat(30),coverImage:"https://example.com/cover.jpg"});
+    const html=renderToStaticMarkup(React.createElement(ProfileHeader,{displayName:"Long name ".repeat(8),username:"creator",bio:"Bio ".repeat(40),avatarUrl:"https://example.com/avatar.jpg",theme}));
+    assert.ok(html.includes("About the creator"));assert.ok(html.includes("Long story"));assert.ok(html.includes("Turn profile card"));
+    if(profileLayout==="cover") assert.ok(html.includes("https://example.com/cover.jpg"));
+  }
+});
+
+test("premium social icon styles render every platform and a custom name", () => {
+ const React=require("react");const {renderToStaticMarkup}=require("react-dom/server");
+ const {PremiumSocials}=load("components/blocks/premium-socials.tsx");const {SOCIAL_PLATFORMS}=load("lib/blocks.ts");
+ for(const socialPresentation of ["dock","pop"]){
+  const html=renderToStaticMarkup(React.createElement(PremiumSocials,{config:{socialPresentation,items:SOCIAL_PLATFORMS.map(platform=>({platform,url:"example.com",label:"My community",icon:"heart"}))},theme:resolveTheme("classic",{})}));
+  assert.equal((html.match(/<a /g)||[]).length,SOCIAL_PLATFORMS.length);assert.ok(html.includes("My community"));
+ }
+});
