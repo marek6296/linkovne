@@ -13,6 +13,8 @@ import { SITE_DOMAIN } from "@/lib/site";
 const TRACKED_PATHS: RegExp[] = [
   /^\/$/,
   /^\/about$/,
+  /^\/pricing$/,
+  /^\/features$/,
   /^\/guides(\/[a-z0-9-]{1,80})?$/,
   /^\/vs(\/[a-z0-9-]{1,80})?$/,
   /^\/login$/,

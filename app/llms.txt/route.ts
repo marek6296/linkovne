@@ -25,8 +25,9 @@ export function GET() {
 
 ## Main pages
 
+- [Features](${SITE_URL}/features): page building, analytics and creator workflows.
 - [About Linkovne](${SITE_URL}/about): product scope, plans and contact.
-- [Plans](${SITE_URL}/#pricing): monthly EUR pricing and included features.
+- [Plans](${SITE_URL}/pricing): monthly EUR pricing and included features.
 - [Creator guides](${SITE_URL}/guides): practical product-led setup guides.
 ${GUIDES.map(g => `- [${g.title}](${SITE_URL}/guides/${g.slug}): ${g.description}`).join("\n")}
 - [Compare Linktree and Link.me alternatives](${SITE_URL}/vs): choose by creator-page workflow, with official sources.

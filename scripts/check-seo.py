@@ -6,7 +6,7 @@ from xml.etree import ElementTree
 
 base = (sys.argv[1] if len(sys.argv) > 1 else 'https://linkovne.com').rstrip('/')
 origin = 'https://linkovne.com'
-paths = ['/guides/link-in-bio-for-ai-creators', '/', '/about', '/guides', '/guides/link-in-bio-for-models', '/guides/agency-link-in-bio', '/guides/custom-domain-link-in-bio', '/vs', '/vs/linkme', '/vs/allmylinks', '/vs/hoobe', '/vs/linktree', '/vs/beacons', '/privacy', '/terms']
+paths = ['/pricing', '/features', '/guides/link-in-bio-for-ai-creators', '/', '/about', '/guides', '/guides/link-in-bio-for-models', '/guides/agency-link-in-bio', '/guides/custom-domain-link-in-bio', '/vs', '/vs/linkme', '/vs/allmylinks', '/vs/hoobe', '/vs/linktree', '/vs/beacons', '/privacy', '/terms']
 
 class Page(HTMLParser):
     def __init__(self):
