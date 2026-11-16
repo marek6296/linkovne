@@ -61,8 +61,8 @@ function TemplateCard({
     <button
       type="button"
       onClick={() => {
-        onPick(t);
         if (locked) onLocked();
+        else onPick(t);
       }}
       aria-pressed={selected}
       aria-label={locked ? `${t.label} · Pro template` : undefined}

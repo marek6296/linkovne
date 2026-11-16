@@ -1,4 +1,5 @@
 "use client";
+import { ProfileVideo } from "@/components/profile/profile-video";
 
 import {
   ANIM_CLASS,
@@ -800,7 +801,10 @@ export function ProfileHeader({
   };
   const layout = theme.profileLayout ?? "centered";
   const avatar = (className: string, style = avatarStyle) =>
-    avatarUrl ? (
+    theme.avatarVideo ? (
+      <ProfileVideo src={theme.avatarVideo} poster={theme.avatarVideoPoster ?? avatarUrl ?? undefined}
+        className={className} style={{ ...style, objectFit: theme.avatarFit ?? "cover", objectPosition: theme.avatarPosition ?? "center" }} />
+    ) : avatarUrl ? (
       // eslint-disable-next-line @next/next/no-img-element
       <img
         src={avatarUrl}

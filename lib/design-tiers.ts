@@ -67,6 +67,10 @@ export function designForPlan(
   if (caps.full) return design;
 
   const d: Design = { ...design };
+  delete d.avatarVideo;
+  delete d.avatarVideoPoster;
+  delete d.bgVideo;
+  delete d.bgVideoPoster;
 
   // ---- Pozadie ----
   if (!caps.bgImage) {
@@ -117,6 +121,7 @@ export function lockedDesignFeatures(
   if (caps.full) return [];
 
   const locked: string[] = [];
+  if (design.avatarVideo || (design.bg === "image" && design.bgVideo)) locked.push("Profile video");
   if (!caps.bgImage && design.bg === "image") {
     locked.push("Image background");
   }
@@ -145,4 +150,13 @@ export function lockedDesignFeatures(
   }
 
   return [...new Set(locked)];
+}
+
+/** Existing per-link motion survives on Free; adding or changing it requires Pro. */
+export function hasNewButtonAnimation(
+  blocks: { id: string; config?: { anim?: string } | null }[],
+  existing: { id: string; config?: { anim?: string } | null }[],
+): boolean {
+  const animations = new Map(existing.map(b => [b.id, b.config?.anim]));
+  return blocks.some(b => !!b.config?.anim && b.config.anim !== "none" && animations.get(b.id) !== b.config.anim);
 }

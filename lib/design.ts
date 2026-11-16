@@ -62,6 +62,10 @@ export type Design = {
   bgColor?: string;
   bgColor2?: string;
   bgImage?: string;
+  bgVideo?: string;
+  bgVideoPoster?: string;
+  avatarVideo?: string;
+  avatarVideoPoster?: string;
   textColor?: string;
   btnBg?: string;
   btnText?: string;
@@ -433,6 +437,12 @@ export function resolveTheme(
     t.size = BTN_SIZES[design.btnSize];
   }
 
+  t.avatarVideo = safeUrl(design.avatarVideo) ?? undefined;
+  t.avatarVideoPoster = safeUrl(design.avatarVideoPoster) ?? undefined;
+  if (design.bg === "image") {
+    t.bgVideo = safeUrl(design.bgVideo) ?? undefined;
+    t.bgVideoPoster = safeUrl(design.bgVideoPoster) ?? undefined;
+  }
   // ---- Profilovka (tvar / pomer / velkost / ram) ----
   if (design.avatarShape && design.avatarShape in AVATAR_SHAPES) {
     t.avatarRadius = AVATAR_SHAPES[design.avatarShape].radius;

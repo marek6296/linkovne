@@ -1,3 +1,4 @@
+import { ProfileVideo } from "@/components/profile/profile-video";
 import type { CSSProperties, ReactNode } from "react";
 import type { Theme } from "@/lib/themes";
 import { LogoMark } from "@/components/logo-mark";
@@ -46,6 +47,8 @@ export function ProfileShell({
 
   return (
     <main className="profile-card" style={surfaceStyle(theme)}>
+      {theme.bgVideo && <ProfileVideo src={theme.bgVideo} poster={theme.bgVideoPoster} className="pointer-events-none absolute inset-0 -z-10 h-full w-full object-cover" />}
+      {theme.bgVideo && <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 opacity-60" style={{ background: theme.page }} />}
       {leading}
 
       {theme.glow && (

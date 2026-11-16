@@ -2150,6 +2150,7 @@ const CATEGORY_POLISH: Record<TemplateCategory, Partial<Design>> = {
 
 export const TEMPLATES: Template[] = TEMPLATE_DEFINITIONS.map((template) => ({
   ...template,
+  premium: !["paper", "mono"].includes(template.key),
   design: {
     ...CATEGORY_POLISH[template.category],
     ...template.design,

@@ -93,6 +93,10 @@ export type Theme = {
   /** Hero layout maps photo size + format to a visible cover height. */
   heroHeightPx?: number;
   heroRadius?: string;
+  avatarVideo?: string;
+  avatarVideoPoster?: string;
+  bgVideo?: string;
+  bgVideoPoster?: string;
   profileNameSize?: string;
   profileHandleSize?: string;
   profileBioSize?: string;

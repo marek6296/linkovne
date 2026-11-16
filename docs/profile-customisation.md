@@ -15,7 +15,8 @@ Reviewed 2026-11-16. Implementation sources: `lib/plans.ts`, `lib/design-tiers.t
 | Image backgrounds | No | Yes | Yes |
 | Custom glass/gradient buttons and automatic motion | No | Yes | Yes |
 | Photo frames and custom desktop backgrounds | No | Yes | Yes |
-| Image-based premium templates | Preview only | Yes | Yes |
+| Templates | Paper and Mono | All | All |
+| Video profile photo and background | No | Yes | Yes |
 | Hide Linkovne branding | No | Yes | Yes |
 | Profiles | 1 | 4 | 10 |
 | Custom domains | No | No | Yes |
@@ -34,7 +35,11 @@ Business shares Pro's visual controls. Existing theme presets may already includ
 
 ## Follow-up before changing plan packaging
 
-Individual link-block animation and glass/gradient overrides are gated in editor controls, but `saveBlocks` and public block rendering do not apply the page-design plan sanitizer to those fields. Existing saved overrides can therefore survive a downgrade. This audit records the discrepancy; this typography change does not introduce a new server restriction that could change existing client pages. Resolve it together with the next entitlement decision and use a shared block-config sanitizer for save and public rendering.
+New per-link animations now require Pro on the server as well as in the editor. Existing stored animation values are allowed unchanged for Free profiles; changing to Off is allowed. Glass/gradient per-link style enforcement remains a separate follow-up; this iteration does not change those entitlements.
+
+Template restriction applies to selecting a new preset, not to recognising or stripping an existing saved design. Free keeps all existing basic customisation and all three layouts. Premium template clicks leave the current draft unchanged.
+
+Video is stored in design fields separate from the original photo. MP4/WebM, max 15 seconds and 10 MB; a JPEG poster is generated before upload. Preview and public rendering share the same silent loop component, pausing offscreen, in hidden tabs and for reduced motion. Free server filtering excludes video fields. Upload uses existing authenticated Storage paths; no schema or bucket changes. The player was tested with local media; an actual authenticated Storage upload is still to be verified with a disposable test account.
 
 ## Verification
 

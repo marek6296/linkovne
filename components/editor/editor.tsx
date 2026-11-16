@@ -436,6 +436,8 @@ export function Editor({
         handleSize: p.design.handleSize,
         bioSize: p.design.bioSize,
         profileTextAlign: p.design.profileTextAlign,
+        avatarVideo: p.design.avatarVideo,
+        avatarVideoPoster: p.design.avatarVideoPoster,
         btnShape: p.design.btnShape,
         btnSize: p.design.btnSize,
         btnShadow: p.design.btnShadow,
@@ -708,6 +710,7 @@ export function Editor({
   // ostavaju nedotknute. Ziadny medzi-dialog, klik = okamzita zmena vzhladu.
   function applyTemplate(template: Template) {
     const previewOnly = template.premium === true && !plan.customDesign;
+    if (previewOnly) { setNotice("This template is available on Pro. Your current design has been kept."); return; }
     if (!previewOnly) profileDirty.current = true;
     editVersion.current += 1;
     setHasLocalChanges(true);
@@ -859,7 +862,10 @@ export function Editor({
                   <AvatarRow
                     url={profile.avatar_url}
                     userId={userId}
-                    onChange={(avatar_url) => patchProfile({ avatar_url })}
+                    onChange={(avatar_url) => {
+                      patchProfile({ avatar_url });
+                      patchDesign({ avatarVideo: undefined, avatarVideoPoster: undefined });
+                    }}
                   />
                   <label className="block">
                     <span className="mb-1 block text-xs font-medium text-soft">
@@ -934,7 +940,7 @@ export function Editor({
                   canUsePremium={plan.customDesign}
                   onLocked={(t) =>
                     setNotice(
-                      `You’re previewing ${t.label}. The locked Pro features are listed beside Publish.`,
+                      `${t.label} is a Pro template. Free includes Paper and Mono. Your current design stays unchanged.`,
                     )
                   }
                 />

@@ -12,7 +12,7 @@ import {
   validProfileOrder,
 } from "@/lib/profile-order";
 import { cleanTrackedLinks } from "@/lib/channels";
-import { designForPlan } from "@/lib/design-tiers";
+import { designForPlan, hasNewButtonAnimation } from "@/lib/design-tiers";
 import { createSubscriptionCheckout, findPromotionCode } from "@/lib/checkout";
 
 export type ActionState = { error?: string } | undefined;
@@ -247,6 +247,17 @@ export async function saveBlocks(
   const blocked = blocks.find((b) => !allowsBlock(plan, b.type));
   if (blocked) {
     return { error: `The ${blocked.type} block needs a paid plan.` };
+  }
+
+  // Keep previously saved Free animations, but require Pro for a new one.
+  // Compare against the owned profile's stored blocks, never a client entitlement flag.
+  if (!plan.customDesign && blocks.some(b => b.config?.anim && b.config.anim !== "none")) {
+    const { data: existing, error } = await supabase
+      .from("blocks").select("id, config").eq("profile_id", profileId);
+    if (error) return { error: "Couldn't verify your saved button settings. Please retry." };
+    if (hasNewButtonAnimation(blocks, existing ?? [])) {
+      return { error: "New button animations require Pro. Your saved animations can stay as they are." };
+    }
   }
 
   const rows = blocks

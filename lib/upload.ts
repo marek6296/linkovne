@@ -90,3 +90,30 @@ export async function uploadVideo(file: File, userId: string): Promise<string> {
 
   return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${path}`;
 }
+
+/** Short decorative clips with a real poster for loading and reduced motion. */
+export async function uploadProfileVideo(file: File, userId: string) {
+  if (!["video/mp4", "video/webm"].includes(file.type)) throw new Error("Choose an MP4 or WebM video.");
+  if (file.size > 10 * 1024 * 1024) throw new Error("Keep profile videos under 10 MB.");
+  const objectUrl = URL.createObjectURL(file);
+  const video = document.createElement("video");
+  video.muted = true; video.playsInline = true; video.preload = "auto";
+  try {
+    await new Promise<void>((resolve, reject) => {
+      const timeout = setTimeout(() => reject(new Error("Couldn't read this video. Try another MP4.")), 15000);
+      video.onerror = () => { clearTimeout(timeout); reject(new Error("Unsupported video encoding. Try an H.264 MP4.")); };
+      video.onloadeddata = () => { clearTimeout(timeout); resolve(); };
+      video.src = objectUrl;
+    });
+    if (!Number.isFinite(video.duration) || video.duration > 15 || !video.videoWidth) throw new Error("Choose a video no longer than 15 seconds.");
+    const canvas = document.createElement("canvas");
+    const scale = Math.min(1,1200 / Math.max(video.videoWidth,video.videoHeight));
+    canvas.width = Math.round(video.videoWidth*scale); canvas.height = Math.round(video.videoHeight*scale);
+    const ctx = canvas.getContext("2d"); if(!ctx) throw new Error("Video preview unavailable.");
+    ctx.drawImage(video,0,0,canvas.width,canvas.height);
+    const blob = await new Promise<Blob>((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error("Video preview unavailable.")),"image/jpeg",0.85));
+    const poster = await uploadImage(new File([blob],"poster.jpg",{type:"image/jpeg"}),userId);
+    const url = await uploadVideo(new File([file],file.type === "video/mp4" ? "profile.mp4" : "profile.webm",{type:file.type}),userId);
+    return {url,poster};
+  } finally { video.removeAttribute("src"); video.load(); URL.revokeObjectURL(objectUrl); }
+}

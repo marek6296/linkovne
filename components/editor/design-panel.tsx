@@ -1,4 +1,5 @@
 "use client";
+import { ProfileVideoUpload } from "@/components/editor/profile-video-upload";
 
 import { useRef, useState } from "react";
 import {
@@ -66,7 +67,7 @@ const BG_MODES: { key: BgMode; label: string }[] = [
   { key: "theme", label: "Theme" },
   { key: "solid", label: "Colour" },
   { key: "gradient", label: "Gradient" },
-  { key: "image", label: "Photo" },
+  { key: "image", label: "Photo / video" },
 ];
 
 const DESK_BG_MODES: { key: DeskBgMode; label: string }[] = [
@@ -802,7 +803,7 @@ export function DesignPanel({
                     setBusy(true);
                     setUploadError(null);
                     try {
-                      onChange({ bgImage: await uploadImage(file, userId) });
+                      onChange({ bgImage: await uploadImage(file, userId), bgVideo: undefined, bgVideoPoster: undefined });
                     } catch (error) {
                       setUploadError(
                         error instanceof Error
@@ -830,6 +831,8 @@ export function DesignPanel({
               </div>
             )}
 
+            {bg === "image" && <ProfileVideoUpload allowed={caps.full} userId={userId} value={design.bgVideo} onUpsell={onUpsell}
+              onChange={(bgVideo, bgVideoPoster) => onChange({ bgVideo, bgVideoPoster })} />}
             {bg !== "theme" && (
               <div className="border-t border-line pt-1">
                 <ColorRow
@@ -994,6 +997,8 @@ export function DesignPanel({
         {/* ---------- Profile photo ---------- */}
         {tab === "avatar" && (
           <div className="space-y-5">
+            <ProfileVideoUpload allowed={caps.full} userId={userId} value={design.avatarVideo} onUpsell={onUpsell}
+              onChange={(avatarVideo, avatarVideoPoster) => onChange({ avatarVideo, avatarVideoPoster })} />
             <div>
               <GroupLabel>{isSpotlight ? "Cover proportions" : "Format"}</GroupLabel>
               <p className="mt-1 text-xs text-soft">

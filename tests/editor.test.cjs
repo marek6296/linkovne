@@ -316,3 +316,32 @@ test("shared profile header renders saved typography for every layout", () => {
     assert.equal(html.includes("text-align:right"), profileLayout === "hero");
   }
 });
+
+test("Free template catalogue is Paper and Mono without restricting saved custom layouts", () => {
+  const { TEMPLATES } = load("lib/templates.ts");
+  const { designForPlan } = load("lib/design-tiers.ts");
+  const { PLANS } = load("lib/plans.ts");
+  assert.deepEqual(TEMPLATES.filter(t => !t.premium).map(t => t.key).sort(), ["mono", "paper"]);
+  assert.equal(designForPlan({profileLayout:"hero",nameSize:"xl",font:"serif"},PLANS.free).profileLayout,"hero");
+});
+
+test("profile video is paid and unsafe URLs never reach the renderer", () => {
+  const { designForPlan, lockedDesignFeatures } = load("lib/design-tiers.ts");
+  const { PLANS } = load("lib/plans.ts");
+  const design = {bg:"image", bgVideo:"https://example.com/background.mp4", bgVideoPoster:"https://example.com/poster.jpg", avatarVideo:"https://example.com/avatar.webm", avatarVideoPoster:"https://example.com/photo.jpg"};
+  for(const plan of [PLANS.pro, PLANS.business]) assert.equal(resolveTheme("classic",designForPlan(design,plan)).avatarVideo,design.avatarVideo);
+  const free = designForPlan(design,PLANS.free);
+  assert.equal(free.avatarVideo,undefined); assert.equal(free.bgVideo,undefined);
+  assert.ok(lockedDesignFeatures(design,PLANS.free).includes("Profile video"));
+  const unsafe=resolveTheme("classic",{bg:"image",bgVideo:"javascript:alert(1)",avatarVideo:"javascript:alert(1)"});
+  assert.equal(unsafe.avatarVideo,undefined); assert.equal(unsafe.bgVideo,undefined);
+});
+
+test("Free keeps saved per-link motion but cannot add or change it", () => {
+  const { hasNewButtonAnimation } = load("lib/design-tiers.ts");
+  const old = [{id:"owned",config:{anim:"glow"}}];
+  assert.equal(hasNewButtonAnimation(old,old),false);
+  assert.equal(hasNewButtonAnimation([{id:"owned",config:{anim:"none"}}],old),false);
+  assert.equal(hasNewButtonAnimation([{id:"owned",config:{anim:"pulse"}}],old),true);
+  assert.equal(hasNewButtonAnimation([{id:"new",config:{anim:"glow"}}],old),true);
+});
