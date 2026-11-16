@@ -1,4 +1,5 @@
 "use client";
+import { AnimatedSettings } from "./animated-settings";
 import { CoverPhotoPicker } from "./cover-photo-picker";
 import { PremiumProfileControls } from "./premium-profile-controls";
 import { ProfileVideoUpload } from "@/components/editor/profile-video-upload";
@@ -513,7 +514,7 @@ export function DesignPanel({
           {uploadError}
         </p>
       )}
-      <div className="min-h-[230px] p-5" key={tab}>
+      <AnimatedSettings className="min-h-[230px] p-5" view={tab}>
         {/* ---------- Layout ---------- */}
         {tab === "layout" && (
           <div className="space-y-5">
@@ -704,13 +705,14 @@ export function DesignPanel({
                   );
                 })}
               </div>
+            </div>
+            <AnimatedSettings view={bg} className="space-y-4">
               {bg === "theme" && (
                 <p className="mt-3 text-xs text-soft">
                   Uses your theme&apos;s own background. Pick Colour, Gradient
                   or Photo to override it.
                 </p>
               )}
-            </div>
 
             {bg === "solid" && (
               <div className="border-t border-line pt-3">
@@ -832,6 +834,7 @@ export function DesignPanel({
                 />
               </div>
             )}
+            </AnimatedSettings>
 
             {/* ---- Desktop backdrop (pozadie za kartou, len PC) ---- */}
             <div className="border-t border-line pt-4">
@@ -866,6 +869,7 @@ export function DesignPanel({
                   );
                 })}
               </div>
+              <AnimatedSettings view={deskBg} className="pt-3">
               {deskBg === "auto" && (
                 <p className="mt-2 text-xs text-soft">
                   A soft blurred glow of your card&apos;s background.
@@ -980,6 +984,7 @@ export function DesignPanel({
                   </button>
                 </div>
               )}
+              </AnimatedSettings>
             </div>
           </div>
         )}
@@ -1727,7 +1732,7 @@ export function DesignPanel({
             </details>
           </div>
         )}
-      </div>
+      </AnimatedSettings>
 
       <div className="flex justify-end border-t border-line px-5 py-3">
         <button
