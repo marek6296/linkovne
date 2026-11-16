@@ -43,7 +43,7 @@ export function PremiumProfileControls({
     </label>
   );
   return (
-    <section className="space-y-4 border-t border-line pt-5">
+    <fieldset disabled={!allowed} className="space-y-4 border-t border-line pt-5 disabled:opacity-50">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold">Profile details & card motion</h3>
         <span className="rounded bg-ink px-2 py-0.5 text-[10px] font-semibold text-white">
@@ -132,6 +132,6 @@ export function PremiumProfileControls({
         </div>
       )}
 
-    </section>
+    </fieldset>
   );
 }

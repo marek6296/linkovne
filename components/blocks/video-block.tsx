@@ -12,7 +12,7 @@ import { useRef, useState } from "react";
  * video (ak vobec nejaky zvuk ma). Klik zastavi bublanie, aby neaktivoval
  * pripadny odkaz okolo.
  */
-export function VideoBlock({ src }: { src: string }) {
+export function VideoBlock({ src, controls = false }: { src: string; controls?: boolean }) {
   const ref = useRef<HTMLVideoElement>(null);
   const [muted, setMuted] = useState(true);
 
@@ -30,10 +30,12 @@ export function VideoBlock({ src }: { src: string }) {
     <video
       ref={ref}
       src={src}
-      onClick={toggle}
+      onClick={controls ? undefined : toggle}
+      controls={controls}
+      preload="metadata"
       aria-label={muted ? "Tap for sound" : "Mute"}
       className="edge-fade w-full cursor-pointer select-none"
-      autoPlay
+      autoPlay={!controls}
       loop
       muted
       playsInline

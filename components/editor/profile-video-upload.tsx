@@ -10,8 +10,8 @@ export function ProfileVideoUpload({ allowed, userId, value, onChange, onUpsell 
   const [error, setError] = useState("");
   return <div className="space-y-2 border-t border-line pt-4">
     <div className="flex flex-wrap items-center gap-3">
-      <button type="button" disabled={busy} className="rounded-full border border-line px-4 py-2 text-sm disabled:opacity-50" onClick={() => allowed ? input.current?.click() : onUpsell()}>{busy ? "Uploading video…" : value ? "Replace video" : "Upload video"}{!allowed && " · Pro"}</button>
-      {value && <button type="button" className="text-sm text-danger" onClick={() => onChange()}>Remove video</button>}
+      <button type="button" disabled={busy || !allowed} className="rounded-full border border-line px-4 py-2 text-sm disabled:opacity-50" onClick={() => allowed ? input.current?.click() : onUpsell()}>{busy ? "Uploading video…" : value ? "Replace video" : "Upload video"}{" · Pro"}</button>
+      {value && <button type="button" className="text-sm text-danger" disabled={!allowed} onClick={() => onChange()}>Remove video</button>}
     </div>
     <p className="text-xs text-soft">MP4 or WebM · up to 15 seconds and 10 MB. Plays silently; a still image appears when motion is reduced.</p>
     {error && <p role="alert" className="text-sm text-danger">{error}</p>}

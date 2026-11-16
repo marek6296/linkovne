@@ -176,3 +176,23 @@ export function hasPremiumSocials(blocks: {config: {socialPresentation?: string;
 export function hasNewPremiumLayout(design: Design, existing?: Design | null): boolean {
   return ["hero", "cover", "editorial"].includes(design.profileLayout ?? "") && design.profileLayout !== existing?.profileLayout;
 }
+
+/** Reject newly requested paid values while retaining untouched saved designs. */
+export function hasNewPaidDesign(design: Design, plan: PlanFeatures, existing?: Design | null): boolean {
+  if (plan.customDesign) return false;
+  if (hasNewPremiumLayout(design, existing)) return true;
+  const clean = designForPlan(design, plan);
+  return (Object.keys(design) as (keyof Design)[]).some(key =>
+    JSON.stringify(design[key]) !== JSON.stringify(clean[key]) &&
+    JSON.stringify(design[key]) !== JSON.stringify(existing?.[key])
+  );
+}
+
+/** Per-link paid styles need the same server checks as page-wide styles. */
+export function hasNewPaidButtonStyle(blocks: {id: string; config?: Record<string, unknown> | null}[], existing: {id:string; config?: Record<string, unknown> | null}[]): boolean {
+  const saved = new Map(existing.map(block => [block.id, block.config]));
+  return blocks.some(block => {
+    const style = block.config?.buttonStyle;
+    return (style === "glass" || style === "gradient") && saved.get(block.id)?.buttonStyle !== style;
+  });
+}

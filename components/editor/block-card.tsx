@@ -1,5 +1,6 @@
 "use client";
 
+import { ContentStyle } from "./content-style";
 import { ICON_KEYS } from "@/components/blocks/icon";
 import Link from "next/link";
 import { useId, useRef, useState } from "react";
@@ -21,6 +22,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import {
   BLOCK_META,
+  toEmbed,
   LINK_WIDTHS,
   SOCIAL_LABELS,
   SOCIAL_PLATFORMS,
@@ -68,11 +70,13 @@ function Field({
 }
 
 function MediaPicker({
+  imageOnly = false,
   value,
   mediaType,
   userId,
   onChange,
 }: {
+  imageOnly?: boolean;
   value: string;
   mediaType: "image" | "video";
   userId: string;
@@ -92,6 +96,7 @@ function MediaPicker({
     setError(null);
     try {
       const isVideo = file.type.startsWith("video/");
+      if (imageOnly && isVideo) throw new Error("Choose a photo for this block.");
       const src = isVideo
         ? await uploadVideo(file, userId)
         : await uploadImage(file, userId);
@@ -112,7 +117,7 @@ function MediaPicker({
       {/* Prepinac urcuje, aky suborovy picker sa otvori — nie retroaktivnu
           zmenu uz nahrateho media (na to sluzi Replace). */}
       <div className="inline-flex rounded-full border border-line p-0.5 text-sm">
-        {(["image", "video"] as const).map((t) => (
+        {(imageOnly ? ["image"] as const : ["image", "video"] as const).map((t) => (
           <button
             key={t}
             type="button"
@@ -340,8 +345,8 @@ export function SocialsEditor({
 
   return (
     <div className="space-y-4">
-      <label className="block text-sm font-medium">Presentation <span className="text-xs text-soft">Pro</span>
-        <select className="field mt-2 w-full" value={config.socialPresentation ?? "classic"} onChange={e => onPatch({ socialPresentation: e.target.value as BlockConfig["socialPresentation"] })}>
+      <label className="block text-sm font-medium">Presentation
+        <select disabled={!premium} className="field mt-2 w-full disabled:opacity-50" value={config.socialPresentation ?? "classic"} onChange={e => onPatch({ socialPresentation: e.target.value as BlockConfig["socialPresentation"] })}>
           <option value="classic">Classic</option><option value="dock" disabled={!premium}>Dock · Pro</option><option value="pop" disabled={!premium}>Pop · Pro</option><option value="rail" disabled={!premium}>Side rail · Pro</option>
         </select>
       </label>
@@ -1001,10 +1006,18 @@ export function BlockCard({
             </>
           )}
 
+          {block.type === "image" && <div className="grid grid-cols-2 gap-3">
+            <Field label="Format"><select className="field" value={block.config.mediaRatio??"auto"} onChange={e=>patchConfig({mediaRatio:e.target.value as BlockConfig["mediaRatio"]})}><option value="auto">Original</option><option value="square">Square</option><option value="portrait">Portrait</option><option value="wide">Wide</option></select></Field>
+            <Field label="Image fit"><select className="field" value={block.config.mediaFit??"cover"} onChange={e=>patchConfig({mediaFit:e.target.value as "cover"|"contain"})}><option value="cover">Fill</option><option value="contain">Fit whole image</option></select></Field>
+            <div className="col-span-2"><Field label="Caption"><input className="field" value={block.config.caption??""} onChange={e=>patchConfig({caption:e.target.value})}/></Field></div>
+            {block.config.mediaType==="video"&&<label className="col-span-2 flex gap-2 text-sm"><input type="checkbox" checked={block.config.videoControls??false} onChange={e=>patchConfig({videoControls:e.target.checked})}/> Show video player controls</label>}
+          </div>}
+
           {block.type === "video" && (
             <Field label="Embed URL">
               <input
                 value={block.config.url ?? ""}
+                aria-invalid={!!block.config.url && !toEmbed(block.config.url)}
                 placeholder="YouTube · TikTok · Spotify · Vimeo · SoundCloud"
                 onChange={(e) => patchConfig({ url: e.target.value })}
                 className="field py-2.5"
@@ -1012,9 +1025,10 @@ export function BlockCard({
             </Field>
           )}
 
+          {block.type === "video" && block.config.url && !toEmbed(block.config.url) && <p role="status" className="text-sm text-danger">This URL cannot be embedded. Use a supported media URL, or add it as a Link.</p>}
           {block.type === "divider" && (
             <p className="text-sm text-soft">
-              A thin line to separate sections. Nothing to set up.
+              Separate sections with a line or a little breathing room.
             </p>
           )}
 
@@ -1111,13 +1125,22 @@ export function BlockCard({
               <Field label="Counts down to">
                 <input
                   type="datetime-local"
-                  value={block.config.target ?? ""}
-                  onChange={(e) => patchConfig({ target: e.target.value })}
+                  value={toLocalInput(block.config.target)}
+                  onChange={(e) => patchConfig({ target: fromLocalInput(e.target.value) ?? "" })}
                   className="field py-2.5"
                 />
               </Field>
             </>
           )}
+
+          {block.type === "countdown" && <>
+            <p className="text-xs text-soft">Time is saved in your local timezone and shown consistently to visitors worldwide.</p>
+            <MediaPicker imageOnly value={block.config.src??""} mediaType="image" userId={userId} onChange={patch=>patchConfig(patch)} />
+            <Field label="Event link (optional)"><input className="field" type="url" value={block.config.href??""} placeholder="https://…" onChange={e=>patchConfig({href:e.target.value})}/></Field>
+            <Field label="Link label"><input className="field" value={block.config.buttonLabel??""} placeholder="View event" onChange={e=>patchConfig({buttonLabel:e.target.value})}/></Field>
+            <Field label="Message when the countdown ends"><input className="field" value={block.config.completedText??""} placeholder="It's live" onChange={e=>patchConfig({completedText:e.target.value})}/></Field>
+          </>}
+          {["headline","text","faq","countdown","divider"].includes(block.type) && <ContentStyle type={block.type} config={block.config} onChange={patchConfig}/>}
 
           {block.type === "form" && (
             <>

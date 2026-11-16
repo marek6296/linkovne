@@ -2,13 +2,13 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { BLOCK_META, BLOCK_ORDER, type BlockType } from "@/lib/blocks";
-import { allowsBlock, type PlanFeatures } from "@/lib/plans";
+import { allowsBlock, PLANS, type PlanFeatures } from "@/lib/plans";
 import { BlockGlyph } from "./block-glyph";
 
 const GROUPS = [
   { name: "Links & social", types: ["link", "socials", "tip"] },
   { name: "Media & content", types: ["image", "video", "headline", "text"] },
-  { name: "More", types: ["faq", "countdown", "divider"] },
+  { name: "More", types: ["faq", "countdown", "divider", "form"] },
 ];
 export function ContentPicker({
   plan,
@@ -81,6 +81,7 @@ export function ContentPicker({
               {types.map((type) => (
                 <button
                   key={type}
+                  disabled={!allowsBlock(plan, type)}
                   onClick={() => {
                     onPick(type);
                     onClose();
@@ -93,7 +94,7 @@ export function ContentPicker({
                     <strong>{BLOCK_META[type].label}</strong>
                     <small>{BLOCK_META[type].hint}</small>
                   </span>
-                  {!allowsBlock(plan, type) && <em>Pro</em>}
+                  {!allowsBlock(PLANS.free, type) && <em>Pro</em>}
                 </button>
               ))}
             </div>
@@ -108,13 +109,14 @@ export function ContentPicker({
       {!query && (
         <button
           className="studio-section-choice"
+          disabled={!plan.sections}
           onClick={() => {
             onSection();
             onClose();
           }}
         >
           Group content into a section{" "}
-          <span>{plan.sections ? "+" : "Pro"}</span>
+          <span>Pro</span>
         </button>
       )}
     </dialog>,

@@ -1,6 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { createPublicClient } from "@/lib/supabase/public";
+import { isVisibleNow, type Block } from "@/lib/blocks";
+import { planOf } from "@/lib/plans";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
 
 const UUID_RE =
@@ -104,6 +106,15 @@ export async function POST(request: NextRequest) {
   }
 
   const supabase = createPublicClient();
+  if (!UUID_RE.test(blockId)) return NextResponse.json({ok:false},{status:400});
+  const {data: publicProfile} = await supabase.from("profiles").select("username").eq("id",profileId).maybeSingle();
+  if (!publicProfile) return NextResponse.json({ok:false},{status:404});
+  const {data: rows} = await supabase.rpc("public_profile",{p_username:publicProfile.username});
+  const published = Array.isArray(rows) ? rows[0] : null;
+  if (!published || !planOf(published.plan).leads || !(published.snapshot?.blocks as Block[] | undefined)?.some(block=>block.id===blockId && block.type==="form" && isVisibleNow(block))) {
+    return NextResponse.json({ok:false},{status:403});
+  }
+
 
   // RLS pusti insert len na zverejneny profil.
   const { error } = await supabase.from("leads").insert({

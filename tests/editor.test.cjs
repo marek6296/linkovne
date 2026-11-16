@@ -465,3 +465,42 @@ test("Free tracking UI keeps saved campaigns but offers no creation form", () =>
  assert.ok(free.includes("Saved campaign"));assert.ok(!free.includes("Add tracking link"));assert.ok(free.includes("Pro and Business"));
  const pro=renderToStaticMarkup(React.createElement(ShareCard,{...props,premium:true}));assert.ok(pro.includes("Add tracking link"));
 });
+
+test("countdown renders event photo and safe destination with themed text", () => {
+ const React=require("react");const {renderToStaticMarkup}=require("react-dom/server");const {Countdown}=load("components/blocks/countdown.tsx");
+ const base={title:"Live event",target:"2027-01-01T12:00:00Z",theme:resolveTheme("classic",{btnBg:"#202027",btnText:"#ffffff"})};
+ const html=renderToStaticMarkup(React.createElement(Countdown,{...base,config:{src:"https://example.com/photo.jpg",href:"https://example.com/event",buttonLabel:"Tickets",countdownStyle:"tiles"}}));
+ assert.ok(html.includes('href="https://example.com/event"'));assert.ok(html.includes('src="https://example.com/photo.jpg"'));assert.ok(html.includes("Tickets"));assert.ok(html.includes("color:#ffffff"));
+ const unsafe=renderToStaticMarkup(React.createElement(Countdown,{...base,config:{href:"javascript:alert(1)"}}));assert.ok(!unsafe.includes("href="));
+ assert.equal(renderToStaticMarkup(React.createElement(Countdown,{...base,target:"invalid"})),"");
+});
+
+test("content controls render safe divider and readable FAQ, and forms remain paid", () => {
+ const React=require("react");const {renderToStaticMarkup}=require("react-dom/server");const {BlockList}=load("components/blocks/render.tsx");const {BLOCK_ORDER}=load("lib/blocks.ts");const {PLANS,allowsBlock}=load("lib/plans.ts");
+ assert.ok(BLOCK_ORDER.includes("form"));assert.equal(allowsBlock(PLANS.free,"form"),false);assert.equal(allowsBlock(PLANS.pro,"form"),true);
+ const blocks=[{id:"d",type:"divider",position:0,is_active:true,config:{dividerStyle:"dashed",dividerWidth:"full",color:"#123456"}},{id:"f",type:"faq",position:1,is_active:true,config:{faqs:[{q:"Question",a:"Answer"}],textColor:"#ffffff",color:"#202027"}}];
+ const html=renderToStaticMarkup(React.createElement(BlockList,{blocks,profileId:"test",theme:resolveTheme("classic",{}),preview:true}));
+ assert.ok(html.includes("1px dashed #123456"));assert.ok(html.includes('aria-expanded="false"'));assert.ok(html.includes("color:#ffffff"));assert.ok(html.includes("Answer"));
+});
+
+
+test("Free cannot add paid design values; unchanged saved values survive editing", () => {
+  const { hasNewPaidDesign } = load("lib/design-tiers.ts");
+  const { PLANS } = load("lib/plans.ts");
+  for (const design of [{btnAnimation:"pulse"},{profileHover:"tilt"},{profileLayout:"hero"},{avatarVideo:"https://example.com/v.mp4"},{btnStyle:"glass"}]) {
+    assert.equal(hasNewPaidDesign(design, PLANS.free, {}), true);
+    assert.equal(hasNewPaidDesign(design, PLANS.free, design), false);
+    assert.equal(hasNewPaidDesign(design, PLANS.pro, {}), false);
+    assert.equal(hasNewPaidDesign(design, PLANS.business, {}), false);
+  }
+  assert.equal(hasNewPaidDesign({nameSize:"xl", btnBg:"#ffffff"}, PLANS.free, {}), false);
+});
+
+
+test("per-link paid button styles cannot bypass Free plan", () => {
+  const { hasNewPaidButtonStyle } = load("lib/design-tiers.ts");
+  const paid = [{id:"a",config:{buttonStyle:"gradient"}}];
+  assert.equal(hasNewPaidButtonStyle(paid, []), true);
+  assert.equal(hasNewPaidButtonStyle(paid, paid), false);
+  assert.equal(hasNewPaidButtonStyle([{id:"a",config:{buttonStyle:"fill"}}], []), false);
+});

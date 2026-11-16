@@ -1010,7 +1010,7 @@ export function Editor({
                 karte: obe su ochranne prepinace, patria k sebe. Dva symetricke
                 riadky (nazov + popis + Switch), oddelene ciarou. */}
               <Section
-                title="Privacy & link behaviour"
+                title="Privacy & link behaviour · Pro"
                 defaultOpen
                 subtitle="link privacy · real browser"
                 delay={180}

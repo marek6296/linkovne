@@ -60,6 +60,7 @@ function TemplateCard({
   return (
     <button
       type="button"
+      disabled={locked}
       onClick={() => {
         if (locked) onLocked();
         else onPick(t);
@@ -79,7 +80,7 @@ function TemplateCard({
           </svg>
           In preview
         </span>
-      ) : locked ? (
+      ) : t.premium ? (
         <span className="absolute top-2.5 right-2.5 z-20 rounded-full bg-[#d7b46a] px-2 py-1 text-[9px] font-bold tracking-wider text-[#211a10] uppercase shadow">
           Pro
         </span>

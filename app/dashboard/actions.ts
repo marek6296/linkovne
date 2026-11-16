@@ -12,7 +12,7 @@ import {
   validProfileOrder,
 } from "@/lib/profile-order";
 import { cleanTrackedLinks, hasNewTrackedLinks } from "@/lib/channels";
-import { designForPlan, hasNewPremiumLayout, hasNewButtonAnimation, hasPremiumSocials } from "@/lib/design-tiers";
+import { hasNewPaidDesign, hasNewPaidButtonStyle, hasNewButtonAnimation, hasPremiumSocials } from "@/lib/design-tiers";
 import { createSubscriptionCheckout, findPromotionCode } from "@/lib/checkout";
 
 export type ActionState = { error?: string } | undefined;
@@ -251,10 +251,11 @@ export async function saveBlocks(
 
   // Keep previously saved Free animations, but require Pro for a new one.
   // Compare against the owned profile's stored blocks, never a client entitlement flag.
-  if (!plan.customDesign && blocks.some(b => b.config?.anim && b.config.anim !== "none")) {
+  if (!plan.customDesign) {
     const { data: existing, error } = await supabase
       .from("blocks").select("id, config").eq("profile_id", profileId);
     if (error) return { error: "Couldn't verify your saved button settings. Please retry." };
+    if (hasNewPaidButtonStyle(blocks, existing ?? [])) return { error: "Glass and gradient buttons require Pro." };
     if (hasNewButtonAnimation(blocks, existing ?? [])) {
       return { error: "New button animations require Pro. Your saved animations can stay as they are." };
     }
@@ -382,12 +383,10 @@ export async function saveProfile(
   }
 
   if (patch.design !== undefined) {
-    if (!plan.customDesign && hasNewPremiumLayout(patch.design, profile.design as Design)) return { error: "Cover, Editorial and Spotlight layouts require Pro. Your existing layout is kept." };
-    // Premium polia (obrazkove pozadie, animacie, glass/gradient buttony,
-    // avatar ramy, desktop backdrop) sa pre free ocistia uz pri zapise —
-    // nedaju sa podstrcit upravenym klientskym requestom.
+    if (hasNewPaidDesign(patch.design, plan, profile.design as Design)) return { error: "This design option requires Pro. Your saved design is kept." };
+    // New paid values are rejected above; untouched saved values are preserved.
     clean.design = {
-      ...designForPlan(patch.design, plan),
+      ...patch.design,
       trackedLinks: cleanTrackedLinks(patch.design?.trackedLinks),
     };
   }

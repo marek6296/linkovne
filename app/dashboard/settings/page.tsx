@@ -97,7 +97,7 @@ export default async function SettingsPage({
           },
           {
             id: "branding",
-            title: "Page branding",
+            title: "Page branding · Pro",
             description:
               "Choose whether the Linkovne badge appears on your public page.",
             content: (
@@ -126,7 +126,7 @@ export default async function SettingsPage({
           },
           {
             id: "domains",
-            title: "Custom domains",
+            title: "Custom domains · Business",
             description:
               "Connect your own domain and check its connection status.",
             content: (

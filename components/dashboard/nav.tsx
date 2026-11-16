@@ -11,6 +11,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 const ITEMS = [
   { key: "editor", label: "Editor", href: "/dashboard" },
   { key: "analytics", label: "Analytics", href: "/dashboard/analytics" },
+  { key: "inbox", label: "Inbox", href: "/dashboard/leads" },
   { key: "invite", label: "Invite & earn", href: "/dashboard/invite" },
   { key: "settings", label: "Settings", href: "/dashboard/settings" },
 ] as const;
@@ -21,7 +22,7 @@ export function DashboardNav() {
   const p = params.get("p");
   const q = p ? `?p=${p}` : "";
 
-  const active = pathname.startsWith("/dashboard/analytics")
+  const active = pathname.startsWith("/dashboard/leads") ? "inbox" : pathname.startsWith("/dashboard/analytics")
     ? "analytics"
     : pathname.startsWith("/dashboard/invite")
       ? "invite"

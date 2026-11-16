@@ -367,9 +367,7 @@ function TipBlock({
       className="block w-full text-center font-semibold transition duration-200 hover:-translate-y-0.5"
       style={{
         background: theme.text,
-        color: theme.page.includes("gradient") || theme.page.includes("url(")
-          ? "#fff"
-          : theme.page,
+        color: readableText(theme.text),
         border: `1px solid ${theme.text}`,
         borderRadius: theme.btnRadius,
         boxShadow: "0 10px 30px rgba(0,0,0,0.18)",
@@ -494,7 +492,7 @@ export function BlockList({
                 <p
                   key={block.id}
                   className="pt-4 pb-1 text-sm font-semibold tracking-wide uppercase"
-                  style={{ color: theme.muted }}
+                  style={{ color: safeColor(block.config.textColor) ?? theme.muted, textAlign:block.config.textAlign ?? "left",fontSize:block.config.textSize === "large" ? "1.25rem" : block.config.textSize === "small" ? ".8rem" : undefined,whiteSpace:"pre-wrap",overflowWrap:"anywhere" }}
                 >
                   {block.config.text}
                 </p>
@@ -505,7 +503,7 @@ export function BlockList({
                 <p
                   key={block.id}
                   className="px-2 text-[15px] leading-relaxed text-pretty"
-                  style={{ color: theme.muted }}
+                  style={{ color: safeColor(block.config.textColor) ?? theme.muted, textAlign:block.config.textAlign ?? "left",fontSize:block.config.textSize === "large" ? "1.25rem" : block.config.textSize === "small" ? ".8rem" : undefined,whiteSpace:"pre-wrap",overflowWrap:"anywhere" }}
                 >
                   {block.config.text}
                 </p>
@@ -516,13 +514,15 @@ export function BlockList({
               if (!src) return null;
               const media =
                 block.config.mediaType === "video" ? (
-                  <VideoBlock src={src} />
+                  <VideoBlock src={src} controls={block.config.videoControls} />
                 ) : (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={src}
                     alt={block.config.alt ?? ""}
-                    className="w-full rounded-xl object-cover"
+                    className="w-full rounded-xl"
+                    style={{aspectRatio:({square:"1",portrait:"4/5",wide:"16/9"} as Record<string,string>)[block.config.mediaRatio??""]??"auto",objectFit:block.config.mediaFit==="contain"?"contain":"cover"}}
+                    loading="lazy"
                   />
                 );
               return (
@@ -534,6 +534,7 @@ export function BlockList({
                   ) : (
                     media
                   )}
+                  {block.config.caption&&<p className="mt-2 text-center text-sm opacity-75 whitespace-pre-wrap break-words">{block.config.caption}</p>}
                 </div>
               );
             }
@@ -543,10 +544,9 @@ export function BlockList({
 
             case "divider":
               return (
-                <div key={block.id} className="flex justify-center py-3">
+                <div key={block.id} className="flex justify-center" style={{paddingBlock: block.config.blockSpacing === "compact" ? 4 : block.config.blockSpacing === "airy" ? 24 : 12}}>
                   <span
-                    className="h-px w-16 rounded-full"
-                    style={{ background: theme.text, opacity: 0.25 }}
+                    style={{width:block.config.dividerWidth === "full" ? "100%" : block.config.dividerWidth === "medium" ? "50%" : 64,borderTop:block.config.dividerStyle === "space" ? undefined : `1px ${["solid","dashed","dotted"].includes(block.config.dividerStyle??"")?block.config.dividerStyle:"solid"} ${safeColor(block.config.color)??theme.text}`,opacity:0.4}}
                   />
                 </div>
               );
@@ -642,6 +642,7 @@ export function BlockList({
                 <Faq
                   key={block.id}
                   items={block.config.faqs ?? []}
+                  config={block.config}
                   theme={theme}
                 />
               );
@@ -652,6 +653,7 @@ export function BlockList({
                   key={block.id}
                   title={block.config.title}
                   target={block.config.target}
+                  config={block.config}
                   theme={theme}
                 />
               );

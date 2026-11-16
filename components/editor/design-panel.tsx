@@ -219,14 +219,7 @@ function Locked({
       <div inert className="pointer-events-none select-none opacity-45">
         {children}
       </div>
-      <button
-        type="button"
-        onClick={onUpsell}
-        aria-label="Upgrade to unlock"
-        className="absolute inset-0 flex items-center justify-center rounded-xl bg-paper/5 transition hover:bg-paper/15"
-      >
-        <ProPill />
-      </button>
+
     </div>
   );
 }
@@ -300,6 +293,7 @@ function VisualChip({
     <button
       type="button"
       onClick={onClick}
+      disabled={locked}
       aria-pressed={active}
       className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-sm transition ${
         active
@@ -483,20 +477,7 @@ export function DesignPanel({
         <div>
           <div className="flex items-center gap-2">
             <p className="text-sm font-semibold">Design studio</p>
-            {caps.full ? (
-              <span className="rounded-full bg-ink px-2 py-0.5 text-[9px] font-bold tracking-widest text-paper uppercase">
-                Premium
-              </span>
-            ) : (
-              <button
-                type="button"
-                onClick={onUpsell}
-                className="inline-flex items-center gap-1 rounded-full border border-ink/20 px-2 py-0.5 text-[9px] font-bold tracking-widest text-ink uppercase transition hover:bg-ink hover:text-paper"
-              >
-                <LockGlyph />
-                Unlock Pro
-              </button>
-            )}
+
           </div>
           <p className="mt-1 text-xs text-soft">
             {caps.full
@@ -550,6 +531,7 @@ export function DesignPanel({
                         key={key}
                         type="button"
                         aria-pressed={active}
+                        disabled={!caps.full && ["cover", "editorial", "hero"].includes(key)}
                         onClick={() => !caps.full && ["cover", "editorial", "hero"].includes(key) ? onUpsell() : onChange({ profileLayout: key })}
                         className={`rounded-2xl border p-2.5 text-left transition ${
                           active
@@ -706,6 +688,7 @@ export function DesignPanel({
                     <button
                       key={o.key}
                       type="button"
+                      disabled={locked}
                       onClick={() =>
                         locked ? onUpsell() : onChange({ bg: o.key })
                       }
@@ -715,7 +698,7 @@ export function DesignPanel({
                           : "border-line hover:border-soft"
                       } ${locked ? "opacity-60" : ""}`}
                     >
-                      {o.label}
+                      {o.label}{o.key === "image" && " · Pro"}
                       {locked && <LockGlyph />}
                     </button>
                   );
@@ -825,7 +808,7 @@ export function DesignPanel({
                 <button
                   type="button"
                   onClick={() => fileRef.current?.click()}
-                  disabled={busy}
+                  disabled={busy || !caps.bgImage}
                   className="rounded-full border border-line px-4 py-2 text-sm transition hover:border-ink disabled:opacity-50"
                 >
                   {busy
@@ -854,7 +837,7 @@ export function DesignPanel({
             <div className="border-t border-line pt-4">
               <div className="flex items-center gap-2">
                 <GroupLabel>Behind the card · desktop</GroupLabel>
-                {!caps.deskBackdrop && <ProPill />}
+                <ProPill />
               </div>
               <p className="mt-1 text-xs text-soft">
                 The area around your card on wide screens. On phones the card
@@ -867,6 +850,7 @@ export function DesignPanel({
                     <button
                       key={o.key}
                       type="button"
+                      disabled={locked}
                       onClick={() =>
                         locked ? onUpsell() : onChange({ deskBg: o.key })
                       }
@@ -876,7 +860,7 @@ export function DesignPanel({
                           : "border-line hover:border-soft"
                       } ${locked ? "opacity-60" : ""}`}
                     >
-                      {o.label}
+                      {o.label}{o.key === "image" && " · Pro"}
                       {locked && <LockGlyph />}
                     </button>
                   );
@@ -985,7 +969,7 @@ export function DesignPanel({
                   <button
                     type="button"
                     onClick={() => deskFileRef.current?.click()}
-                    disabled={deskBusy}
+                    disabled={deskBusy || !caps.deskBackdrop}
                     className="rounded-full border border-line px-4 py-2 text-sm transition hover:border-ink disabled:opacity-50"
                   >
                     {deskBusy
@@ -1083,7 +1067,7 @@ export function DesignPanel({
             <div className="border-t border-line pt-4">
               <div className="flex items-center gap-2">
                 <GroupLabel>Frame</GroupLabel>
-                {!caps.avatarFrames && <ProPill />}
+                <ProPill />
               </div>
               <div className="mt-2 grid grid-cols-3 gap-1.5 sm:grid-cols-5">
                 {(Object.keys(AVATAR_FRAMES) as AvatarFrame[]).map((k) => {
@@ -1092,6 +1076,7 @@ export function DesignPanel({
                     <button
                       key={k}
                       type="button"
+                      disabled={locked}
                       onClick={() =>
                         locked
                           ? onUpsell()
@@ -1408,7 +1393,7 @@ export function DesignPanel({
                       onClick={() =>
                         locked ? onUpsell() : chooseButtonStyle(k)
                       }
-                      label={BTN_STYLES[k]}
+                      label={`${BTN_STYLES[k]}${["glass", "gradient"].includes(k) ? " · Pro" : ""}`}
                       glyph={
                         <span
                           className={`h-3.5 w-8 shrink-0 rounded-full ${
@@ -1531,7 +1516,7 @@ export function DesignPanel({
                   BTN_ANIMATIONS[
                     selectedConfig?.anim ?? design.btnAnimation ?? "none"
                   ].label
-                }
+                }{" "}<ProPill />
               </summary>
               <div className="flex items-center gap-2">
                 <GroupLabel>Animation</GroupLabel>

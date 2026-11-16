@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { readableText } from "@/lib/design";
 import type { Theme } from "@/lib/themes";
 
 export function ContactForm({
@@ -24,11 +25,9 @@ export function ContactForm({
   );
 
   const inputStyle = {
-    background: theme.page.includes("gradient")
-      ? "rgba(255,255,255,0.75)"
-      : theme.btnBg,
+    background: "#ffffff",
     border: theme.btnBorder,
-    color: theme.text,
+    color: "#202027",
   };
 
   async function submit(e: React.FormEvent<HTMLFormElement>) {
@@ -69,10 +68,11 @@ export function ContactForm({
           border: theme.btnBorder,
           borderRadius: theme.btnRadius === "999px" ? "18px" : theme.btnRadius,
           background: theme.btnBg,
+          color:theme.btnText,
         }}
       >
         <p className="font-medium">Thank you — message sent.</p>
-        <p className="mt-1" style={{ color: theme.muted }}>
+        <p className="mt-1" style={{ color: "inherit",opacity:.7 }}>
           You&apos;ll hear back soon.
         </p>
       </div>
@@ -82,17 +82,20 @@ export function ContactForm({
   return (
     <form
       onSubmit={submit}
-      className="space-y-2.5 px-5 py-5"
+      className="block-surface space-y-2.5 px-5 py-5"
       style={{
         border: theme.btnBorder,
         borderRadius: theme.btnRadius === "999px" ? "18px" : theme.btnRadius,
         background: theme.btnBg,
+        color:theme.btnText,
       }}
     >
       {title && <p className="mb-1 text-sm font-semibold">{title}</p>}
 
       <input
         name="name"
+        aria-label="Your name"
+        autoComplete="name"
         required
         maxLength={100}
         placeholder="Your name"
@@ -101,6 +104,8 @@ export function ContactForm({
       />
       <input
         name="email"
+        aria-label="Email address"
+        autoComplete="email"
         type="email"
         required
         maxLength={200}
@@ -110,6 +115,7 @@ export function ContactForm({
       />
       <textarea
         name="message"
+        aria-label="Your message"
         rows={3}
         maxLength={2000}
         placeholder="Your message"
@@ -133,10 +139,7 @@ export function ContactForm({
         style={{
           background: theme.text,
           // Rovnaky dovod ako pri featured odkaze — btnBg byva priehladny
-          color:
-            theme.page.includes("gradient") || theme.page.includes("url(")
-              ? "#fff"
-              : theme.page,
+          color: readableText(theme.text),
           borderRadius: theme.btnRadius,
         }}
       >

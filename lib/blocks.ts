@@ -234,6 +234,18 @@ export type BlockConfig = {
   faqs?: { q: string; a: string }[];
   // countdown — ISO datetime
   target?: string;
+  mediaRatio?: "auto" | "square" | "portrait" | "wide";
+  mediaFit?: "cover" | "contain";
+  caption?: string;
+  videoControls?: boolean;
+  countdownStyle?: "minimal" | "tiles";
+  completedText?: string;
+  faqStyle?: "card" | "lines";
+  dividerStyle?: "solid" | "dashed" | "dotted" | "space";
+  dividerWidth?: "short" | "medium" | "full";
+  blockSpacing?: "compact" | "normal" | "airy";
+  textAlign?: "left" | "center" | "right";
+  textSize?: "small" | "medium" | "large";
   // form
   buttonLabel?: string;
   /** Premium visual section. Stored on a headline block for DB compatibility. */
@@ -292,7 +304,7 @@ export const BLOCK_ORDER: BlockType[] = [
   "countdown",
   "divider",
   "tip",
-  // "form" — kontaktny formular / inbox sme odstranili (nikto tam nepise).
+  "form",
 ];
 
 export function defaultConfig(type: BlockType): BlockConfig {
