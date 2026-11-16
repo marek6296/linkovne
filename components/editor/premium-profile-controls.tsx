@@ -61,7 +61,7 @@ export function PremiumProfileControls({
         {choice(
           "Button treatment",
           "buttonTreatment",
-          { default: "Original", soft: "Soft depth", tile: "Large tiles" },
+          { default: "Original", soft: "Soft depth", tile: "Large tiles", raised: "Raised · 3D", cushion: "Cushion · 3D", bevel: "Bevel · 3D" },
           "default",
         )}
         {choice("Entrance", "profileEntrance", PROFILE_ENTRANCES, "none")}

@@ -425,3 +425,14 @@ test("Free layouts come first and saved Spotlight is grandfathered", () => {
  assert.ok(lockedDesignFeatures({profileLayout:"hero"},PLANS.free,{profileLayout:"centered"}).includes("Spotlight layout"));
  assert.equal(designForPlan({profileLayout:"hero"},PLANS.free).profileLayout,"hero");
 });
+
+
+test("3D button treatments are Pro only and unknown treatments are ignored", () => {
+ const {designForPlan}=load("lib/design-tiers.ts");const {PLANS}=load("lib/plans.ts");
+ for(const buttonTreatment of ["raised","cushion","bevel"]){
+   assert.equal(resolveTheme("classic",designForPlan({buttonTreatment},PLANS.pro)).buttonTreatment,buttonTreatment);
+   assert.equal(resolveTheme("classic",designForPlan({buttonTreatment},PLANS.business)).buttonTreatment,buttonTreatment);
+   assert.equal(resolveTheme("classic",designForPlan({buttonTreatment},PLANS.free)).buttonTreatment,undefined);
+ }
+ assert.equal(resolveTheme("classic",{buttonTreatment:"unknown"}).buttonTreatment,undefined);
+});

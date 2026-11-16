@@ -63,7 +63,7 @@ export type Design = {
   profileAccent?: string;
   coverImage?: string;
   linkArrangement?: "stack" | "grid";
-  buttonTreatment?: "default" | "soft" | "tile";
+  buttonTreatment?: "default" | "soft" | "tile" | "raised" | "cushion" | "bevel";
   /** Sharing metadata; independent of the visual theme. */
   trackedLinks?: import("./channels").TrackedLink[];
   /** Overall page composition, independent from colors and typography. */
@@ -426,7 +426,7 @@ export function resolveTheme(
   t.profileAccent = safeColor(design.profileAccent) ?? t.btnBg;
   t.coverImage = safeUrl(design.coverImage) ?? undefined;
   if (["stack", "grid"].includes(design.linkArrangement ?? "")) t.linkArrangement = design.linkArrangement;
-  if (["default", "soft", "tile"].includes(design.buttonTreatment ?? "")) t.buttonTreatment = design.buttonTreatment;
+  if (["default", "soft", "tile", "raised", "cushion", "bevel"].includes(design.buttonTreatment ?? "")) t.buttonTreatment = design.buttonTreatment;
   const layout = t.profileLayout ?? "centered";
   const nameScale = { sm: 0.85, md: 1, lg: 1.15, xl: 1.3 };
   const handleSizes = { sm: 0.75, md: 0.82, lg: 0.95, xl: 1.1 };
