@@ -1,11 +1,11 @@
 import Link from "next/link";
-import type { Metadata } from "next";
+import { marketingMetadata } from "@/lib/seo";
 import { signIn } from "@/app/auth/actions";
 import { AuthForm } from "@/components/auth-form";
 import { AuthShell } from "@/components/auth-shell";
 import { GoogleButton } from "@/components/google-button";
 
-export const metadata: Metadata = { title: "Log in" };
+export const metadata = marketingMetadata("/login", "Log in to Linkovne", "Sign in to your Linkovne account to manage your creator pages, links, analytics and subscription.");
 
 export default async function LoginPage({
   searchParams,
