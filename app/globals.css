@@ -983,7 +983,7 @@ html.lk-escaping main > :not(.lk-gate):not(script) {
 .action-spinner { width:16px; height:16px; border:2px solid currentColor; border-right-color:transparent; border-radius:50%; animation:action-spin .7s linear infinite; }
 .landing .scroll-awaiting { opacity:0; translate:0 24px; }
 .landing .scroll-arrived { animation:section-arrive .65s cubic-bezier(.2,.7,.2,1) both; }
-.landing-hero-copy { animation:workspace-arrive .6s ease-out; }
+
 :is(.dashboard-studio,.admin-workspace,.auth-shell) button { transition:background-color .15s,color .15s,box-shadow .15s,opacity .15s; }
 :is(.dashboard-studio,.admin-workspace,.auth-shell) button:active:not(:disabled) { scale:.98; }
 /* Native top-layer dialogs retain focus trapping and Escape behaviour during exit. */

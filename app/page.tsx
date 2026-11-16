@@ -61,7 +61,7 @@ export default async function Home() {
         <LandingNav />
         <section className="landing-hero landing-width">
           <div className="landing-hero-copy">
-            <h1>One profile.<br />One link.<br /><span>All your sites.</span></h1>
+            <h1><span className="hero-line">One profile.</span><span className="hero-line">One link.</span><span className="hero-line hero-line-accent">All your sites.</span></h1>
             <p>Your links, your content, your style.<br className="landing-desktop-break" /> Bring it all together on a page that’s yours.</p>
             <Link href="/register" className="landing-button landing-button-blue">Create your free page <span aria-hidden>↗</span></Link>
           </div>
