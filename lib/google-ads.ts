@@ -7,7 +7,7 @@ const SENT_KEY = "linkovne:ads-sent";
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 type Store = Pick<Storage, "getItem" | "setItem" | "removeItem">;
 export function adsPageAllowed(host: string, path: string): boolean {
-  return host === "linkovne.com" && /^(\/|\/(about|guides|vs)(\/[a-z0-9-]+)?|\/(register|login|onboarding|privacy|terms))$/.test(path);
+  return host === "linkovne.com" && /^(\/|\/(about|pricing|features|guides|vs)(\/[a-z0-9-]+)?|\/(register|login|onboarding|privacy|terms))$/.test(path);
 }
 export function hasAdsConsent(raw: string | null): boolean {
   try { const v = JSON.parse(raw || "null"); return v?.version === 1 && v.choice === "granted"; } catch { return false; }

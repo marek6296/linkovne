@@ -11,7 +11,7 @@ export const ADS_FRAME_HTML = `<!doctype html><html lang="en"><head><meta charse
     if (data.type === 'linkovne:ads-start' && !started) {
       var page;
       try { page = new URL(data.location); } catch (_) { return; }
-      if (page.origin !== origin || !/^(\\/|\\/(about|guides|vs)(\\/[a-z0-9-]+)?|\\/(register|login|onboarding|privacy|terms))$/.test(page.pathname)) return;
+      if (page.origin !== origin || !/^(\\/|\\/(about|pricing|features|guides|vs)(\\/[a-z0-9-]+)?|\\/(register|login|onboarding|privacy|terms))$/.test(page.pathname)) return;
       // Parent only passes the sanitized page URL; recheck at the document boundary.
       Array.from(page.searchParams.keys()).forEach(function (key) { if (!['gclid','wbraid','gbraid'].includes(key)) page.searchParams.delete(key); });
       page.hash = '';

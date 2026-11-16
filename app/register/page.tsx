@@ -1,16 +1,11 @@
 import Link from "next/link";
-import type { Metadata } from "next";
+import { marketingMetadata } from "@/lib/seo";
 import { signUp } from "@/app/auth/actions";
 import { AuthForm } from "@/components/auth-form";
 import { AuthShell } from "@/components/auth-shell";
 import { GoogleButton } from "@/components/google-button";
 
-export const metadata: Metadata = {
-  title: "Create your free link in bio page",
-  description:
-    "Pick your name, add your links and go live in two minutes. Free plan, no card required.",
-  alternates: { canonical: "/register" },
-};
+export const metadata = marketingMetadata("/register", "Create your free link in bio page", "Pick your name, add your links and create your Linkovne page. Start with a free plan, no card required.");
 
 export default async function RegisterPage({
   searchParams,
