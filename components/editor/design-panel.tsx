@@ -403,6 +403,7 @@ export function DesignPanel({
   buttonTarget,
   onButtonTargetChange,
   onLinkChange,
+  onAllButtonAnimation,
 }: {
   design: Design;
   caps: DesignCaps;
@@ -419,6 +420,7 @@ export function DesignPanel({
   buttonTarget: string;
   onButtonTargetChange: (target: string) => void;
   onLinkChange: (id: string, patch: Partial<BlockConfig>) => void;
+  onAllButtonAnimation: (animation: BtnAnimation) => void;
 }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const deskFileRef = useRef<HTMLInputElement>(null);
@@ -1538,7 +1540,7 @@ export function DesignPanel({
               <p className="mt-1 text-xs text-soft">
                 {selectedButton
                   ? "Choose an independent effect for this button. Off overrides any page animation."
-                  : "Set the default effect. Individual buttons can override it."}
+                  : "Apply this effect to every button, replacing individual animation settings."}
               </p>
               <Locked locked={!caps.btnAnimation} onUpsell={onUpsell}>
                 <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -1556,7 +1558,7 @@ export function DesignPanel({
                         onClick={() =>
                           selectedButton
                             ? patchSelected({ anim: k })
-                            : onChange({ btnAnimation: k })
+                            : onAllButtonAnimation(k)
                         }
                         className={`rounded-xl border px-3 py-2.5 text-left transition ${
                           active

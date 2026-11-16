@@ -430,3 +430,13 @@ export function socialHref(platform: SocialPlatform, value: string): string {
   if (/^https?:\/\//i.test(v)) return v;
   return `https://${v}`;
 }
+
+/** Explicit All buttons action removes old per-link motion overrides. */
+export function inheritButtonAnimations(blocks: Block[]): Block[] {
+  return blocks.map(block => {
+    if (block.type !== "link" || block.config.anim === undefined) return block;
+    const config = { ...block.config };
+    delete config.anim;
+    return { ...block, config };
+  });
+}

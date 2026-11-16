@@ -436,3 +436,13 @@ test("3D button treatments are Pro only and unknown treatments are ignored", () 
  }
  assert.equal(resolveTheme("classic",{buttonTreatment:"unknown"}).buttonTreatment,undefined);
 });
+
+
+test("All buttons clears motion overrides including Off without changing other content", () => {
+ const {inheritButtonAnimations}=load("lib/blocks.ts");
+ const original=[{id:"a",type:"link",config:{anim:"none",title:"A",color:"#fff"}},{id:"b",type:"link",config:{anim:"glow",title:"B"}},{id:"c",type:"link",config:{title:"C"}},{id:"d",type:"text",config:{text:"Keep",anim:"float"}}];
+ const result=inheritButtonAnimations(original);
+ assert.deepEqual(result.slice(0,3).map(b=>b.config.anim),[undefined,undefined,undefined]);
+ assert.equal(result[0].config.color,"#fff");assert.equal(result[0].config.title,"A");
+ assert.equal(original[0].config.anim,"none");assert.equal(result[3],original[3]);
+});

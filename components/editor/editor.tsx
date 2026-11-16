@@ -20,6 +20,7 @@ import {
 } from "@dnd-kit/sortable";
 import {
   BLOCK_META,
+  inheritButtonAnimations,
   defaultConfig,
   type Block,
   type BlockType,
@@ -985,6 +986,10 @@ export function Editor({
                   linkBlocks={blocks.filter((block) => block.type === "link")}
                   buttonTarget={buttonTarget}
                   onButtonTargetChange={setButtonTarget}
+                  onAllButtonAnimation={(animation) => {
+                    patchDesign({ btnAnimation: animation });
+                    patchBlocks(inheritButtonAnimations);
+                  }}
                   onLinkChange={(id, configPatch) =>
                     patchBlocks((prev) =>
                       prev.map((block) =>
