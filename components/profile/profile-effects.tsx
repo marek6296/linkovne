@@ -144,7 +144,7 @@ export function ProfileEffects({
             className="profile-effect-toggle"
             aria-pressed={active}
             aria-label={
-              effect === "flip" ? "Turn profile card" : "Reveal profile colour"
+              effect === "flip" ? "Turn profile card" : "Reveal profile colours"
             }
             onClick={() => setActive((v) => !v)}
           >
@@ -152,7 +152,7 @@ export function ProfileEffects({
               ? active
                 ? "Back to profile ↶"
                 : "About me ↗"
-              : "Change colour ◉"}
+              : "Reveal colours ◉"}
           </button>
         )}
       </div>
