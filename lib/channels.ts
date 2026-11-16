@@ -71,3 +71,9 @@ export function cleanTrackedLinks(value: unknown): TrackedLink[] {
     return [{ label, source }];
   });
 }
+
+/** Free may retain or remove saved links, but cannot add or rename campaigns. */
+export function hasNewTrackedLinks(next: unknown, existing: unknown): boolean {
+ const saved = new Map(cleanTrackedLinks(existing).map(link => [link.source, link.label]));
+ return cleanTrackedLinks(next).some(link => saved.get(link.source) !== link.label);
+}

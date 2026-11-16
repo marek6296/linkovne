@@ -15,7 +15,9 @@ export function ShareCard({
   isPublished,
   trackedLinks,
   onTrackedLinksChange,
+  premium,
 }: {
+  premium: boolean;
   trackedLinks: TrackedLink[];
   onTrackedLinksChange: (links: TrackedLink[]) => void;
   username: string;
@@ -164,12 +166,13 @@ export function ShareCard({
 
       <Collapse open={panel === "channels"}>
         <div className="mt-5 border-t border-line pt-5">
-          <h2 className="text-base font-semibold">Accounts & campaigns</h2>
+          <h2 className="flex items-center gap-2 text-base font-semibold">Accounts & campaigns <span className="rounded-full bg-ink px-2 py-0.5 text-[10px] text-white">PRO</span></h2>
           <p className="mt-1 text-sm text-soft">
             Create a separate link for each Instagram account, campaign or
             channel. Visits and clicks appear under its source in Analytics.
           </p>
-          <form
+          {!premium && <p className="mt-4 rounded-xl border border-line p-4 text-sm">Custom tracking links are available on Pro and Business. Your saved links stay available. <a href="/dashboard/settings" className="font-semibold underline">Explore plans</a></p>}
+          {premium && <form
             className="studio-tracking-form"
             onSubmit={(event) => {
               event.preventDefault();
@@ -236,7 +239,7 @@ export function ShareCard({
             <button className="btn-ink px-4 py-2.5 text-sm" type="submit">
               Add tracking link
             </button>
-          </form>
+          </form>}
           {trackingError && (
             <p role="alert" className="mt-2 text-sm text-danger">
               {trackingError}

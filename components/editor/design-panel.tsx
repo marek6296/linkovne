@@ -1535,7 +1535,7 @@ export function DesignPanel({
               </summary>
               <div className="flex items-center gap-2">
                 <GroupLabel>Animation</GroupLabel>
-                {!caps.btnAnimation && <ProPill />}
+                <ProPill />
               </div>
               <p className="mt-1 text-xs text-soft">
                 {selectedButton

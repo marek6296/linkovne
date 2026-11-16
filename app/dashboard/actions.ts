@@ -11,7 +11,7 @@ import {
   orderProfiles,
   validProfileOrder,
 } from "@/lib/profile-order";
-import { cleanTrackedLinks } from "@/lib/channels";
+import { cleanTrackedLinks, hasNewTrackedLinks } from "@/lib/channels";
 import { designForPlan, hasNewPremiumLayout, hasNewButtonAnimation, hasPremiumSocials } from "@/lib/design-tiers";
 import { createSubscriptionCheckout, findPromotionCode } from "@/lib/checkout";
 
@@ -356,6 +356,11 @@ export async function saveProfile(
   },
 ): Promise<ActionState> {
   const { supabase, plan, profile } = await requireProfile(profileId);
+
+  const requestedTracking = patch.trackedLinks ?? patch.design?.trackedLinks;
+  if (!plan.customDesign && requestedTracking !== undefined && hasNewTrackedLinks(requestedTracking, (profile.design as Design | null)?.trackedLinks)) {
+    return { error: "Custom tracking links require Pro or Business. Your saved links are kept." };
+  }
 
   const clean: Record<string, unknown> = {
     updated_at: new Date().toISOString(),

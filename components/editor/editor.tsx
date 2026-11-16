@@ -1336,6 +1336,7 @@ export function Editor({
             </div>
             {workspace === "share" && (
               <ShareCard
+                premium={plan.customDesign}
                 username={profile.username}
                 isPublished={isPublished}
                 trackedLinks={profile.design.trackedLinks ?? []}

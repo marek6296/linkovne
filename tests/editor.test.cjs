@@ -446,3 +446,22 @@ test("All buttons clears motion overrides including Off without changing other c
  assert.equal(result[0].config.color,"#fff");assert.equal(result[0].config.title,"A");
  assert.equal(original[0].config.anim,"none");assert.equal(result[3],original[3]);
 });
+
+
+test("custom tracking links require Pro for new sources or renamed campaigns, preserving existing Free links", () => {
+ const {hasNewTrackedLinks}=load("lib/channels.ts");
+ const saved=[{source:"my-campaign",label:"Campaign"}];
+ assert.equal(hasNewTrackedLinks(saved,saved),false);
+ assert.equal(hasNewTrackedLinks([],saved),false);
+ assert.equal(hasNewTrackedLinks(saved,[]),true);
+ assert.equal(hasNewTrackedLinks([{source:"my-campaign",label:"New"}],saved),true);
+});
+
+test("Free tracking UI keeps saved campaigns but offers no creation form", () => {
+ const React=require("react");const {renderToStaticMarkup}=require("react-dom/server");
+ const {ShareCard}=load("components/editor/share-card.tsx");
+ const props={username:"creator",isPublished:true,trackedLinks:[{source:"saved-campaign",label:"Saved campaign"}],onTrackedLinksChange:()=>{}};
+ const free=renderToStaticMarkup(React.createElement(ShareCard,{...props,premium:false}));
+ assert.ok(free.includes("Saved campaign"));assert.ok(!free.includes("Add tracking link"));assert.ok(free.includes("Pro and Business"));
+ const pro=renderToStaticMarkup(React.createElement(ShareCard,{...props,premium:true}));assert.ok(pro.includes("Add tracking link"));
+});
