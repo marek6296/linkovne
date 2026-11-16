@@ -20,7 +20,7 @@ export function ProfileEffects({
 }) {
   const motionRoot = useRef<HTMLDivElement>(null);
   const root = useRef<HTMLDivElement>(null);
-  const [active, setActive] = useState(false);
+  const [active, setActive] = useState(theme.profileHover === "flip");
   const effect = theme.profileHover ?? "none";
   const pointerFrame = useRef(0);
   useEffect(() => () => cancelAnimationFrame(pointerFrame.current), []);
@@ -30,7 +30,7 @@ export function ProfileEffects({
     root.current?.style.setProperty("--tilt-y", "0deg");
   };
   useEffect(() => {
-    setActive(false);
+    setActive(effect === "flip");
     const node = root.current;
     if (!node || effect !== "reveal") return;
     const measure = () => {
@@ -89,7 +89,7 @@ export function ProfileEffects({
         data-scope={scope}
         data-active={active}
         onPointerEnter={(e) => {
-          if (e.pointerType === "mouse" && interactive) setActive(true);
+          if (e.pointerType === "mouse" && interactive) setActive(effect !== "flip");
         }}
         onPointerMove={(e) => {
           if (e.pointerType !== "mouse" || !["tilt", "spotlight"].includes(effect) || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -107,7 +107,7 @@ export function ProfileEffects({
         }}
         onPointerLeave={(e) => {
           resetPointer();
-          if (e.pointerType === "mouse" && interactive) setActive(false);
+          if (e.pointerType === "mouse" && interactive) setActive(effect === "flip");
         }}
         onKeyDown={(e) => {
           if (e.key === "Escape") setActive(false);

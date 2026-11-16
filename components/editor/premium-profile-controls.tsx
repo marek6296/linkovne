@@ -127,7 +127,7 @@ export function PremiumProfileControls({
             />
           </label>
           <p className="text-xs text-soft">
-            Hover to turn on desktop, tap on mobile. The entire card turns. Use “Back to profile” to return to your links.
+            Hover to reveal your profile on desktop, tap on mobile. The back is shown at rest; your profile and links face the visitor on hover.
           </p>
         </div>
       )}
