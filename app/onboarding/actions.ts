@@ -8,8 +8,15 @@ import { createClient } from "@/lib/supabase/server";
 import { templateByKey, templateBlocks } from "@/lib/templates";
 import { socialHref, type SocialPlatform } from "@/lib/blocks";
 import type { RedeemGrant } from "@/app/dashboard/actions";
+import { findPromotion } from "@/lib/checkout";
 
-export type OnboardingResult = { error?: string; ok?: boolean; conversionId?: string };
+export type OnboardingResult = {
+  error?: string;
+  ok?: boolean;
+  conversionId?: string;
+  /** Zadany kod je Stripe promo kod (napr. PRO2) → /redeem/<kod> = Checkout. */
+  checkoutPath?: string;
+};
 
 /**
  * Uplatni invite kod z cookie (nastavenej v /i/<code> pred registraciou) HNED
@@ -204,9 +211,17 @@ export async function completeOnboarding(
   const typed = (payload.promoCode ?? "").trim().toLowerCase();
   const fromCookie = cookieStore.get("invite")?.value;
   const code = typed || fromCookie;
+  let checkoutPath: string | undefined;
   if (code) {
-    await supabase.rpc("redeem_invite", { p_code: code });
+    const { data: redeemed } = await supabase.rpc("redeem_invite", { p_code: code });
     if (fromCookie) cookieStore.delete("invite");
+    // Nie je to nas invite kod → moze to byt Stripe promo kod z reklamy (PRO2).
+    // Ten sa uplatni az v Stripe Checkoute (s kartou a pripadnym trialom).
+    const invited = (redeemed as { status?: string } | null)?.status === "ok";
+    if (!invited && typed) {
+      const promo = await findPromotion(typed);
+      if (promo) checkoutPath = `/redeem/${encodeURIComponent(promo.code)}`;
+    }
   }
 
   // Referral pozvanka (/i/<referral_code>) — naviaz pozvanku. Odmena pre toho,
@@ -227,5 +242,5 @@ export async function completeOnboarding(
     if (!markerError) conversionId = createHash("sha256").update(`linkovne:onboarding:${user.id}`).digest("hex");
   }
   revalidatePath("/", "layout");
-  return { ok: true, conversionId };
+  return { ok: true, conversionId, checkoutPath };
 }

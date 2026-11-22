@@ -118,6 +118,13 @@ export function Wizard({
 
       await recordCreatorConversion(res.conversionId);
 
+      // Stripe promo kod (napr. PRO2) → /redeem/<kod> → Checkout s kartou,
+      // zlavou a pripadnym trialom.
+      if (res.checkoutPath) {
+        window.location.href = res.checkoutPath;
+        return;
+      }
+
       // Vybral Pro (a nejde cez invite kod) → rovno do Stripe checkoutu.
       // Stranka uz existuje, takze aj ked platbu zrusi, ma hotovy free ucet.
       if (wantsPro && !promoCode.trim()) {
@@ -263,7 +270,7 @@ export function Wizard({
               <SquishyBg id={2} />
             </div>
 
-            {/* Invite / promo kod — odomkne odmenu bez karty */}
+            {/* Invite kod odomkne odmenu bez karty; Stripe promo kod (PRO2) ide do checkoutu */}
             <div className="mt-4 flex items-center gap-2">
               <input
                 value={promoCode}

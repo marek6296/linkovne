@@ -34,7 +34,7 @@ test('actual onboarding emits one stable conversion only for a newly acquired fi
  const client={auth:{getUser:async()=>({data:{user:state.user}}),updateUser:async({data})=>{if(state.markerError)return {error:{message:'offline'}};Object.assign(state.user.user_metadata,data);return {error:null};}},rpc:async()=>({data:true}),from:()=>{const q={select:()=>q,eq:async()=>({count:state.count,error:null}),upsert:async()=>({error:null}),insert:()=>q,single:async()=>({data:{id:'profile'},error:null})};return q;}};
  const mocks={
   'node:crypto':{createHash},'next/navigation':{redirect:()=>{throw Error('unexpected redirect');}},'next/cache':{revalidatePath:()=>{}},'next/headers':{cookies:async()=>({get:()=>null,delete:()=>{}})},
-  '@/lib/supabase/server':{createClient:async()=>client},'@/lib/templates':{templateByKey:()=>({key:'paper',theme:'classic',design:{}}),templateBlocks:()=>[]},'@/lib/blocks':{socialHref:()=>''},
+  '@/lib/supabase/server':{createClient:async()=>client},'@/lib/templates':{templateByKey:()=>({key:'paper',theme:'classic',design:{}}),templateBlocks:()=>[]},'@/lib/blocks':{socialHref:()=>''},'@/lib/checkout':{findPromotion:async()=>null},
  };
  const m={exports:{}};const code=ts.transpileModule(fs.readFileSync('app/onboarding/actions.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
  new Function('require','module','exports',code)(key=>{if(!(key in mocks))throw Error(key);return mocks[key];},m,m.exports);

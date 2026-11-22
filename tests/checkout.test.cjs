@@ -92,3 +92,24 @@ test('a Stripe rejection of a first-time code is not retried as a brand-new cust
   assert.equal(calls.length, 1);
   assert.equal(result.status, 400);
 });
+
+test('onboarding sends a Stripe promo code (PRO2) to checkout, but keeps invite codes in-app', async () => {
+  const rpcResult = { data: { status: 'invalid' } };
+  const client = { auth: { getUser: async () => ({ data: { user: { id: 'u', created_at: '2020-01-01T00:00:00Z', user_metadata: {} } } }), updateUser: async () => ({ error: null }) }, rpc: async (name) => name === 'redeem_invite' ? rpcResult : { data: true }, from: () => { const q = { select: () => q, eq: async () => ({ count: 0, error: null }), upsert: async () => ({ error: null }), insert: () => q, single: async () => ({ data: { id: 'profile' }, error: null }) }; return q; } };
+  const looked = [];
+  const mocks = {
+    'node:crypto': require('node:crypto'), 'next/navigation': { redirect: () => { throw Error('unexpected redirect'); } }, 'next/cache': { revalidatePath: () => {} }, 'next/headers': { cookies: async () => ({ get: () => null, delete: () => {} }) },
+    '@/lib/supabase/server': { createClient: async () => client }, '@/lib/templates': { templateByKey: () => ({ key: 'paper', theme: 'classic', design: {} }), templateBlocks: () => [] }, '@/lib/blocks': { socialHref: () => '' },
+    '@/lib/checkout': { findPromotion: async (c) => { looked.push(c); return c.toUpperCase() === 'PRO2' ? { id: 'promo_1', code: 'PRO2', trialDays: 31, firstTimeOnly: true } : null; } },
+  };
+  const m = { exports: {} };
+  const code = ts.transpileModule(fs.readFileSync('app/onboarding/actions.ts', 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
+  new Function('require', 'module', 'exports', code)(key => { if (!(key in mocks)) throw Error(key); return mocks[key]; }, m, m.exports);
+  const promo = await m.exports.completeOnboarding({ username: 'testcreator', template: 'paper', promoCode: 'PRO2' });
+  assert.equal(promo.ok, true);
+  assert.equal(promo.checkoutPath, '/redeem/PRO2');
+  rpcResult.data = { status: 'ok', plan: 'pro' };
+  const invite = await m.exports.completeOnboarding({ username: 'testcreator', template: 'paper', promoCode: 'FRIENDINVITE' });
+  assert.equal(invite.checkoutPath, undefined);
+  assert.deepEqual(looked, ['pro2']);
+});
