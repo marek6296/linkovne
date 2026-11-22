@@ -51,6 +51,13 @@ export async function POST(request: NextRequest) {
       { status: 400 },
     );
   }
+  // Kody s trialom (PRO2) su kampan len na Pro.
+  if (promo?.trialDays && plan !== "pro") {
+    return NextResponse.json(
+      { error: "This code is for the Pro plan." },
+      { status: 400 },
+    );
+  }
   // Uz plateny plan → promo nesmie zalozit druhe predplatne.
   if (promo && (account?.plan === "pro" || account?.plan === "business")) {
     return NextResponse.json(
