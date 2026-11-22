@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { stripe } from "@/lib/stripe";
 import { buildCouponParams } from "@/lib/discounts";
+import { MAX_TRIAL_DAYS } from "@/lib/checkout";
 
 /**
  * Zľavy a promo kódy sa vytvárajú a spravujú TU (v admine), ale žijú v Stripe —
@@ -66,6 +67,22 @@ export async function createDiscount(formData: FormData): Promise<DiscountState>
       return { error: "Expiry must be a future date." };
     }
     promoParams.expires_at = Math.floor(d.getTime() / 1000);
+  }
+
+  // Trial pred prvou platbou (napr. PRO2 = 31 dní zadarmo). Stripe ho z kódu
+  // sám nepridá — prečíta ho náš checkout z metadata `trial_days`.
+  const rawTrial = String(formData.get("trial_days") ?? "").trim();
+  if (rawTrial) {
+    const days = parseInt(rawTrial, 10);
+    if (!(days >= 1 && days <= MAX_TRIAL_DAYS) || String(days) !== rawTrial) {
+      return { error: `Free trial must be 1–${MAX_TRIAL_DAYS} days.` };
+    }
+    promoParams.metadata = { trial_days: String(days) };
+  }
+  // Len zákazníci bez predchádzajúcej platby/predplatného (aj trialu) — Stripe
+  // first_time_transaction; náš checkout to navyše overí podľa histórie.
+  if (formData.get("first_time") === "on") {
+    promoParams.restrictions = { first_time_transaction: true };
   }
 
   try {

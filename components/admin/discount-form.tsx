@@ -123,6 +123,31 @@ export function DiscountForm() {
         </label>
       </div>
 
+      {/* Trial + obmedzenie na nových */}
+      <div className="grid gap-3 sm:grid-cols-2">
+        <label className="text-xs text-soft">
+          Free trial days before first payment (optional, 1–90)
+          <input
+            name="trial_days"
+            type="number"
+            min={1}
+            max={90}
+            placeholder="31"
+            className="field mt-1 py-2"
+          />
+        </label>
+        <label className="flex items-end gap-2 pb-2 text-xs text-soft">
+          <input name="first_time" type="checkbox" className="h-4 w-4" />
+          New customers only (one use per customer)
+        </label>
+      </div>
+      <p className="text-xs leading-relaxed text-soft">
+        A coupon&apos;s months start counting on signup, so the trial uses part of
+        them: 31 trial days + 12 months = 1 free month, then 11 discounted months.
+        Customers enter codes on linkovne.com (pricing card, Settings or the promo
+        link) — not inside Stripe Checkout.
+      </p>
+
       <label className="block text-xs text-soft">
         Internal note (optional)
         <input

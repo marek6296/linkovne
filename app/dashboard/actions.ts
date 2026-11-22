@@ -13,7 +13,7 @@ import {
 } from "@/lib/profile-order";
 import { cleanTrackedLinks, hasNewTrackedLinks } from "@/lib/channels";
 import { hasNewPaidDesign, hasNewPaidButtonStyle, hasNewButtonAnimation, hasPremiumSocials } from "@/lib/design-tiers";
-import { createSubscriptionCheckout, findPromotionCode } from "@/lib/checkout";
+import { createSubscriptionCheckout, findPromotion } from "@/lib/checkout";
 
 export type ActionState = { error?: string } | undefined;
 
@@ -202,8 +202,8 @@ export async function redeemPromoCode(
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const promotionCodeId = await findPromotionCode(code);
-  if (!promotionCodeId) {
+  const promo = await findPromotion(code);
+  if (!promo) {
     return { error: "That code isn't valid or has expired." };
   }
 
@@ -226,8 +226,10 @@ export async function redeemPromoCode(
     email: user.email,
     stripeCustomerId: account?.stripe_customer_id,
     plan: "pro",
-    promotionCodeId,
+    promotionCodeId: promo.id,
     requirePromo: true,
+    trialDays: promo.trialDays,
+    firstTimeOnly: promo.firstTimeOnly,
   });
 
   if ("error" in result) return { error: result.error };

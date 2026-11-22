@@ -5,6 +5,7 @@ import {
   CopyPromoLink,
 } from "@/components/admin/discount-form";
 import { SITE_URL } from "@/lib/site";
+import { trialDaysFromMetadata } from "@/lib/checkout";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +17,8 @@ type Row = {
   duration: string;
   uses: string;
   expires: string | null;
+  trialDays: number | null;
+  firstTime: boolean;
 };
 
 function couponSummary(c: {
@@ -69,6 +72,8 @@ async function loadCodes(): Promise<Row[]> {
       expires: pc.expires_at
         ? new Date(pc.expires_at * 1000).toLocaleDateString()
         : null,
+      trialDays: trialDaysFromMetadata(pc.metadata),
+      firstTime: pc.restrictions?.first_time_transaction === true,
     };
   });
 }
@@ -96,7 +101,8 @@ export default async function DiscountsPage() {
         </h1>
         <p className="mt-1 text-sm text-soft">
           Created here, they live in Stripe and apply to real subscriptions.
-          Customers enter the code at checkout, or use a promo link.
+          Customers enter the code on the Pro pricing card, in Settings, or use a
+          promo link.
         </p>
       </div>
 
@@ -120,6 +126,14 @@ export default async function DiscountsPage() {
                   </code>
                   <span className="text-sm font-medium">{r.discount}</span>
                   <span className="text-xs text-soft">{r.duration}</span>
+                  {r.trialDays && (
+                    <span className="text-xs text-soft">
+                      {r.trialDays}-day free trial
+                    </span>
+                  )}
+                  {r.firstTime && (
+                    <span className="text-xs text-soft">New customers only</span>
+                  )}
                   <span className="text-xs text-soft">Used {r.uses}</span>
                   {r.expires && (
                     <span className="text-xs text-soft">

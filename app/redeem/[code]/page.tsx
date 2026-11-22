@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import {
   createSubscriptionCheckout,
-  findPromotionCode,
+  findPromotion,
 } from "@/lib/checkout";
 import { BRAND_TITLE } from "@/lib/site";
 
@@ -31,10 +31,10 @@ export default async function RedeemPage({
   const code = decodeURIComponent(raw).trim().toUpperCase();
 
   const invalid = !CODE_RE.test(code);
-  const promotionCodeId = invalid ? null : await findPromotionCode(code);
+  const promo = invalid ? null : await findPromotion(code);
 
   // Neplatný / expirovaný / vyčerpaný kód.
-  if (!promotionCodeId) {
+  if (!promo) {
     return (
       <Shell title="This code isn’t available">
         <p className="mt-2 text-sm leading-relaxed text-soft">
@@ -108,8 +108,10 @@ export default async function RedeemPage({
     email: user.email,
     stripeCustomerId: account?.stripe_customer_id,
     plan: "pro",
-    promotionCodeId,
+    promotionCodeId: promo.id,
     requirePromo: true,
+    trialDays: promo.trialDays,
+    firstTimeOnly: promo.firstTimeOnly,
   });
 
   if ("url" in result) redirect(result.url);

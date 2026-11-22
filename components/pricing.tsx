@@ -105,6 +105,8 @@ function Card({ def, promoPrice }: { def: CardDef; promoPrice?: string | null })
         <UpgradeButton
           plan={def.key}
           noteClassName="text-white/85"
+          promoField={def.key === "pro"}
+          promoClassName="min-w-0 flex-1 rounded-full border-2 border-white/60 bg-white/10 px-4 py-2 text-center font-mono text-sm font-bold uppercase tracking-widest text-white placeholder:text-white/60 focus:border-white focus:outline-none"
           className="relative z-20 mt-4 w-full rounded-full border-2 border-white bg-white py-2.5 text-center font-mono font-black uppercase text-neutral-800 transition-all duration-200 hover:bg-transparent hover:text-white"
         >
           {def.cta}
