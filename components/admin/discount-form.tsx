@@ -50,9 +50,9 @@ export function DiscountForm() {
           <input
             name="value"
             type="number"
-            min={kind === "percent" ? 1 : 0.5}
+            min={kind === "percent" ? 1 : 0.01}
             max={kind === "percent" ? 100 : undefined}
-            step={kind === "percent" ? 1 : 0.5}
+            step={kind === "percent" ? 1 : 0.01}
             required
             placeholder={kind === "percent" ? "50" : "3.00"}
             className="field mt-1 py-2"
